@@ -195,7 +195,7 @@
 
   <div class="stats-bar">
     <div class="stat-card suppliers-debt">
-      <h3>إجمالي ديون المجهزين (عليك)</h3>
+      <h3>إجمالي ديون المجهّزين (عليك)</h3>
       <div class="value" id="statTotalSupplierDebts" style="color: var(--supplier-color);">0 د.ع</div>
     </div>
     <div class="stat-card customers-debt">
@@ -214,7 +214,7 @@
     <button class="tab-btn" data-tab="stock">🏪 إدارة المخزن والمواد</button>
   </div>
 
-  <!-- قسم المجهزين -->
+  <!-- قسم المجهّجين -->
   <div id="suppliersSection" class="tab-content active">
     <div class="flex-grid">
       <div>
@@ -231,8 +231,8 @@
       </div>
       <div>
         <div class="card">
-          <h2 style="color: var(--supplier-color);">قائمة المجهزين والأرصدة</h2>
-          <input type="text" id="searchSupplier" placeholder="🔍 ابحث عن مجهز..." />
+          <h2 style="color: var(--supplier-color);">قائمة المجهّجين والأرصدة</h2>
+          <input type="text" id="searchSupplier" placeholder="🔍 ابحث عن مجهّز..." />
           <div class="table-wrapper">
             <table id="suppliersTable">
               <thead><tr><th>#</th><th>اسم المجهّز</th><th>الهاتف</th><th>الرصيد الحالي</th></tr></thead>
@@ -274,7 +274,7 @@
     </div>
   </div>
 
-  <!-- قسم المخزن الجديد -->
+  <!-- قسم المخزن -->
   <div id="stockSection" class="tab-content">
     <div class="flex-grid">
       <div>
@@ -309,7 +309,7 @@
   <div class="card" id="accountingCore" style="margin-top: 20px;">
     <h2>تفاصيل كشف الحساب والعمليات الماليّة المزامنة</h2>
     <div id="activePersonInfo" class="card" style="background: #edf2f7; box-shadow: none;">
-      الرجاء اختيار (مجهز أو زبون) من الجداول أعلاه لبدء العمل الحسابي.
+      الرجاء اختيار (مجهّز أو زبون) من الجداول أعلاه لبدء العمل الحسابي.
     </div>
 
     <div class="flex-grid" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));">
@@ -526,7 +526,6 @@
     }
     let item = getStockList().find(x => x.id === itemId);
     if(item) {
-      // إذا كان الحساب الحالي مجهز نأخذ سعر الشراء، وإذا كان زبون نأخذ سعر البيع تلقائياً
       row.querySelector(".item-price").value = (activeMode === "suppliers") ? item.buyPrice : item.sellPrice;
       row.querySelector(".item-qty").value = 1;
       row.querySelector(".item-qty").max = item.qty;
@@ -547,7 +546,7 @@
   function renderActiveInfo() {
     let container = document.getElementById("activePersonInfo");
     let person = (activeMode === "suppliers" ? getSuppliersList() : getCustomersList()).find(x => x.id === activeId);
-    if(!person) { container.innerHTML = "الرجاء اختيار اسم مجهز أو زبون من الأعلى لبدء الإدخال الحسابي."; return; }
+    if(!person) { container.innerHTML = "الرجاء اختيار اسم مجهّز أو زبون من الأعلى لبدء الإدخال الحسابي."; return; }
     let bal = calcBalance(activeId, activeMode === "suppliers" ? 'supplier' : 'customer');
     container.innerHTML = `<strong>الاسم الحالي المختص:</strong> ${person.name} | <strong>الهاتف:</strong> ${person.phone || '-'} | <strong>الرصيد المستحق:</strong> <span style="color:red; font-weight:bold;">${bal.toLocaleString()} د.ع</span>`;
   }
@@ -611,7 +610,7 @@
       updateInvoiceSelects();
     };
 
-    // حفظ مجهز
+    // حفظ مجهّز
     document.getElementById("supplierForm").onsubmit = (e) => {
       e.preventDefault(); if(!dbRef) return;
       let newRef = dbRef.child("suppliers").push();
@@ -657,7 +656,6 @@
       
       let itemsArray = [];
       let updatesToStock = {};
-      let stockError = false;
 
       document.querySelectorAll(".invoice-item-row").forEach(row => {
         let selectElement = row.querySelector(".item-select");
@@ -669,16 +667,12 @@
           let item = getStockList().find(x => x.id === itemId);
           if(item) {
             itemsArray.push(`${item.name} (${qty}x${price})`);
-            
-            // حساب الكمية الجديدة بالمخزن
             let currentStockQty = parseFloat(item.qty || 0);
             let newStockQty = currentStockQty;
             
             if(activeMode === "customers") {
-              // الزبون يشتري -> تنقص كمية المخزن
               newStockQty = currentStockQty - qty;
             } else if(activeMode === "suppliers") {
-              // المجهز نشتري منه -> تزيد كمية المخزن
               newStockQty = currentStockQty + qty;
             }
             updatesToStock[itemId] = newStockQty;
@@ -686,7 +680,6 @@
         }
       });
 
-      // إرسال العملية المالية للسحابة
       let newTxRef = dbRef.child("transactions").push();
       newTxRef.set({
         personId: activeId,
@@ -697,7 +690,6 @@
         date: new Date().toISOString()
       });
 
-      // تطبيق تحديث المخزن التلقائي السحابي
       Object.keys(updatesToStock).forEach(id => {
         dbRef.child("stock").child(id).update({ qty: updatesToStock[id] });
       });
