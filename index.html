@@ -5,6 +5,7 @@
   <title>نظام الحسابات والفواتير السحابي - محل الدباغ</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+  <!-- تضمين مكتبات Firebase السحابية من جوجل -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
@@ -163,6 +164,18 @@
     #cloudStatus {
       background: #e2e8f0; padding: 8px; text-align: center; font-size: 13px; font-weight: bold; border-radius: 6px; margin-bottom: 15px;
     }
+
+    .backup-section {
+      background: #edf2f7;
+      padding: 15px;
+      border-radius: 8px;
+      margin-top: 25px;
+      display: flex;
+      gap: 15px;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #cbd5e0;
+    }
   </style>
 </head>
 <body>
@@ -191,6 +204,7 @@
     <button class="tab-btn" data-tab="customers">👥 إدارة الزبائن</button>
   </div>
 
+  <!-- قسم المجهزين -->
   <div id="suppliersSection" class="tab-content active">
     <div class="flex-grid">
       <div>
@@ -220,6 +234,7 @@
     </div>
   </div>
 
+  <!-- قسم الزبائن -->
   <div id="customersSection" class="tab-content">
     <div class="flex-grid">
       <div>
@@ -249,6 +264,7 @@
     </div>
   </div>
 
+  <!-- كشف الحساب والعمليات الماليّة -->
   <div class="card" id="accountingCore" style="margin-top: 20px;">
     <h2>تفاصيل كشف الحساب والعمليات الماليّة المزامنة</h2>
     <div id="activePersonInfo" class="card" style="background: #edf2f7; box-shadow: none;">
@@ -302,10 +318,18 @@
     </div>
   </div>
 
+  <!-- قسم النسخ الاحتياطي اليدوي المستعاد -->
+  <div class="backup-section">
+    <strong>💾 أدوات النسخ الاحتياطي اليدوي:</strong>
+    <button type="button" id="exportBackupBtn" class="btn-supplier" style="background: #4a5568;">📥 تصدير نسخة احتياطية للكمبيوتر (JSON)</button>
+    <button type="button" id="importBackupBtn" class="btn-customer" style="background: #718096;">📤 استيراد نسخة احتياطية للسحابة</button>
+    <input type="file" id="backupFileInput" accept=".json" style="display: none;" />
+  </div>
+
 </div>
 
 <script>
-  // إعدادات مشروعك gimi-fd7fe السحابية
+  // إعدادات مشروعك السحابية
   const firebaseConfig = {
     apiKey: "AIzaSyC-QqnQTbbyVFS8QFkf4CYZTcURcr9nBW0",
     authDomain: "gimi-fd7fe.firebaseapp.com",
@@ -509,6 +533,43 @@
 
     document.getElementById("searchSupplier").oninput = renderTables;
     document.getElementById("searchCustomer").oninput = renderTables;
+
+    // ميزة تصدير النسخة الاحتياطية
+    document.getElementById("exportBackupBtn").onclick = () => {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dbData, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `aldabbagh_backup_${new Date().toISOString().slice(0,10)}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    };
+
+    // ميزة استيراد النسخة الاحتياطية
+    document.getElementById("importBackupBtn").onclick = () => {
+      document.getElementById("backupFileInput").click();
+    };
+
+    document.getElementById("backupFileInput").onchange = (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        try {
+          const importedData = JSON.parse(evt.target.result);
+          if (confirm("هل أنت متأكد من استيراد هذه النسخة؟ سيتم دمج البيانات المرفوعة مع السحابة مباشرة.")) {
+            if (dbRef) {
+              dbRef.update(importedData).then(() => {
+                alert("🟢 تم استيراد ودمج النسخة الاحتياطية سحابياً بنجاح!");
+              });
+            }
+          }
+        } catch (err) {
+          alert("❌ الملف غير صالح، يرجى التأكد من اختيار ملف بخلفية JSON صحيح.");
+        }
+      };
+      reader.readAsText(file);
+    };
 
     document.getElementById("printDocBtn").onclick = () => {
       if(!activeId) return;
