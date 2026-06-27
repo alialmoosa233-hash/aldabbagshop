@@ -2,8 +2,11 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>نظام الحسابات والفواتير - محل الدباغ</title>
+  <title>نظام الحسابات والفواتير السحابي - محل الدباغ</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
   <style>
     :root {
@@ -42,7 +45,6 @@
       padding: 0 15px;
     }
 
-    /* تبويبات النظام الأساسية */
     .tabs {
       display: flex;
       gap: 10px;
@@ -68,7 +70,6 @@
     .tab-content { display: none; }
     .tab-content.active { display: block; }
 
-    /* شريط الإحصائيات */
     .stats-bar {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -116,12 +117,6 @@
       font-family: inherit;
     }
 
-    input:focus, select:focus, textarea:focus {
-      outline: none;
-      border-color: var(--primary-color);
-      background-color: #fff;
-    }
-
     button {
       padding: 10px 16px;
       border-radius: 6px;
@@ -151,7 +146,6 @@
 
     .selected-row { font-weight: bold; background-color: #ebf8ff; }
 
-    /* حاسبة الفاتورة الذكية */
     .invoice-builder {
       background: #f8fafc;
       padding: 12px;
@@ -159,25 +153,27 @@
       border: 1px dashed #cbd5e0;
       margin-bottom: 12px;
     }
-    .invoice-item-row {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 8px;
-    }
+    .invoice-item-row { display: flex; gap: 8px; margin-bottom: 8px; }
     .invoice-item-row input { margin-bottom: 0; }
 
     .badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
     .badge-plus { background: #e2f0fe; color: #2b6cb0; }
     .badge-minus { background: #c6f6d5; color: #22543d; }
+    
+    #cloudStatus {
+      background: #e2e8f0; padding: 8px; text-align: center; font-size: 13px; font-weight: bold; border-radius: 6px; margin-bottom: 15px;
+    }
   </style>
 </head>
 <body>
 
 <header>
-  نظام الحسابات والفواتير المتكامل - محل الدباغ
+  نظام الحسابات والفواتير السحابي المباشر - محل الدباغ
 </header>
 
 <div class="container">
+  
+  <div id="cloudStatus" style="color: #4a5568;">🔄 جاري الاتصال بقاعدة البيانات السحابية...</div>
 
   <div class="stats-bar">
     <div class="stat-card suppliers-debt">
@@ -191,8 +187,8 @@
   </div>
 
   <div class="tabs">
-    <button class="tab-btn active" data-tab="suppliers">📦 إدارة المجهّجين (الموردين)</button>
-    <button class="tab-btn" data-tab="customers">👥 إدارة الزبائن (العملاء)</button>
+    <button class="tab-btn active" data-tab="suppliers">📦 إدارة المجهّجين</button>
+    <button class="tab-btn" data-tab="customers">👥 إدارة الزبائن</button>
   </div>
 
   <div id="suppliersSection" class="tab-content active">
@@ -202,10 +198,10 @@
           <h2 style="color: var(--supplier-color);">إضافة مجهّز جديد</h2>
           <form id="supplierForm">
             <input type="text" id="supplierName" placeholder="اسم المجهّز" required />
-            <input type="text" id="supplierPhone" placeholder="رقم الهاتف (اختياري)" />
-            <input type="number" id="supplierOpeningBalance" placeholder="الرصيد السابق (عليك)" value="0" />
+            <input type="text" id="supplierPhone" placeholder="رقم الهاتف" />
+            <input type="number" id="supplierOpeningBalance" placeholder="الرصيد السابق" value="0" />
             <textarea id="supplierNotes" placeholder="ملاحظات..." rows="2"></textarea>
-            <button type="submit" class="btn-supplier btn-full">حفظ المجهّز</button>
+            <button type="submit" class="btn-supplier btn-full">حفظ المجهّز سحابياً</button>
           </form>
         </div>
       </div>
@@ -231,10 +227,10 @@
           <h2 style="color: var(--customer-color);">إضافة زبون جديد</h2>
           <form id="customerForm">
             <input type="text" id="customerName" placeholder="اسم الزبون" required />
-            <input type="text" id="customerPhone" placeholder="رقم الهاتف (اختياري)" />
-            <input type="number" id="customerOpeningBalance" placeholder="الرصيد السابق (مطلوب منه)" value="0" />
+            <input type="text" id="customerPhone" placeholder="رقم الهاتف" />
+            <input type="number" id="customerOpeningBalance" placeholder="الرصيد السابق" value="0" />
             <textarea id="customerNotes" placeholder="ملاحظات..." rows="2"></textarea>
-            <button type="submit" class="btn-customer btn-full">حفظ الزبون</button>
+            <button type="submit" class="btn-customer btn-full">حفظ الزبون سحابياً</button>
           </form>
         </div>
       </div>
@@ -254,7 +250,7 @@
   </div>
 
   <div class="card" id="accountingCore" style="margin-top: 20px;">
-    <h2>تفاصيل كشف الحساب والعمليات الماليّة</h2>
+    <h2>تفاصيل كشف الحساب والعمليات الماليّة المزامنة</h2>
     <div id="activePersonInfo" class="card" style="background: #edf2f7; box-shadow: none;">
       الرجاء اختيار (مجهز أو زبون) من الجداول أعلاه لبدء العمل.
     </div>
@@ -271,7 +267,6 @@
 
           <div class="invoice-builder">
             <strong>🧮 حاسبة تفاصيل الفاتورة (اختياري)</strong>
-            <p style="font-size: 11px; color: #718096; margin: 2px 0 8px 0;">أدخل المواد لحساب الإجمالي تلقائياً ولتوثيقها بالكشف</p>
             <div id="invoiceItemsContainer">
               <div class="invoice-item-row">
                 <input type="text" placeholder="المادة" style="flex:2;">
@@ -288,7 +283,7 @@
           <label>ملاحظة البيان العامة</label>
           <input type="text" id="txNote" placeholder="بيان الحركة أو الفاتورة..." />
 
-          <button type="submit" class="btn-primary btn-full">تسجيل واعتماد الحركة</button>
+          <button type="submit" class="btn-primary btn-full">تسجيل وإرسال للسحابة</button>
         </form>
       </div>
 
@@ -298,14 +293,7 @@
         <div class="table-wrapper" style="margin-top:15px;">
           <table id="txTable">
             <thead>
-              <tr>
-                <th>التاريخ</th>
-                <th>النوع</th>
-                <th>المبلغ</th>
-                <th>الرصيد</th>
-                <th>البيان والمواد</th>
-                <th>إجراء</th>
-              </tr>
+              <tr><th>التاريخ</th><th>النوع</th><th>المبلغ</th><th>الرصيد</th><th>البيان والمواد</th><th>إجراء</th></tr>
             </thead>
             <tbody></tbody>
           </table>
@@ -314,74 +302,91 @@
     </div>
   </div>
 
-  <div class="card" style="text-align: center; background: #fff5f5;">
-    <button type="button" id="exportData" class="btn-primary" style="background: #4a5568;">تنزيل نسخة احتياطية شاملة</button>
-    <input type="file" id="importData" accept="application/json" style="width: auto; display: inline-block; margin: 0 10px;" />
-    <button type="button" id="wipeData" class="btn-danger">تصفير النظام بالكامل</button>
-  </div>
-
 </div>
 
 <script>
-  const DB_KEY = "aldabbagh_accounting_v3";
-  let db = { suppliers: [], customers: [], transactions: [] };
-  let activeMode = "suppliers"; // أو customers
+  // إعدادات مشروعك gimi-fd7fe السحابية
+  const firebaseConfig = {
+    apiKey: "AIzaSyC-QqnQTbbyVFS8QFkf4CYZTcURcr9nBW0",
+    authDomain: "gimi-fd7fe.firebaseapp.com",
+    databaseURL: "https://gimi-fd7fe-default-rtdb.firebaseio.com/",
+    projectId: "gimi-fd7fe",
+    storageBucket: "gimi-fd7fe.firebasestorage.app",
+    messagingSenderId: "642364940251",
+    appId: "1:642364940251:web:6dd47f47d500ae9ed791fe"
+  };
+
+  let dbRef;
+  let dbData = { suppliers: {}, customers: {}, transactions: {} };
+  let activeMode = "suppliers";
   let activeId = null;
 
-  function loadDB() {
-    const data = localStorage.getItem(DB_KEY);
-    if(data) {
-      try { db = JSON.parse(data); } catch(e) { console.error(e); }
-    }
-    if(!db.suppliers) db.suppliers = [];
-    if(!db.customers) db.customers = [];
-    if(!db.transactions) db.transactions = [];
+  try {
+    firebase.initializeApp(firebaseConfig);
+    dbRef = firebase.database().ref("aldabbagh_store");
+    document.getElementById("cloudStatus").innerHTML = "🟢 متصل بالسحابة بنجاح ومزامن مع كل الأجهزة!";
+    document.getElementById("cloudStatus").style.backgroundColor = "#c6f6d5";
+    document.getElementById("cloudStatus").style.color = "#22543d";
+  } catch (e) {
+    document.getElementById("cloudStatus").innerHTML = "🔴 خطأ في الاتصال: يرجى التحقق من الإعدادات.";
+    document.getElementById("cloudStatus").style.backgroundColor = "#fed7d7";
+    document.getElementById("cloudStatus").style.color = "#9b2c2c";
   }
 
-  function saveDB() {
-    localStorage.setItem(DB_KEY, JSON.stringify(db));
-    renderStats();
+  if (dbRef) {
+    dbRef.on("value", (snapshot) => {
+      const val = snapshot.val();
+      if (val) {
+        dbData.suppliers = val.suppliers || {};
+        dbData.customers = val.customers || {};
+        dbData.transactions = val.transactions || {};
+      } else {
+        dbData = { suppliers: {}, customers: {}, transactions: {} };
+      }
+      renderStats();
+      renderTables();
+      renderActiveInfo();
+      renderTxTable();
+    });
   }
+
+  function getSuppliersList() { return Object.keys(dbData.suppliers).map(k => ({id: k, ...dbData.suppliers[k]})); }
+  function getCustomersList() { return Object.keys(dbData.customers).map(k => ({id: k, ...dbData.customers[k]})); }
+  function getTxList() { return Object.keys(dbData.transactions).map(k => ({id: k, ...dbData.transactions[k]})); }
 
   function calcBalance(id, type) {
-    let list = type === "supplier" ? db.suppliers : db.customers;
+    let list = type === "supplier" ? getSuppliersList() : getCustomersList();
     let person = list.find(x => x.id === id);
-    let bal = person ? person.openingBalance : 0;
+    let bal = person ? parseFloat(person.openingBalance || 0) : 0;
 
-    db.transactions.filter(t => t.personId === id).forEach(t => {
-      if(t.type === "plus") bal += t.amount;
-      else bal -= t.amount;
+    getTxList().filter(t => t.personId === id).forEach(t => {
+      if(t.type === "plus") bal += parseFloat(t.amount || 0);
+      else bal -= parseFloat(t.amount || 0);
     });
     return bal;
   }
 
   function renderStats() {
-    let sTotal = 0; db.suppliers.forEach(x => sTotal += calcBalance(x.id, 'supplier'));
-    let cTotal = 0; db.customers.forEach(x => cTotal += calcBalance(x.id, 'customer'));
+    let sTotal = 0; getSuppliersList().forEach(x => sTotal += calcBalance(x.id, 'supplier'));
+    let cTotal = 0; getCustomersList().forEach(x => cTotal += calcBalance(x.id, 'customer'));
     document.getElementById("statTotalSupplierDebts").textContent = sTotal.toLocaleString() + " د.ع";
     document.getElementById("statTotalCustomerDebts").textContent = cTotal.toLocaleString() + " د.ع";
   }
 
   function renderTables() {
-    // جدول المجهزين
-    const sTbody = document.querySelector("#suppliersTable tbody");
-    sTbody.innerHTML = "";
+    const sTbody = document.querySelector("#suppliersTable tbody"); sTbody.innerHTML = "";
     let sSearch = document.getElementById("searchSupplier").value;
-    db.suppliers.filter(x => x.name.includes(sSearch)).forEach((x, i) => {
-      let tr = document.createElement("tr");
-      if(activeId === x.id) tr.className = "selected-row";
+    getSuppliersList().filter(x => x.name.includes(sSearch)).forEach((x, i) => {
+      let tr = document.createElement("tr"); if(activeId === x.id) tr.className = "selected-row";
       tr.onclick = () => { activeId = x.id; activeMode = "suppliers"; renderTables(); renderActiveInfo(); renderTxTable(); };
       tr.innerHTML = `<td>${i+1}</td><td>${x.name}</td><td>${x.phone||'-'}</td><td>${calcBalance(x.id,'supplier').toLocaleString()} د.ع</td>`;
       sTbody.appendChild(tr);
     });
 
-    // جدول الزبائن
-    const cTbody = document.querySelector("#customersTable tbody");
-    cTbody.innerHTML = "";
+    const cTbody = document.querySelector("#customersTable tbody"); cTbody.innerHTML = "";
     let cSearch = document.getElementById("searchCustomer").value;
-    db.customers.filter(x => x.name.includes(cSearch)).forEach((x, i) => {
-      let tr = document.createElement("tr");
-      if(activeId === x.id) tr.className = "selected-row";
+    getCustomersList().filter(x => x.name.includes(cSearch)).forEach((x, i) => {
+      let tr = document.createElement("tr"); if(activeId === x.id) tr.className = "selected-row";
       tr.onclick = () => { activeId = x.id; activeMode = "customers"; renderTables(); renderActiveInfo(); renderTxTable(); };
       tr.innerHTML = `<td>${i+1}</td><td>${x.name}</td><td>${x.phone||'-'}</td><td>${calcBalance(x.id,'customer').toLocaleString()} د.ع</td>`;
       cTbody.appendChild(tr);
@@ -390,39 +395,28 @@
 
   function renderActiveInfo() {
     let container = document.getElementById("activePersonInfo");
-    let list = activeMode === "suppliers" ? db.suppliers : db.customers;
-    let person = list.find(x => x.id === activeId);
-    if(!person) { container.innerHTML = "الرجاء اختيار اسم مجهز أو زبون من الأعلى."; return; }
-    
+    let person = (activeMode === "suppliers" ? getSuppliersList() : getCustomersList()).find(x => x.id === activeId);
+    if(!person) { container.innerHTML = "الرجاء اختيار اسم مجهز أو زبون من الأعلى لبدء الإدخال."; return; }
     let bal = calcBalance(activeId, activeMode === "suppliers" ? 'supplier' : 'customer');
-    container.innerHTML = `
-      <strong>الاسم الحالي:</strong> ${person.name} | <strong>الهاتف:</strong> ${person.phone || '-'} | 
-      <strong>الرصيد الحالي المستحق:</strong> <span style="color:red; font-weight:bold;">${bal.toLocaleString()} د.ع</span>
-    `;
+    container.innerHTML = `<strong>الاسم:</strong> ${person.name} | <strong>الهاتف:</strong> ${person.phone || '-'} | <strong>الرصيد المستحق:</strong> <span style="color:red; font-weight:bold;">${bal.toLocaleString()} د.ع</span>`;
   }
 
   function renderTxTable() {
-    const tbody = document.querySelector("#txTable tbody");
-    tbody.innerHTML = "";
-    if(!activeId) return;
-
-    let person = (activeMode === "suppliers" ? db.suppliers : db.customers).find(x => x.id === activeId);
-    let runningBal = person ? person.openingBalance : 0;
-
-    let txs = db.transactions.filter(t => t.personId === activeId).sort((a,b) => new Date(a.date) - new Date(b.date));
-    
+    const tbody = document.querySelector("#txTable tbody"); tbody.innerHTML = ""; if(!activeId) return;
+    let person = (activeMode === "suppliers" ? getSuppliersList() : getCustomersList()).find(x => x.id === activeId);
+    let runningBal = person ? parseFloat(person.openingBalance || 0) : 0;
+    let txs = getTxList().filter(t => t.personId === activeId).sort((a,b) => new Date(a.date) - new Date(b.date));
     let rows = [];
     txs.forEach(t => {
-      if(t.type === "plus") runningBal += t.amount; else runningBal -= t.amount;
+      if(t.type === "plus") runningBal += parseFloat(t.amount); else runningBal -= parseFloat(t.amount);
       rows.push({...t, currentRunning: runningBal});
     });
-
     rows.reverse().forEach(t => {
       let tr = document.createElement("tr");
       tr.innerHTML = `
         <td>${new Date(t.date).toLocaleDateString("ar-IQ")}</td>
         <td><span class="badge ${t.type==='plus'?'badge-plus':'badge-minus'}">${t.type==='plus'?'+ زيادة':'- إنقاص'}</span></td>
-        <td>${t.amount.toLocaleString()}</td>
+        <td>${parseFloat(t.amount).toLocaleString()}</td>
         <td>${t.currentRunning.toLocaleString()}</td>
         <td style="text-align:right; font-size:12px;">${t.note} ${t.itemsStr ? `<br><span style="color:blue;">📦 ${t.itemsStr}</span>`:''}</td>
         <td><button class="btn-danger" style="padding:2px 6px; font-size:11px;" onclick="deleteTx('${t.id}')">حذف</button></td>
@@ -432,14 +426,23 @@
   }
 
   function deleteTx(id) {
-    if(confirm("حذف الحركة الماليّة؟")) {
-      db.transactions = db.transactions.filter(x => x.id !== id);
-      saveDB(); renderTables(); renderActiveInfo(); renderTxTable();
+    if(confirm("حذف الحركة ماليّاً وسحابيّاً؟") && dbRef) {
+      dbRef.child("transactions").child(id).remove();
     }
   }
 
-  // احتساب تلقائي للمواد داخل الفاتورة
-  function setupInvoiceAutoCalc() {
+  window.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll(".tab-btn").forEach(btn => {
+      btn.onclick = () => {
+        document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+        document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+        btn.classList.add("active"); document.getElementById(btn.dataset.tab + "Section").classList.add("active");
+        activeMode = btn.dataset.tab;
+        activeId = null;
+        renderTables(); renderActiveInfo(); renderTxTable();
+      };
+    });
+
     document.getElementById("invoiceItemsContainer").addEventListener("input", () => {
       let total = 0;
       document.querySelectorAll(".invoice-item-row").forEach(row => {
@@ -449,61 +452,39 @@
       });
       if(total > 0) document.getElementById("txAmount").value = total;
     });
-  }
 
-  window.addEventListener("DOMContentLoaded", () => {
-    loadDB(); saveDB(); renderTables(); setupInvoiceAutoCalc();
-
-    // أزرار التبويب
-    document.querySelectorAll(".tab-btn").forEach(btn => {
-      btn.onclick = () => {
-        document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
-        document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
-        btn.classList.add("active");
-        document.getElementById(btn.dataset.tab + "Section").classList.add("active");
-        activeMode = btn.dataset.tab;
-      };
-    });
-
-    // إضافة مجهز وزبون
-    document.getElementById("supplierForm").onsubmit = (e) => {
-      e.preventDefault();
-      let id = "sup_" + Date.now();
-      db.suppliers.push({
-        id, name: document.getElementById("supplierName").value,
-        phone: document.getElementById("supplierPhone").value,
-        openingBalance: parseFloat(document.getElementById("supplierOpeningBalance").value)||0,
-        notes: document.getElementById("supplierNotes").value
-      });
-      saveDB(); e.target.reset(); renderTables();
-    };
-
-    document.getElementById("customerForm").onsubmit = (e) => {
-      e.preventDefault();
-      let id = "cus_" + Date.now();
-      db.customers.push({
-        id, name: document.getElementById("customerName").value,
-        phone: document.getElementById("customerPhone").value,
-        openingBalance: parseFloat(document.getElementById("customerOpeningBalance").value)||0,
-        notes: document.getElementById("customerNotes").value
-      });
-      saveDB(); e.target.reset(); renderTables();
-    };
-
-    // إضافة حقول مواد للفاتورة
     document.getElementById("addInvoiceItemBtn").onclick = () => {
-      let div = document.createElement("div");
-      div.className = "invoice-item-row";
+      let div = document.createElement("div"); div.className = "invoice-item-row";
       div.innerHTML = `<input type="text" placeholder="المادة" style="flex:2;"><input type="number" placeholder="الكمية" style="flex:1;" class="item-qty"><input type="number" placeholder="السعر" style="flex:1.5;" class="item-price">`;
       document.getElementById("invoiceItemsContainer").appendChild(div);
     };
 
-    // تسجيل حركة ماليّة
-    document.getElementById("mainTransactionForm").onsubmit = (e) => {
-      e.preventDefault();
-      if(!activeId) { alert("اختر شخصاً أولاً!"); return; }
+    document.getElementById("supplierForm").onsubmit = (e) => {
+      e.preventDefault(); if(!dbRef) return;
+      let newRef = dbRef.child("suppliers").push();
+      newRef.set({
+        name: document.getElementById("supplierName").value,
+        phone: document.getElementById("supplierPhone").value,
+        openingBalance: parseFloat(document.getElementById("supplierOpeningBalance").value)||0,
+        notes: document.getElementById("supplierNotes").value
+      });
+      e.target.reset();
+    };
 
-      // جمع بيانات المواد إن وجدت
+    document.getElementById("customerForm").onsubmit = (e) => {
+      e.preventDefault(); if(!dbRef) return;
+      let newRef = dbRef.child("customers").push();
+      newRef.set({
+        name: document.getElementById("customerName").value,
+        phone: document.getElementById("customerPhone").value,
+        openingBalance: parseFloat(document.getElementById("customerOpeningBalance").value)||0,
+        notes: document.getElementById("customerNotes").value
+      });
+      e.target.reset();
+    };
+
+    document.getElementById("mainTransactionForm").onsubmit = (e) => {
+      e.preventDefault(); if(!activeId || !dbRef) { alert("اختر شخصاً أولاً من الجداول بالأعلى!"); return; }
       let itemsArray = [];
       document.querySelectorAll(".invoice-item-row").forEach(row => {
         let name = row.querySelectorAll("input")[0].value;
@@ -512,8 +493,8 @@
         if(name && qty && price) itemsArray.push(`${name} (${qty}x${price})`);
       });
 
-      db.transactions.push({
-        id: "tx_" + Date.now(),
+      let newTxRef = dbRef.child("transactions").push();
+      newTxRef.set({
         personId: activeId,
         type: document.getElementById("txType").value,
         amount: parseFloat(document.getElementById("txAmount").value)||0,
@@ -522,52 +503,25 @@
         date: new Date().toISOString()
       });
 
-      saveDB();
       e.target.reset();
       document.getElementById("invoiceItemsContainer").innerHTML = `<div class="invoice-item-row"><input type="text" placeholder="المادة" style="flex:2;"><input type="number" placeholder="الكمية" style="flex:1;" class="item-qty"><input type="number" placeholder="السعر" style="flex:1.5;" class="item-price"></div>`;
-      renderTables(); renderActiveInfo(); renderTxTable();
     };
 
-    // البحث السريع
     document.getElementById("searchSupplier").oninput = renderTables;
     document.getElementById("searchCustomer").oninput = renderTables;
 
-    // تصفير النظام
-    document.getElementById("wipeData").onclick = () => {
-      if(confirm("هل أنت متأكد من مسح جميع البيانات؟")) { localStorage.clear(); location.reload(); }
-    };
-
-    // نسخة احتياطية
-    document.getElementById("exportData").onclick = () => {
-      let blob = new Blob([JSON.stringify(db)], {type:"application/json"});
-      let a = document.createElement("a"); a.href = URL.createObjectURL(blob);
-      a.download = `حسابات_الدباغ_${new Date().toISOString().slice(0,10)}.json`; a.click();
-    };
-
-    document.getElementById("importData").onchange = (e) => {
-      let file = e.target.files[0]; if(!file) return;
-      let reader = new FileReader();
-      reader.onload = (evt) => {
-        try { db = JSON.parse(evt.target.result); saveDB(); location.reload(); } catch(err) { alert("ملف غير صالح"); }
-      };
-      reader.readAsText(file);
-    };
-
-    // طباعة كشف حساب
     document.getElementById("printDocBtn").onclick = () => {
       if(!activeId) return;
-      let p = (activeMode === "suppliers" ? db.suppliers : db.customers).find(x => x.id === activeId);
-      let run = p.openingBalance;
-      let txs = db.transactions.filter(t => t.personId === activeId).sort((a,b) => new Date(a.date) - new Date(b.date));
-      
+      let p = (activeMode === "suppliers" ? getSuppliersList() : getCustomersList()).find(x => x.id === activeId);
+      let run = parseFloat(p.openingBalance || 0);
+      let txs = getTxList().filter(t => t.personId === activeId).sort((a,b) => new Date(a.date) - new Date(b.date));
       let rows = `<tr><td>-</td><td>رصيد افتتاحي سابق</td><td>-</td><td>${run.toLocaleString()} د.ع</td><td>-</td></tr>`;
       txs.forEach(t => {
-        if(t.type === "plus") run += t.amount; else run -= t.amount;
-        rows += `<tr><td>${new Date(t.date).toLocaleDateString("ar-IQ")}</td><td>${t.type==='plus'?'+ زيادة':'- تنزيل'}</td><td>${t.amount.toLocaleString()}</td><td>${run.toLocaleString()}</td><td>${t.note} ${t.itemsStr?'['+t.itemsStr+']':''}</td></tr>`;
+        if(t.type === "plus") run += parseFloat(t.amount); else run -= parseFloat(t.amount);
+        rows += `<tr><td>${new Date(t.date).toLocaleDateString("ar-IQ")}</td><td>${t.type==='plus'?'+ زيادة':'- تنزيل'}</td><td>${parseFloat(t.amount).toLocaleString()}</td><td>${run.toLocaleString()}</td><td>${t.note} ${t.itemsStr?'['+t.itemsStr+']':''}</td></tr>`;
       });
-
       let win = window.open("","");
-      win.document.write(`<html lang="ar" dir="rtl"><head><title>كشف حساب</title><style>body{font-family:sans-serif;padding:20px;direction:rtl;} table{width:100%;border-collapse:collapse;} th,td{border:1px solid #000;padding:8px;text-align:center;}</style></head><body><h2>محل الدباغ للحسابات</h2><p>كشف حساب: <strong>${p.name}</strong></p><table><thead><tr><th>التاريخ</th><th>النوع</th><th>المبلغ</th><th>الرصيد بعد الحركة</th><th>التفاصيل والمواد</th></tr></thead><tbody>${rows}</tbody></table></body></html>`);
+      win.document.write(`<html lang="ar" dir="rtl"><head><title>كشف حساب سحابي</title><style>body{font-family:sans-serif;padding:20px;direction:rtl;} table{width:100%;border-collapse:collapse;} th,td{border:1px solid #000;padding:8px;text-align:center;}</style></head><body><h2>محل الدباغ للحسابات السحابية</h2><p>كشف حساب: <strong>${p.name}</strong></p><table><thead><tr><th>التاريخ</th><th>النوع</th><th>المبلغ</th><th>الرصيد بعد الحركة</th><th>التفاصيل والمواد</th></tr></thead><tbody>${rows}</tbody></table></body></html>`);
       win.document.close(); win.print();
     };
   });
