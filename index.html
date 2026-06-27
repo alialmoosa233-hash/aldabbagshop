@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>نظام الحسابات والفواتير السحابي - محل الدباغ</title>
+  <title>نظام الحسابات والمخزن السحابي - محل الدباغ</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <!-- تضمين مكتبات Firebase السحابية من جوجل -->
@@ -14,6 +14,7 @@
       --primary-color: #2b6cb0;
       --supplier-color: #2f855a;
       --customer-color: #4c51bf;
+      --stock-color: #dd6b20;
       --danger-color: #e53e3e;
       --bg-color: #f7fafc;
       --card-bg: #ffffff;
@@ -31,7 +32,7 @@
     }
 
     header {
-      background: linear-gradient(135deg, var(--supplier-color), var(--customer-color));
+      background: linear-gradient(135deg, var(--supplier-color), var(--customer-color), var(--stock-color));
       color: white;
       padding: 20px;
       text-align: center;
@@ -41,7 +42,7 @@
     }
 
     .container {
-      max-width: 1300px;
+      max-width: 1400px;
       margin: 20px auto;
       padding: 0 15px;
     }
@@ -67,6 +68,7 @@
 
     .tab-btn.active[data-tab="suppliers"] { background: var(--supplier-color); color: white; }
     .tab-btn.active[data-tab="customers"] { background: var(--customer-color); color: white; }
+    .tab-btn.active[data-tab="stock"] { background: var(--stock-color); color: white; }
 
     .tab-content { display: none; }
     .tab-content.active { display: block; }
@@ -87,6 +89,7 @@
     }
     .stat-card.suppliers-debt { border-right-color: var(--supplier-color); }
     .stat-card.customers-debt { border-right-color: var(--customer-color); }
+    .stat-card.stock-val { border-right-color: var(--stock-color); }
     .stat-card h3 { margin: 0 0 5px 0; font-size: 14px; color: #718096; }
     .stat-card .value { font-size: 20px; font-weight: bold; }
 
@@ -130,6 +133,7 @@
     .btn-primary { background: var(--primary-color); color: white; }
     .btn-supplier { background: var(--supplier-color); color: white; }
     .btn-customer { background: var(--customer-color); color: white; }
+    .btn-stock { background: var(--stock-color); color: white; }
     .btn-danger { background: var(--danger-color); color: white; }
     .btn-full { width: 100%; margin-top: 5px; margin-bottom: 5px; }
 
@@ -155,11 +159,12 @@
       margin-bottom: 12px;
     }
     .invoice-item-row { display: flex; gap: 8px; margin-bottom: 8px; }
-    .invoice-item-row input { margin-bottom: 0; }
+    .invoice-item-row input, .invoice-item-row select { margin-bottom: 0; }
 
     .badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
     .badge-plus { background: #e2f0fe; color: #2b6cb0; }
     .badge-minus { background: #c6f6d5; color: #22543d; }
+    .badge-alert { background: #fff5f5; color: #c53030; }
     
     #cloudStatus {
       background: #e2e8f0; padding: 8px; text-align: center; font-size: 13px; font-weight: bold; border-radius: 6px; margin-bottom: 15px;
@@ -181,7 +186,7 @@
 <body>
 
 <header>
-  نظام الحسابات والفواتير السحابي المباشر - محل الدباغ
+  نظام الحسابات والمخزن السحابي المتكامل - محل الدباغ
 </header>
 
 <div class="container">
@@ -197,11 +202,16 @@
       <h3>إجمالي ديون الزبائن (لك)</h3>
       <div class="value" id="statTotalCustomerDebts" style="color: var(--customer-color);">0 د.ع</div>
     </div>
+    <div class="stat-card stock-val">
+      <h3>إجمالي القيمة المالية للمخزن</h3>
+      <div class="value" id="statTotalStockValue" style="color: var(--stock-color);">0 د.ع</div>
+    </div>
   </div>
 
   <div class="tabs">
     <button class="tab-btn active" data-tab="suppliers">📦 إدارة المجهّجين</button>
     <button class="tab-btn" data-tab="customers">👥 إدارة الزبائن</button>
+    <button class="tab-btn" data-tab="stock">🏪 إدارة المخزن والمواد</button>
   </div>
 
   <!-- قسم المجهزين -->
@@ -264,11 +274,42 @@
     </div>
   </div>
 
+  <!-- قسم المخزن الجديد -->
+  <div id="stockSection" class="tab-content">
+    <div class="flex-grid">
+      <div>
+        <div class="card">
+          <h2 style="color: var(--stock-color);">إضافة مادة جديدة للمخزن</h2>
+          <form id="stockForm">
+            <input type="text" id="itemName" placeholder="اسم المادة" required />
+            <input type="number" id="itemQty" placeholder="الكمية المتوفرة الحالية" required min="0" />
+            <input type="number" id="itemMinQty" placeholder="حد التنبيه الأدنى للكمية" value="5" min="0" />
+            <input type="number" id="itemBuyPrice" placeholder="سعر الشراء (دينار)" required min="0" />
+            <input type="number" id="itemSellPrice" placeholder="سعر البيع (دينار)" required min="0" />
+            <button type="submit" class="btn-stock btn-full">إضافة المادة للمخزن سحابياً</button>
+          </form>
+        </div>
+      </div>
+      <div>
+        <div class="card">
+          <h2 style="color: var(--stock-color);">جرد المخزن الفوري</h2>
+          <input type="text" id="searchStock" placeholder="🔍 ابحث عن مادة في المخزن..." />
+          <div class="table-wrapper">
+            <table id="stockTable">
+              <thead><tr><th>#</th><th>اسم المادة</th><th>الكمية</th><th>سعر الشراء</th><th>سعر البيع</th><th>إجمالي القيمة</th><th>إجراء</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- كشف الحساب والعمليات الماليّة -->
   <div class="card" id="accountingCore" style="margin-top: 20px;">
     <h2>تفاصيل كشف الحساب والعمليات الماليّة المزامنة</h2>
     <div id="activePersonInfo" class="card" style="background: #edf2f7; box-shadow: none;">
-      الرجاء اختيار (مجهز أو زبون) من الجداول أعلاه لبدء العمل.
+      الرجاء اختيار (مجهز أو زبون) من الجداول أعلاه لبدء العمل الحسابي.
     </div>
 
     <div class="flex-grid" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));">
@@ -282,15 +323,17 @@
           </select>
 
           <div class="invoice-builder">
-            <strong>🧮 حاسبة تفاصيل الفاتورة (اختياري)</strong>
+            <strong>🧮 حاسبة الفاتورة الذكية من المخزن</strong>
             <div id="invoiceItemsContainer">
               <div class="invoice-item-row">
-                <input type="text" placeholder="المادة" style="flex:2;">
+                <select class="item-select" style="flex:2;" onchange="onItemSelectChange(this)">
+                  <option value="">-- اختر مادة من المخزن --</option>
+                </select>
                 <input type="number" placeholder="الكمية" style="flex:1;" class="item-qty">
                 <input type="number" placeholder="السعر" style="flex:1.5;" class="item-price">
               </div>
             </div>
-            <button type="button" id="addInvoiceItemBtn" style="padding: 4px 8px; font-size: 12px; background: #cbd5e0; margin-top:5px;">+ إضافة مادة</button>
+            <button type="button" id="addInvoiceItemBtn" style="padding: 4px 8px; font-size: 12px; background: #cbd5e0; margin-top:5px;">+ إضافة مادة للفاتورة</button>
           </div>
 
           <label>المبلغ الإجمالي النهائي (دينار)</label>
@@ -299,7 +342,7 @@
           <label>ملاحظة البيان العامة</label>
           <input type="text" id="txNote" placeholder="بيان الحركة أو الفاتورة..." />
 
-          <button type="submit" class="btn-primary btn-full">تسجيل وإرسال للسحابة</button>
+          <button type="submit" class="btn-primary btn-full">تسجيل وإرسال للسحابة وتحديث المخزن</button>
         </form>
       </div>
 
@@ -320,7 +363,7 @@
 
   <!-- قسم النسخ الاحتياطي اليدوي المستعاد -->
   <div class="backup-section">
-    <strong>💾 أدوات النسخ الاحتياطي اليدوي:</strong>
+    <strong>💾 أدوات النسخ الاحتياطي اليدوي الشامل:</strong>
     <button type="button" id="exportBackupBtn" class="btn-supplier" style="background: #4a5568;">📥 تصدير نسخة احتياطية للكمبيوتر (JSON)</button>
     <button type="button" id="importBackupBtn" class="btn-customer" style="background: #718096;">📤 استيراد نسخة احتياطية للسحابة</button>
     <input type="file" id="backupFileInput" accept=".json" style="display: none;" />
@@ -329,7 +372,7 @@
 </div>
 
 <script>
-  // إعدادات مشروعك السحابية
+  // إعدادات مشروعك السحابية الثابتة
   const firebaseConfig = {
     apiKey: "AIzaSyC-QqnQTbbyVFS8QFkf4CYZTcURcr9nBW0",
     authDomain: "gimi-fd7fe.firebaseapp.com",
@@ -341,14 +384,14 @@
   };
 
   let dbRef;
-  let dbData = { suppliers: {}, customers: {}, transactions: {} };
+  let dbData = { suppliers: {}, customers: {}, transactions: {}, stock: {} };
   let activeMode = "suppliers";
   let activeId = null;
 
   try {
     firebase.initializeApp(firebaseConfig);
     dbRef = firebase.database().ref("aldabbagh_store");
-    document.getElementById("cloudStatus").innerHTML = "🟢 متصل بالسحابة بنجاح ومزامن مع كل الأجهزة!";
+    document.getElementById("cloudStatus").innerHTML = "🟢 متصل بالسحابة بنجاح ومزامن مع كل الأجهزة والمخزن!";
     document.getElementById("cloudStatus").style.backgroundColor = "#c6f6d5";
     document.getElementById("cloudStatus").style.color = "#22543d";
   } catch (e) {
@@ -364,19 +407,23 @@
         dbData.suppliers = val.suppliers || {};
         dbData.customers = val.customers || {};
         dbData.transactions = val.transactions || {};
+        dbData.stock = val.stock || {};
       } else {
-        dbData = { suppliers: {}, customers: {}, transactions: {} };
+        dbData = { suppliers: {}, customers: {}, transactions: {}, stock: {} };
       }
       renderStats();
       renderTables();
       renderActiveInfo();
       renderTxTable();
+      renderStockTable();
+      updateInvoiceSelects();
     });
   }
 
   function getSuppliersList() { return Object.keys(dbData.suppliers).map(k => ({id: k, ...dbData.suppliers[k]})); }
   function getCustomersList() { return Object.keys(dbData.customers).map(k => ({id: k, ...dbData.customers[k]})); }
   function getTxList() { return Object.keys(dbData.transactions).map(k => ({id: k, ...dbData.transactions[k]})); }
+  function getStockList() { return Object.keys(dbData.stock).map(k => ({id: k, ...dbData.stock[k]})); }
 
   function calcBalance(id, type) {
     let list = type === "supplier" ? getSuppliersList() : getCustomersList();
@@ -393,8 +440,11 @@
   function renderStats() {
     let sTotal = 0; getSuppliersList().forEach(x => sTotal += calcBalance(x.id, 'supplier'));
     let cTotal = 0; getCustomersList().forEach(x => cTotal += calcBalance(x.id, 'customer'));
+    let stTotal = 0; getStockList().forEach(x => stTotal += (parseFloat(x.qty || 0) * parseFloat(x.buyPrice || 0)));
+    
     document.getElementById("statTotalSupplierDebts").textContent = sTotal.toLocaleString() + " د.ع";
     document.getElementById("statTotalCustomerDebts").textContent = cTotal.toLocaleString() + " د.ع";
+    document.getElementById("statTotalStockValue").textContent = stTotal.toLocaleString() + " د.ع";
   }
 
   function renderTables() {
@@ -417,12 +467,89 @@
     });
   }
 
+  function renderStockTable() {
+    const tbody = document.querySelector("#stockTable tbody"); tbody.innerHTML = "";
+    let search = document.getElementById("searchStock").value;
+    getStockList().filter(x => x.name.includes(search)).forEach((x, i) => {
+      let tr = document.createElement("tr");
+      let totalVal = parseFloat(x.qty || 0) * parseFloat(x.buyPrice || 0);
+      let isLow = parseFloat(x.qty || 0) <= parseFloat(x.minQty || 5);
+      tr.innerHTML = `
+        <td>${i+1}</td>
+        <td>${x.name}</td>
+        <td><span class="badge ${isLow ? 'badge-alert' : ''}">${x.qty} ${isLow ? '(قارب على النفاد)' : ''}</span></td>
+        <td>${parseFloat(x.buyPrice).toLocaleString()}</td>
+        <td>${parseFloat(x.sellPrice).toLocaleString()}</td>
+        <td>${totalVal.toLocaleString()} د.ع</td>
+        <td>
+          <button class="btn-stock" style="padding:2px 6px; font-size:11px; background:#4a5568;" onclick="adjustStockPrompt('${x.id}', ${x.qty})">تعديل كمية</button>
+          <button class="btn-danger" style="padding:2px 6px; font-size:11px;" onclick="deleteStockItem('${x.id}')">حذف</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function adjustStockPrompt(id, currentQty) {
+    let newVal = prompt("أدخل الكمية الجديدة للمادة مباشرة:", currentQty);
+    if(newVal !== null && dbRef) {
+      dbRef.child("stock").child(id).update({ qty: parseFloat(newVal) || 0 });
+    }
+  }
+
+  function deleteStockItem(id) {
+    if(confirm("هل أنت متأكد من حذف هذه المادة نهائياً من المخزن؟") && dbRef) {
+      dbRef.child("stock").child(id).remove();
+    }
+  }
+
+  function updateInvoiceSelects() {
+    document.querySelectorAll(".item-select").forEach(select => {
+      let currentVal = select.value;
+      select.innerHTML = '<option value="">-- اختر مادة من المخزن --</option>';
+      getStockList().forEach(item => {
+        let opt = document.createElement("option");
+        opt.value = item.id;
+        opt.textContent = `${item.name} (متوفر: ${item.qty})`;
+        select.appendChild(opt);
+      });
+      select.value = currentVal;
+    });
+  }
+
+  function onItemSelectChange(selectElement) {
+    let itemId = selectElement.value;
+    let row = selectElement.closest(".invoice-item-row");
+    if(!itemId) {
+      row.querySelector(".item-price").value = "";
+      return;
+    }
+    let item = getStockList().find(x => x.id === itemId);
+    if(item) {
+      // إذا كان الحساب الحالي مجهز نأخذ سعر الشراء، وإذا كان زبون نأخذ سعر البيع تلقائياً
+      row.querySelector(".item-price").value = (activeMode === "suppliers") ? item.buyPrice : item.sellPrice;
+      row.querySelector(".item-qty").value = 1;
+      row.querySelector(".item-qty").max = item.qty;
+    }
+    triggerInvoiceCalculation();
+  }
+
+  function triggerInvoiceCalculation() {
+    let total = 0;
+    document.querySelectorAll(".invoice-item-row").forEach(row => {
+      let qty = parseFloat(row.querySelector(".item-qty").value) || 0;
+      let price = parseFloat(row.querySelector(".item-price").value) || 0;
+      total += (qty * price);
+    });
+    if(total > 0) document.getElementById("txAmount").value = total;
+  }
+
   function renderActiveInfo() {
     let container = document.getElementById("activePersonInfo");
     let person = (activeMode === "suppliers" ? getSuppliersList() : getCustomersList()).find(x => x.id === activeId);
-    if(!person) { container.innerHTML = "الرجاء اختيار اسم مجهز أو زبون من الأعلى لبدء الإدخال."; return; }
+    if(!person) { container.innerHTML = "الرجاء اختيار اسم مجهز أو زبون من الأعلى لبدء الإدخال الحسابي."; return; }
     let bal = calcBalance(activeId, activeMode === "suppliers" ? 'supplier' : 'customer');
-    container.innerHTML = `<strong>الاسم:</strong> ${person.name} | <strong>الهاتف:</strong> ${person.phone || '-'} | <strong>الرصيد المستحق:</strong> <span style="color:red; font-weight:bold;">${bal.toLocaleString()} د.ع</span>`;
+    container.innerHTML = `<strong>الاسم الحالي المختص:</strong> ${person.name} | <strong>الهاتف:</strong> ${person.phone || '-'} | <strong>الرصيد المستحق:</strong> <span style="color:red; font-weight:bold;">${bal.toLocaleString()} د.ع</span>`;
   }
 
   function renderTxTable() {
@@ -450,7 +577,7 @@
   }
 
   function deleteTx(id) {
-    if(confirm("حذف الحركة ماليّاً وسحابيّاً؟") && dbRef) {
+    if(confirm("حذف الحركة ماليّاً وسحابيّاً؟ لن يعيد هذا الحذف تعديل كميات المخزن تلقائياً لحماية الحركات القديمة.") && dbRef) {
       dbRef.child("transactions").child(id).remove();
     }
   }
@@ -461,28 +588,30 @@
         document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
         document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
         btn.classList.add("active"); document.getElementById(btn.dataset.tab + "Section").classList.add("active");
-        activeMode = btn.dataset.tab;
-        activeId = null;
-        renderTables(); renderActiveInfo(); renderTxTable();
+        if(btn.dataset.tab !== 'stock') {
+          activeMode = btn.dataset.tab;
+          activeId = null;
+          renderTables(); renderActiveInfo(); renderTxTable();
+        }
       };
     });
 
-    document.getElementById("invoiceItemsContainer").addEventListener("input", () => {
-      let total = 0;
-      document.querySelectorAll(".invoice-item-row").forEach(row => {
-        let qty = parseFloat(row.querySelector(".item-qty").value) || 0;
-        let price = parseFloat(row.querySelector(".item-price").value) || 0;
-        total += (qty * price);
-      });
-      if(total > 0) document.getElementById("txAmount").value = total;
-    });
+    document.getElementById("invoiceItemsContainer").addEventListener("input", triggerInvoiceCalculation);
 
     document.getElementById("addInvoiceItemBtn").onclick = () => {
       let div = document.createElement("div"); div.className = "invoice-item-row";
-      div.innerHTML = `<input type="text" placeholder="المادة" style="flex:2;"><input type="number" placeholder="الكمية" style="flex:1;" class="item-qty"><input type="number" placeholder="السعر" style="flex:1.5;" class="item-price">`;
+      div.innerHTML = `
+        <select class="item-select" style="flex:2;" onchange="onItemSelectChange(this)">
+          <option value="">-- اختر مادة من المخزن --</option>
+        </select>
+        <input type="number" placeholder="الكمية" style="flex:1;" class="item-qty">
+        <input type="number" placeholder="السعر" style="flex:1.5;" class="item-price">
+      `;
       document.getElementById("invoiceItemsContainer").appendChild(div);
+      updateInvoiceSelects();
     };
 
+    // حفظ مجهز
     document.getElementById("supplierForm").onsubmit = (e) => {
       e.preventDefault(); if(!dbRef) return;
       let newRef = dbRef.child("suppliers").push();
@@ -495,6 +624,7 @@
       e.target.reset();
     };
 
+    // حفظ زبون
     document.getElementById("customerForm").onsubmit = (e) => {
       e.preventDefault(); if(!dbRef) return;
       let newRef = dbRef.child("customers").push();
@@ -507,16 +637,56 @@
       e.target.reset();
     };
 
+    // حفظ مادة للمخزن
+    document.getElementById("stockForm").onsubmit = (e) => {
+      e.preventDefault(); if(!dbRef) return;
+      let newRef = dbRef.child("stock").push();
+      newRef.set({
+        name: document.getElementById("itemName").value,
+        qty: parseFloat(document.getElementById("itemQty").value) || 0,
+        minQty: parseFloat(document.getElementById("itemMinQty").value) || 5,
+        buyPrice: parseFloat(document.getElementById("itemBuyPrice").value) || 0,
+        sellPrice: parseFloat(document.getElementById("itemSellPrice").value) || 0
+      });
+      e.target.reset();
+    };
+
+    // حفظ حركة مالية وتحديث المخزن تلقائياً
     document.getElementById("mainTransactionForm").onsubmit = (e) => {
-      e.preventDefault(); if(!activeId || !dbRef) { alert("اختر شخصاً أولاً من الجداول بالأعلى!"); return; }
+      e.preventDefault(); if(!activeId || !dbRef) { alert("اختر شخصاً أولاً من الجداول بالأعلى لربط العملية بالحساب!"); return; }
+      
       let itemsArray = [];
+      let updatesToStock = {};
+      let stockError = false;
+
       document.querySelectorAll(".invoice-item-row").forEach(row => {
-        let name = row.querySelectorAll("input")[0].value;
-        let qty = row.querySelectorAll("input")[1].value;
-        let price = row.querySelectorAll("input")[2].value;
-        if(name && qty && price) itemsArray.push(`${name} (${qty}x${price})`);
+        let selectElement = row.querySelector(".item-select");
+        let itemId = selectElement.value;
+        let qty = parseFloat(row.querySelector(".item-qty").value) || 0;
+        let price = parseFloat(row.querySelector(".item-price").value) || 0;
+
+        if(itemId && qty > 0) {
+          let item = getStockList().find(x => x.id === itemId);
+          if(item) {
+            itemsArray.push(`${item.name} (${qty}x${price})`);
+            
+            // حساب الكمية الجديدة بالمخزن
+            let currentStockQty = parseFloat(item.qty || 0);
+            let newStockQty = currentStockQty;
+            
+            if(activeMode === "customers") {
+              // الزبون يشتري -> تنقص كمية المخزن
+              newStockQty = currentStockQty - qty;
+            } else if(activeMode === "suppliers") {
+              // المجهز نشتري منه -> تزيد كمية المخزن
+              newStockQty = currentStockQty + qty;
+            }
+            updatesToStock[itemId] = newStockQty;
+          }
+        }
       });
 
+      // إرسال العملية المالية للسحابة
       let newTxRef = dbRef.child("transactions").push();
       newTxRef.set({
         personId: activeId,
@@ -527,19 +697,34 @@
         date: new Date().toISOString()
       });
 
+      // تطبيق تحديث المخزن التلقائي السحابي
+      Object.keys(updatesToStock).forEach(id => {
+        dbRef.child("stock").child(id).update({ qty: updatesToStock[id] });
+      });
+
       e.target.reset();
-      document.getElementById("invoiceItemsContainer").innerHTML = `<div class="invoice-item-row"><input type="text" placeholder="المادة" style="flex:2;"><input type="number" placeholder="الكمية" style="flex:1;" class="item-qty"><input type="number" placeholder="السعر" style="flex:1.5;" class="item-price"></div>`;
+      document.getElementById("invoiceItemsContainer").innerHTML = `
+        <div class="invoice-item-row">
+          <select class="item-select" style="flex:2;" onchange="onItemSelectChange(this)">
+            <option value="">-- اختر مادة من المخزن --</option>
+          </select>
+          <input type="number" placeholder="الكمية" style="flex:1;" class="item-qty">
+          <input type="number" placeholder="السعر" style="flex:1.5;" class="item-price">
+        </div>
+      `;
+      updateInvoiceSelects();
     };
 
     document.getElementById("searchSupplier").oninput = renderTables;
     document.getElementById("searchCustomer").oninput = renderTables;
+    document.getElementById("searchStock").oninput = renderStockTable;
 
-    // ميزة تصدير النسخة الاحتياطية
+    // ميزة تصدير النسخة الاحتياطية الشاملة للمخزن والحسابات
     document.getElementById("exportBackupBtn").onclick = () => {
       const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dbData, null, 2));
       const downloadAnchor = document.createElement('a');
       downloadAnchor.setAttribute("href", dataStr);
-      downloadAnchor.setAttribute("download", `aldabbagh_backup_${new Date().toISOString().slice(0,10)}.json`);
+      downloadAnchor.setAttribute("download", `aldabbagh_complete_backup_${new Date().toISOString().slice(0,10)}.json`);
       document.body.appendChild(downloadAnchor);
       downloadAnchor.click();
       downloadAnchor.remove();
@@ -557,10 +742,10 @@
       reader.onload = function(evt) {
         try {
           const importedData = JSON.parse(evt.target.result);
-          if (confirm("هل أنت متأكد من استيراد هذه النسخة؟ سيتم دمج البيانات المرفوعة مع السحابة مباشرة.")) {
+          if (confirm("هل أنت متأكد من استيراد هذه النسخة؟ سيتم دمج كافة بيانات الحسابات والمخزن السحابية فورا.")) {
             if (dbRef) {
               dbRef.update(importedData).then(() => {
-                alert("🟢 تم استيراد ودمج النسخة الاحتياطية سحابياً بنجاح!");
+                alert("🟢 تم استيراد وتحديث النظام والمخزن سحابياً بنجاح تام!");
               });
             }
           }
@@ -582,7 +767,7 @@
         rows += `<tr><td>${new Date(t.date).toLocaleDateString("ar-IQ")}</td><td>${t.type==='plus'?'+ زيادة':'- تنزيل'}</td><td>${parseFloat(t.amount).toLocaleString()}</td><td>${run.toLocaleString()}</td><td>${t.note} ${t.itemsStr?'['+t.itemsStr+']':''}</td></tr>`;
       });
       let win = window.open("","");
-      win.document.write(`<html lang="ar" dir="rtl"><head><title>كشف حساب سحابي</title><style>body{font-family:sans-serif;padding:20px;direction:rtl;} table{width:100%;border-collapse:collapse;} th,td{border:1px solid #000;padding:8px;text-align:center;}</style></head><body><h2>محل الدباغ للحسابات السحابية</h2><p>كشف حساب: <strong>${p.name}</strong></p><table><thead><tr><th>التاريخ</th><th>النوع</th><th>المبلغ</th><th>الرصيد بعد الحركة</th><th>التفاصيل والمواد</th></tr></thead><tbody>${rows}</tbody></table></body></html>`);
+      win.document.write(`<html lang="ar" dir="rtl"><head><title>كشف حساب سحابي</title><style>body{font-family:sans-serif;padding:20px;direction:rtl;} table{width:100%;border-collapse:collapse;} th,td{border:1px solid #000;padding:8px;text-align:center;}</style></head><body><h2>محل الدباغ للحسابات والمخزن السحابي</h2><p>كشف حساب العميل/المورد: <strong>${p.name}</strong></p><table><thead><tr><th>التاريخ</th><th>النوع</th><th>المبلغ</th><th>الرصيد بعد الحركة</th><th>التفاصيل والمواد المشتراة</th></tr></thead><tbody>${rows}</tbody></table></body></html>`);
       win.document.close(); win.print();
     };
   });
