@@ -5,7 +5,6 @@
   <title>نظام الحسابات والمخزن السحابي - محل الدباغ</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- تضمين مكتبات Firebase السحابية من جوجل -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
@@ -181,6 +180,7 @@
       justify-content: center;
       border: 1px solid #cbd5e0;
     }
+    .action-btn { padding: 3px 8px; font-size: 11px; margin: 2px; border-radius: 4px; }
   </style>
 </head>
 <body>
@@ -214,7 +214,6 @@
     <button class="tab-btn" data-tab="stock">🏪 إدارة المخزن والمواد</button>
   </div>
 
-  <!-- قسم المجهزين -->
   <div id="suppliersSection" class="tab-content active">
     <div class="flex-grid">
       <div>
@@ -235,7 +234,7 @@
           <input type="text" id="searchSupplier" placeholder="🔍 ابحث عن مجهّز..." />
           <div class="table-wrapper">
             <table id="suppliersTable">
-              <thead><tr><th>#</th><th>اسم المجهّز</th><th>الهاتف</th><th>الرصيد الحالي</th></tr></thead>
+              <thead><tr><th>#</th><th>اسم المجهّز</th><th>الهاتف</th><th>الرصيد الحالي</th><th>الإجراء</th></tr></thead>
               <tbody></tbody>
             </table>
           </div>
@@ -244,7 +243,6 @@
     </div>
   </div>
 
-  <!-- قسم الزبائن -->
   <div id="customersSection" class="tab-content">
     <div class="flex-grid">
       <div>
@@ -265,7 +263,7 @@
           <input type="text" id="searchCustomer" placeholder="🔍 ابحث عن زبون..." />
           <div class="table-wrapper">
             <table id="customersTable">
-              <thead><tr><th>#</th><th>اسم الزبون</th><th>الهاتف</th><th>الرصيد الحالي</th></tr></thead>
+              <thead><tr><th>#</th><th>اسم الزبون</th><th>الهاتف</th><th>الرصيد الحالي</th><th>الإجراء</th></tr></thead>
               <tbody></tbody>
             </table>
           </div>
@@ -274,7 +272,6 @@
     </div>
   </div>
 
-  <!-- قسم المخزن -->
   <div id="stockSection" class="tab-content">
     <div class="flex-grid">
       <div>
@@ -305,7 +302,6 @@
     </div>
   </div>
 
-  <!-- كشف الحساب والعمليات الماليّة -->
   <div class="card" id="accountingCore" style="margin-top: 20px;">
     <h2>تفاصيل كشف الحساب والعمليات الماليّة المزامنة</h2>
     <div id="activePersonInfo" class="card" style="background: #edf2f7; box-shadow: none;">
@@ -361,7 +357,6 @@
     </div>
   </div>
 
-  <!-- قسم النسخ الاحتياطي اليدوي المستعاد -->
   <div class="backup-section">
     <strong>💾 أدوات النسخ الاحتياطي اليدوي الشامل:</strong>
     <button type="button" id="exportBackupBtn" class="btn-supplier" style="background: #4a5568;">📥 تصدير نسخة احتياطية للكمبيوتر (JSON)</button>
@@ -452,8 +447,24 @@
     let sSearch = document.getElementById("searchSupplier").value;
     getSuppliersList().filter(x => x.name.includes(sSearch)).forEach((x, i) => {
       let tr = document.createElement("tr"); if(activeId === x.id) tr.className = "selected-row";
-      tr.onclick = () => { activeId = x.id; activeMode = "suppliers"; renderTables(); renderActiveInfo(); renderTxTable(); };
-      tr.innerHTML = `<td>${i+1}</td><td>${x.name}</td><td>${x.phone||'-'}</td><td>${calcBalance(x.id,'supplier').toLocaleString()} د.ع</td>`;
+      tr.style.cursor = "pointer";
+      
+      // النقر على السطر يحدد المجهز، والنقر على الأزرار لا يتداخل معه
+      tr.onclick = (e) => {
+        if(e.target.tagName === "BUTTON") return;
+        activeId = x.id; activeMode = "suppliers"; renderTables(); renderActiveInfo(); renderTxTable();
+      };
+      
+      tr.innerHTML = `
+        <td>${i+1}</td>
+        <td>${x.name}</td>
+        <td>${x.phone||'-'}</td>
+        <td>${calcBalance(x.id,'supplier').toLocaleString()} د.ع</td>
+        <td>
+          <button class="action-btn btn-stock" onclick="editPersonPrompt('${x.id}', 'suppliers')">✏️ تعديل</button>
+          <button class="action-btn btn-danger" onclick="deletePerson('${x.id}', 'suppliers')">🗑️ حذف</button>
+        </td>
+      `;
       sTbody.appendChild(tr);
     });
 
@@ -461,10 +472,58 @@
     let cSearch = document.getElementById("searchCustomer").value;
     getCustomersList().filter(x => x.name.includes(cSearch)).forEach((x, i) => {
       let tr = document.createElement("tr"); if(activeId === x.id) tr.className = "selected-row";
-      tr.onclick = () => { activeId = x.id; activeMode = "customers"; renderTables(); renderActiveInfo(); renderTxTable(); };
-      tr.innerHTML = `<td>${i+1}</td><td>${x.name}</td><td>${x.phone||'-'}</td><td>${calcBalance(x.id,'customer').toLocaleString()} د.ع</td>`;
+      tr.style.cursor = "pointer";
+      
+      tr.onclick = (e) => {
+        if(e.target.tagName === "BUTTON") return;
+        activeId = x.id; activeMode = "customers"; renderTables(); renderActiveInfo(); renderTxTable();
+      };
+      
+      tr.innerHTML = `
+        <td>${i+1}</td>
+        <td>${x.name}</td>
+        <td>${x.phone||'-'}</td>
+        <td>${calcBalance(x.id,'customer').toLocaleString()} د.ع</td>
+        <td>
+          <button class="action-btn btn-stock" onclick="editPersonPrompt('${x.id}', 'customers')">✏️ تعديل</button>
+          <button class="action-btn btn-danger" onclick="deletePerson('${x.id}', 'customers')">🗑️ حذف</button>
+        </td>
+      `;
       cTbody.appendChild(tr);
     });
+  }
+
+  // ميزة تعديل بيانات المجهز أو العميل الأساسية (الاسم والرصيد السابق)
+  function editPersonPrompt(id, path) {
+    let currentData = dbData[path][id];
+    if (!currentData) return;
+
+    let newName = prompt("تعديل اسم الحساب:", currentData.name);
+    if (newName === null || newName.trim() === "") return;
+
+    let newBalance = prompt("تعديل المبلغ السابق (الرصيد الافتتاحي):", currentData.openingBalance || 0);
+    if (newBalance === null) return;
+
+    if (dbRef) {
+      dbRef.child(path).child(id).update({
+        name: newName,
+        openingBalance: parseFloat(newBalance) || 0
+      }).then(() => {
+        alert("🟢 تم تعديل اسم الحساب والمبلغ السابق بنجاح!");
+      });
+    }
+  }
+
+  // حذف المجهز أو الزبون بالكامل
+  function deletePerson(id, path) {
+    if (confirm("هل أنت متأكد من حذف هذا الحساب نهائياً من السحابة؟ سيمسح الحساب بالكامل.")) {
+      if (dbRef) {
+        dbRef.child(path).child(id).remove().then(() => {
+          if(activeId === id) activeId = null;
+          alert("🟢 تم الحذف بنجاح.");
+        });
+      }
+    }
   }
 
   function renderStockTable() {
@@ -576,8 +635,12 @@
   }
 
   function deleteTx(id) {
-    if(confirm("حذف الحركة ماليّاً وسحابيّاً؟ لن يعيد هذا الحذف تعديل كميات المخزن تلقائياً لحماية الحركات القديمة.") && dbRef) {
-      dbRef.child("transactions").child(id).remove();
+    if(confirm("هل أنت متأكد من حذف هذه الحركة ماليّاً وسحابيّاً نهائياً؟ سيتم إعادة احتساب الرصيد فوراً.")) {
+      if(dbRef) {
+        dbRef.child("transactions").child(id).remove().then(() => {
+          alert("🟢 تم حذف الحركة بنجاح، وتحديث الأرصدة تلقائياً!");
+        });
+      }
     }
   }
 
