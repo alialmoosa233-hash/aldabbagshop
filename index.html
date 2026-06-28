@@ -5,6 +5,7 @@
   <title>نظام المبيعات والمخزن السحابي - محل الدباغ</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+  <!-- تضمين مكتبات Firebase السحابية من جوجل -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
@@ -141,22 +142,31 @@
     #cloudStatus { background: #e2e8f0; padding: 8px; text-align: center; font-size: 13px; font-weight: bold; border-radius: 6px; margin-bottom: 15px; }
     .backup-section { background: #edf2f7; padding: 15px; border-radius: 8px; margin-top: 25px; display: flex; gap: 15px; align-items: center; justify-content: center; border: 1px solid #cbd5e0; }
     .action-btn { padding: 3px 8px; font-size: 11px; margin: 2px; border-radius: 4px; }
+
+    /* تنسيق خاص بإخفاء الأجزاء غير المرغوبة أثناء طباعة التقارير */
+    @media print {
+      body * { visibility: hidden; }
+      .print-window, .print-window * { visibility: visible; }
+      .print-window { position: absolute; left: 0; top: 0; width: 100%; }
+    }
   </style>
 </head>
 <body>
 
+<!-- شاشة تسجيل الدخول -->
 <div id="loginScreen">
   <div class="login-box">
     <h2>🔐 تسجيل دخول النظام</h2>
     <form id="loginForm">
       <input type="text" id="loginUser" placeholder="اسم المستخدم (اليوزر)" required />
       <input type="password" id="loginPass" placeholder="كلمة المرور (الباسورد)" required />
-      <button type="submit" class="btn-primary btn-full">دخول للنظام سحابياً</button>
+      <button type="submit" class="btn-primary btn-full">دخول للنظام</button>
       <div id="loginError" style="color: red; margin-top: 10px; font-size: 14px; font-weight: bold;"></div>
     </form>
   </div>
 </div>
 
+<!-- واجهة التطبيق الرئيسية المحمية -->
 <div id="mainApp">
   <header>
     نظام الحسابات الذكي والمبيعات السحابية - محل الدباغ
@@ -164,7 +174,7 @@
   </header>
 
   <div class="container">
-    <div id="cloudStatus">🔄 جاري الاتصال بقاعدة البيانات السحابية...</div>
+    <div id="cloudStatus">🔄 جاري الاتصال بالخادم السحابي...</div>
 
     <div class="stats-bar">
       <div class="stat-card suppliers-debt">
@@ -188,8 +198,10 @@
       <button class="tab-btn" data-tab="suppliers">📦 ديون وحسابات المجهّجين</button>
     </div>
 
+    <!-- شاشة المبيعات الفورية (POS) -->
     <div id="posSection" class="tab-content active">
       <div class="pos-layout">
+        <!-- يمين: البحث واختيار المواد -->
         <div class="card">
           <h2 style="color: var(--sales-color);">🔍 اختيار المواد والبحث السريع</h2>
           <input type="text" id="posSearchInput" placeholder="اكتب اسم المادة للبحث السريع وإضافتها للفاتورة..." autocomplete="off"/>
@@ -210,6 +222,7 @@
           </div>
         </div>
 
+        <!-- يسار: إتمام الفاتورة والدفع وطريقة الحساب -->
         <div class="card">
           <h2 style="color: var(--sales-color);">🧾 تفاصيل الدفع وإنهاء الفاتورة</h2>
           <form id="posCheckoutForm">
@@ -245,12 +258,13 @@
             <label style="margin-top:15px; display:block;">ملاحظات الفاتورة (البيان):</label>
             <input type="text" id="posInvoiceNote" placeholder="مثال: فاتورة مبيعات مسائية..." />
 
-            <button type="submit" class="btn-sales btn-full" style="font-size:18px; padding:15px;">💾 حفظ وإتمام الفاتورة سحابياً</button>
+            <button type="submit" class="btn-sales btn-full" style="font-size:18px; padding:15px;">💾 حفظ وإتمام وطباعة الفاتورة</button>
           </form>
         </div>
       </div>
     </div>
 
+    <!-- قسم المخزن -->
     <div id="stockSection" class="tab-content">
       <div class="flex-grid">
         <div>
@@ -262,7 +276,7 @@
               <input type="number" id="itemMinQty" placeholder="حد التنبيه الأدنى للكمية" value="5" min="0" />
               <input type="number" id="itemBuyPrice" placeholder="سعر الشراء (دينار)" required min="0" />
               <input type="number" id="itemSellPrice" placeholder="سعر البيع (دينار)" required min="0" />
-              <button type="submit" class="btn-stock btn-full">إضافة المادة للمخزن سحابياً</button>
+              <button type="submit" class="btn-stock btn-full">إضافة المادة للمخزن</button>
             </form>
           </div>
         </div>
@@ -281,6 +295,7 @@
       </div>
     </div>
 
+    <!-- قسم الزبائن -->
     <div id="customersSection" class="tab-content">
       <div class="flex-grid">
         <div>
@@ -291,7 +306,7 @@
               <input type="text" id="customerPhone" placeholder="رقم الهاتف" />
               <input type="number" id="customerOpeningBalance" placeholder="الرصيد السابق" value="0" />
               <textarea id="customerNotes" placeholder="ملاحظات..." rows="2"></textarea>
-              <button type="submit" class="btn-customer btn-full">حفظ الزبون سحابياً</button>
+              <button type="submit" class="btn-customer btn-full">حفظ الزبون</button>
             </form>
           </div>
         </div>
@@ -309,6 +324,7 @@
         </div>
       </div>
       
+      <!-- كشف الحساب التابع للزبائن -->
       <div class="card" id="customerTxArea" style="margin-top:20px; display:none;">
         <h2 id="customerTxHeader">كشف حساب الزبون</h2>
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
@@ -324,6 +340,7 @@
       </div>
     </div>
 
+    <!-- قسم المجهّجين -->
     <div id="suppliersSection" class="tab-content">
       <div class="flex-grid">
         <div>
@@ -334,7 +351,7 @@
               <input type="text" id="supplierPhone" placeholder="رقم الهاتف" />
               <input type="number" id="supplierOpeningBalance" placeholder="الرصيد السابق" value="0" />
               <textarea id="supplierNotes" placeholder="ملاحظات..." rows="2"></textarea>
-              <button type="submit" class="btn-supplier btn-full">حفظ المجهّز سحابياً</button>
+              <button type="submit" class="btn-supplier btn-full">حفظ المجهّز</button>
             </form>
           </div>
         </div>
@@ -352,6 +369,7 @@
         </div>
       </div>
 
+      <!-- كشف الحساب التابع للمجهّزين -->
       <div class="card" id="supplierTxArea" style="margin-top:20px; display:none;">
         <h2 id="supplierTxHeader">كشف حساب المجهّز</h2>
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
@@ -367,6 +385,7 @@
       </div>
     </div>
 
+    <!-- أدوات النسخ الاحتياطي -->
     <div class="backup-section">
       <strong>💾 أدوات النسخ الاحتياطي اليدوي الشامل:</strong>
       <button type="button" id="exportBackupBtn" class="btn-supplier" style="background: #4a5568;">📥 تصدير نسخة احتياطية للكمبيوتر (JSON)</button>
@@ -393,16 +412,20 @@
 
   let dbRef;
   let dbData = { suppliers: {}, customers: {}, transactions: {}, stock: {} };
-  let posCart = []; // سلة المبيعات الحالية
-  let activeId = null; // للشخص المفتوح كشف حسابه حالياً
+  let posCart = []; 
+  let activeId = null; 
   let activeMode = ""; 
 
   if (sessionStorage.getItem("isLoggedIn") === "true") { showApp(); }
 
   document.getElementById("loginForm").onsubmit = (e) => {
     e.preventDefault();
-    if (document.getElementById("loginUser").value.trim() === CONFIG_USER && document.getElementById("loginPass").value.trim() === CONFIG_PASS) {
-      sessionStorage.setItem("isLoggedIn", "true"); showApp();
+    const u = document.getElementById("loginUser").value.trim();
+    const p = document.getElementById("loginPass").value.trim();
+    
+    if (u === CONFIG_USER && p === CONFIG_PASS) {
+      sessionStorage.setItem("isLoggedIn", "true");
+      showApp();
     } else {
       document.getElementById("loginError").textContent = "❌ اسم المستخدم أو كلمة المرور غير صحيحة!";
     }
@@ -411,7 +434,7 @@
   function showApp() {
     document.getElementById("loginScreen").style.display = "none";
     document.getElementById("mainApp").style.display = "block";
-    initFirebase();
+    setTimeout(initFirebase, 200);
   }
 
   function logout() { sessionStorage.removeItem("isLoggedIn"); window.location.reload(); }
@@ -419,6 +442,11 @@
   function initFirebase() {
     if (dbRef) return;
     try {
+      if (typeof firebase === 'undefined') {
+        document.getElementById("cloudStatus").innerHTML = "⚠️ تعمل الآن بنمط أوفلاين محلي (لم يتم تحميل مكتبات جوجل).";
+        document.getElementById("cloudStatus").style.backgroundColor = "#feebc8"; document.getElementById("cloudStatus").style.color = "#c05621";
+        return;
+      }
       if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
       dbRef = firebase.database().ref("aldabbagh_store");
       document.getElementById("cloudStatus").innerHTML = "🟢 متصل بالسحابة ومزامن مع المخزن ونقاط البيع الفورية!";
@@ -436,7 +464,7 @@
         if(activeId) { if(activeMode === "customers") renderCustomerTxTable(); else renderSupplierTxTable(); }
       });
     } catch (e) {
-      document.getElementById("cloudStatus").innerHTML = "🔴 خطأ بالاتصال السحابي.";
+      document.getElementById("cloudStatus").innerHTML = "🔴 خطأ في المزامنة السحابية. يعمل النظام محلياً حالياً.";
       document.getElementById("cloudStatus").style.backgroundColor = "#fed7d7"; document.getElementById("cloudStatus").style.color = "#9b2c2c";
     }
   }
@@ -465,7 +493,6 @@
     document.getElementById("statTotalStockValue").textContent = stTotal.toLocaleString() + " د.ع";
   }
 
-  // محرك البحث الفوري لشاشة المبيعات (POS)
   document.getElementById("posSearchInput").oninput = function() {
     let query = this.value.trim();
     let resultsDiv = document.getElementById("posSearchResults");
@@ -550,7 +577,81 @@
     select.value = currentVal;
   }
 
-  // معالجة تشيك أوت الفاتورة وإنقاص المخزن وترحيل الديون
+  // دالة طباعة الفاتورة الفورية المنبثقة
+  function printPosInvoice(invoiceData) {
+    let rowsHtml = "";
+    invoiceData.items.forEach(item => {
+      rowsHtml += `
+        <tr>
+          <td style="text-align:right;">${item.name}</td>
+          <td>${item.qty}</td>
+          <td>${parseFloat(item.price).toLocaleString()}</td>
+          <td>${(item.qty * item.price).toLocaleString()}</td>
+        </tr>`;
+    });
+
+    let customerName = "زبون نقدي (كاش)";
+    if(invoiceData.payType === "credit" && dbData.customers[invoiceData.customerId]) {
+      customerName = dbData.customers[invoiceData.customerId].name;
+    }
+
+    let win = window.open("", "_blank");
+    win.document.write(`
+      <html lang="ar" dir="rtl">
+      <head>
+        <title>فاتورة مبيعات - محل الدباغ</title>
+        <style>
+          body { font-family: system-ui, sans-serif; padding: 10px; width: 80mm; margin: 0 auto; direction: rtl; font-size: 13px; color: #000; }
+          .header { text-align: center; margin-bottom: 15px; border-bottom: 2px dashed #000; padding-bottom: 10px; }
+          .header h2 { margin: 0 0 5px 0; font-size: 18px; }
+          .info-table { width: 100%; margin-bottom: 10px; font-size: 12px; }
+          .items-table { width: 100%; border-collapse: collapse; margin-top: 5px; }
+          .items-table th, .items-table td { border-bottom: 1px dashed #000; padding: 6px 4px; text-align: center; }
+          .totals-section { margin-top: 12px; border-top: 2px dashed #000; padding-top: 8px; font-size: 13px; }
+          .total-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
+          .footer { text-align: center; margin-top: 20px; font-size: 11px; border-top: 1px solid #000; padding-top: 5px; }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h2>محل الدباغ</h2>
+          <div>للمبيعات والحسابات العامة</div>
+          <div style="font-size:11px; margin-top:3px;">تاريخ: ${new Date().toLocaleDateString("ar-IQ")} | ${new Date().toLocaleTimeString("ar-IQ")}</div>
+        </div>
+        
+        <table class="info-table">
+          <tr><td><strong>نوع الدفع:</strong></td><td>${invoiceData.payType === 'cash' ? 'نقدي (كاش)' : 'آجل (دين)'}</td></tr>
+          <tr><td><strong>الزبون:</strong></td><td>${customerName}</td></tr>
+          ${invoiceData.note ? `<tr><td><strong>البيان:</strong></td><td>${invoiceData.note}</td></tr>` : ''}
+        </table>
+
+        <table class="items-table">
+          <thead>
+            <tr><th style="text-align:right;">المادة</th><th>الكمية</th><th>السعر</th><th>الإجمالي</th></tr>
+          </thead>
+          <tbody>
+            ${rowsHtml}
+          </tbody>
+        </table>
+
+        <div class="totals-section">
+          <div class="total-row"><span>المجموع الكلي:</span> <strong>${invoiceData.subtotal.toLocaleString()} د.ع</strong></div>
+          <div class="total-row"><span>الخصم:</span> <strong>${invoiceData.discount.toLocaleString()} د.ع</strong></div>
+          <div class="total-row" style="font-size:15px;"><span>الصافي النهائي:</span> <strong>${invoiceData.finalTotal.toLocaleString()} د.ع</strong></div>
+        </div>
+
+        <div class="footer">
+          شكراً لزيارتكم وثقتكم بنا!
+        </div>
+        <script>
+          window.onload = function() { window.print(); setTimeout(function(){ window.close(); }, 500); }
+        <\/script>
+      </body>
+      </html>
+    `);
+    win.document.close();
+  }
+
   document.getElementById("posCheckoutForm").onsubmit = function(e) {
     e.preventDefault();
     if(posCart.length === 0) { alert("❌ السلة فارغة! يرجى إضافة مواد أولاً."); return; }
@@ -559,15 +660,19 @@
     
     if(payType === "credit" && !customerId) { alert("❌ يجب اختيار الزبون لترحيل الفاتورة الآجلة إلى حسابه!"); return; }
     
-    let subtotal = 0; let itemsNames = [];
-    posCart.forEach(x => { subtotal += (x.cartQty * x.sellPrice); itemsNames.push(`${x.name} (${x.cartQty}قطع)`); });
+    let subtotal = 0; let itemsNames = []; let itemsArrayForPrint = [];
+    posCart.forEach(x => { 
+      subtotal += (x.cartQty * x.sellPrice); 
+      itemsNames.push(`${x.name} (${x.cartQty}قطع)`);
+      itemsArrayForPrint.push({ name: x.name, qty: x.cartQty, price: x.sellPrice });
+    });
     let discount = parseFloat(document.getElementById("posDiscount").value) || 0;
-    let finalAmount = subtotal - discount;
+    let finalAmount = subtotal - discount; if(finalAmount < 0) finalAmount = 0;
     let note = document.getElementById("posInvoiceNote").value || "فاتورة مبيعات نظام POS";
 
-    if(!dbRef) return;
+    if(!dbRef) { alert("⚠️ تعذر الحفظ، يرجى التأكد من أن النظام متصل بالإنترنت حالياً."); return; }
 
-    // 1. ترحيل مالي إذا كانت الفاتورة دين (آجل)
+    // 1. ترحيل الفاتورة إلى حساب الزبون إذا كانت بالآجل
     if(payType === "credit") {
       let newTxRef = dbRef.child("transactions").push();
       newTxRef.set({
@@ -576,7 +681,7 @@
       });
     }
 
-    // 2. تحديث وانقاص كميات المخزن سحابياً فوراً
+    // 2. تحديث المخزن فوراً
     posCart.forEach(item => {
       let currentStockItem = dbData.stock[item.id];
       if(currentStockItem) {
@@ -585,11 +690,21 @@
       }
     });
 
-    alert("🟢 تم إتمام الفاتورة بنجاح، وتحديث المخزن السحابي وحساب الدين فوراً!");
+    // 3. تجهيز بيانات الطباعة وتشغيل الفاتورة فوراً
+    printPosInvoice({
+      items: itemsArrayForPrint,
+      payType: payType,
+      customerId: customerId,
+      subtotal: subtotal,
+      discount: discount,
+      finalTotal: finalAmount,
+      note: note
+    });
+
+    // 4. تصفير السلة للعملية القادمة
     posCart = []; renderPosCart(); document.getElementById("posCheckoutForm").reset(); toggleCustomerSelect();
   };
 
-  // بقية الجداول والميزات المحاسبية الأساسية المستقرة
   function renderStockTable() {
     const tbody = document.querySelector("#stockTable tbody"); tbody.innerHTML = "";
     let search = document.getElementById("searchStock").value;
@@ -685,12 +800,10 @@
 
     document.getElementById("searchSupplier").oninput = renderTables; document.getElementById("searchCustomer").oninput = renderTables; document.getElementById("searchStock").oninput = renderStockTable;
 
-    // أدوات استيراد وتصدير JSON
     document.getElementById("exportBackupBtn").onclick = () => { const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dbData, null, 2)); const downloadAnchor = document.createElement('a'); downloadAnchor.setAttribute("href", dataStr); downloadAnchor.setAttribute("download", `aldabbagh_complete_backup_${new Date().toISOString().slice(0,10)}.json`); document.body.appendChild(downloadAnchor); downloadAnchor.click(); downloadAnchor.remove(); };
     document.getElementById("importBackupBtn").onclick = () => { document.getElementById("backupFileInput").click(); };
     document.getElementById("backupFileInput").onchange = (e) => { const file = e.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = function(evt) { try { const importedData = JSON.parse(evt.target.result); if (confirm("دمج النسخة الشاملة الآن سحابياً؟")) { if (dbRef) dbRef.update(importedData); } } catch (err) { alert("الملف غير صالح."); } }; reader.readAsText(file); };
 
-    // طباعة الكشوفات
     document.getElementById("printCustomerBtn").onclick = () => { printReport('customers'); };
     document.getElementById("printSupplierBtn").onclick = () => { printReport('suppliers'); };
     
