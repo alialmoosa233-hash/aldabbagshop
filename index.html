@@ -5,7 +5,6 @@
   <title>نظام المبيعات والمخزن السحابي - محل الدباغ</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- تضمين مكتبات Firebase السحابية من جوجل -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
@@ -143,7 +142,6 @@
     .backup-section { background: #edf2f7; padding: 15px; border-radius: 8px; margin-top: 25px; display: flex; gap: 15px; align-items: center; justify-content: center; border: 1px solid #cbd5e0; }
     .action-btn { padding: 3px 8px; font-size: 11px; margin: 2px; border-radius: 4px; }
 
-    /* تنسيق خاص بإخفاء الأجزاء غير المرغوبة أثناء طباعة التقارير */
     @media print {
       body * { visibility: hidden; }
       .print-window, .print-window * { visibility: visible; }
@@ -153,7 +151,6 @@
 </head>
 <body>
 
-<!-- شاشة تسجيل الدخول -->
 <div id="loginScreen">
   <div class="login-box">
     <h2>🔐 تسجيل دخول النظام</h2>
@@ -166,7 +163,6 @@
   </div>
 </div>
 
-<!-- واجهة التطبيق الرئيسية المحمية -->
 <div id="mainApp">
   <header>
     نظام الحسابات الذكي والمبيعات السحابية - محل الدباغ
@@ -198,10 +194,8 @@
       <button class="tab-btn" data-tab="suppliers">📦 ديون وحسابات المجهّجين</button>
     </div>
 
-    <!-- شاشة المبيعات الفورية (POS) -->
     <div id="posSection" class="tab-content active">
       <div class="pos-layout">
-        <!-- يمين: البحث واختيار المواد -->
         <div class="card">
           <h2 style="color: var(--sales-color);">🔍 اختيار المواد والبحث السريع</h2>
           <input type="text" id="posSearchInput" placeholder="اكتب اسم المادة للبحث السريع وإضافتها للفاتورة..." autocomplete="off"/>
@@ -222,7 +216,6 @@
           </div>
         </div>
 
-        <!-- يسار: إتمام الفاتورة والدفع وطريقة الحساب -->
         <div class="card">
           <h2 style="color: var(--sales-color);">🧾 تفاصيل الدفع وإنهاء الفاتورة</h2>
           <form id="posCheckoutForm">
@@ -264,7 +257,6 @@
       </div>
     </div>
 
-    <!-- قسم المخزن -->
     <div id="stockSection" class="tab-content">
       <div class="flex-grid">
         <div>
@@ -295,7 +287,6 @@
       </div>
     </div>
 
-    <!-- قسم الزبائن -->
     <div id="customersSection" class="tab-content">
       <div class="flex-grid">
         <div>
@@ -324,7 +315,6 @@
         </div>
       </div>
       
-      <!-- كشف الحساب التابع للزبائن -->
       <div class="card" id="customerTxArea" style="margin-top:20px; display:none;">
         <h2 id="customerTxHeader">كشف حساب الزبون</h2>
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
@@ -340,7 +330,6 @@
       </div>
     </div>
 
-    <!-- قسم المجهّجين -->
     <div id="suppliersSection" class="tab-content">
       <div class="flex-grid">
         <div>
@@ -369,23 +358,24 @@
         </div>
       </div>
 
-      <!-- كشف الحساب التابع للمجهّزين -->
       <div class="card" id="supplierTxArea" style="margin-top:20px; display:none;">
         <h2 id="supplierTxHeader">كشف حساب المجهّز</h2>
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
           <button type="button" id="printSupplierBtn" class="btn-primary">🖨️ طباعة كشف حساب المجهّز</button>
-          <button type="button" class="btn-danger" style="background:#718096;" onclick="addManualTxPrompt('supplier')">➕ تسجيل وصل تسديد يدوياً للمجهز</button>
+          <div style="display:flex; gap:10px;">
+            <button type="button" class="btn-stock" style="background:#dd6b20;" onclick="addSupplierInvoicePrompt()">📥 تسجيل فاتورة مشتريات (مخزن + دين)</button>
+            <button type="button" class="btn-danger" style="background:#718096;" onclick="addManualTxPrompt('supplier')">➕ تسجيل وصل تسديد يدوياً للمجهز</button>
+          </div>
         </div>
         <div class="table-wrapper">
           <table id="supplierTxTable">
-            <thead><tr><th>التاريخ</th><th>النوع</th><th>المبلغ</th><th>الرصيد</th><th>البيان</th><th>إجراء</th></tr></thead>
+            <thead><tr><th>التاريخ</th><th>النوع</th><th>المبلغ</th><th>الرصيد</th><th>البيان والمواد</th><th>إجراء</th></tr></thead>
             <tbody></tbody>
           </table>
         </div>
       </div>
     </div>
 
-    <!-- أدوات النسخ الاحتياطي -->
     <div class="backup-section">
       <strong>💾 أدوات النسخ الاحتياطي اليدوي الشامل:</strong>
       <button type="button" id="exportBackupBtn" class="btn-supplier" style="background: #4a5568;">📥 تصدير نسخة احتياطية للكمبيوتر (JSON)</button>
@@ -577,7 +567,6 @@
     select.value = currentVal;
   }
 
-  // دالة طباعة الفاتورة الفورية المنبثقة
   function printPosInvoice(invoiceData) {
     let rowsHtml = "";
     invoiceData.items.forEach(item => {
@@ -672,7 +661,6 @@
 
     if(!dbRef) { alert("⚠️ تعذر الحفظ، يرجى التأكد من أن النظام متصل بالإنترنت حالياً."); return; }
 
-    // 1. ترحيل الفاتورة إلى حساب الزبون إذا كانت بالآجل
     if(payType === "credit") {
       let newTxRef = dbRef.child("transactions").push();
       newTxRef.set({
@@ -681,7 +669,6 @@
       });
     }
 
-    // 2. تحديث المخزن فوراً
     posCart.forEach(item => {
       let currentStockItem = dbData.stock[item.id];
       if(currentStockItem) {
@@ -690,7 +677,6 @@
       }
     });
 
-    // 3. تجهيز بيانات الطباعة وتشغيل الفاتورة فوراً
     printPosInvoice({
       items: itemsArrayForPrint,
       payType: payType,
@@ -701,9 +687,66 @@
       note: note
     });
 
-    // 4. تصفير السلة للعملية القادمة
     posCart = []; renderPosCart(); document.getElementById("posCheckoutForm").reset(); toggleCustomerSelect();
   };
+
+  // دالة المشتريات وإدخال فواتير المجهّزين الشاملة للمخزن والدين
+  function addSupplierInvoicePrompt() {
+    if (!activeId) { alert("رجاءً اختر مجهزاً أولاً من القائمة الجانبية."); return; }
+
+    let stockList = getStockList();
+    if (stockList.length === 0) {
+      alert("❌ المخزن فارغ! يرجى إضافة المواد أولاً في قسم المخزن حتى تتمكن من الشراء عليها.");
+      return;
+    }
+
+    let menuText = "اختر رقم المادة المراد شراؤها من المجهز لتحديث كمياتها وسعرها:\n";
+    stockList.forEach((item, index) => {
+      menuText += `${index + 1} - ${item.name} (المتوفر حالياً بالمخزن: ${item.qty})\n`;
+    });
+
+    let choice = prompt(menuText);
+    if (choice === null) return;
+    let idx = parseInt(choice) - 1;
+
+    if (isNaN(idx) || idx < 0 || idx >= stockList.length) {
+      alert("❌ اختيار رقمي غير صحيح!");
+      return;
+    }
+
+    let selectedItem = stockList[idx];
+
+    let qtyBought = prompt(`كم الكمية المشتراة والواردة من [${selectedItem.name}] لتضاف للمخزن؟`, "10");
+    if (!qtyBought || isNaN(qtyBought) || parseFloat(qtyBought) <= 0) return;
+    qtyBought = parseFloat(qtyBought);
+
+    let newBuyPrice = prompt(`أدخل سعر شراء القطعة الواحدة الجديدة من المجهز (بالدينار):`, selectedItem.buyPrice);
+    if (!newBuyPrice || isNaN(newBuyPrice) || parseFloat(newBuyPrice) <= 0) return;
+    newBuyPrice = parseFloat(newBuyPrice);
+
+    let totalInvoiceAmount = qtyBought * newBuyPrice;
+    let note = `فاتورة مشتريات مجهز: شراء (${qtyBought}) قطع من [${selectedItem.name}] بسعر قطعة (${newBuyPrice.toLocaleString()} د.ع)`;
+
+    if (confirm(`هل تريد اعتماد وحفظ الفاتورة؟\nالمادة: ${selectedItem.name}\nإجمالي القيمة: ${totalInvoiceAmount.toLocaleString()} د.ع\nسيتم زيادة الكمية للمخزن فوراً وزيادة حساب المجهز.`)) {
+      if (dbRef) {
+        let currentQtyInStock = parseFloat(selectedItem.qty || 0);
+        dbRef.child("stock").child(selectedItem.id).update({
+          qty: currentQtyInStock + qtyBought,
+          buyPrice: newBuyPrice
+        });
+
+        dbRef.child("transactions").push().set({
+          personId: activeId,
+          type: "plus", 
+          amount: totalInvoiceAmount,
+          note: note,
+          date: new Date().toISOString()
+        });
+        
+        alert("✅ تم حفظ الفاتورة بنجاح وتحديث أرقام المخزن وحساب المجهّز سحابياً!");
+      }
+    }
+  }
 
   function renderStockTable() {
     const tbody = document.querySelector("#stockTable tbody"); tbody.innerHTML = "";
@@ -764,15 +807,22 @@
     let rows = []; txs.forEach(t => { if(t.type === "plus") run += parseFloat(t.amount); else run -= parseFloat(t.amount); rows.push({...t, currentRunning: run}); });
     rows.reverse().forEach(t => {
       let tr = document.createElement("tr");
-      tr.innerHTML = `<td>${new Date(t.date).toLocaleDateString("ar-IQ")}</td><td><span class="badge ${t.type==='plus'?'badge-plus':'badge-minus'}">${t.type==='plus'?'+ زيادة دين':'- وصل تسديد'}</span></td><td>${parseFloat(t.amount).toLocaleString()}</td><td><strong>${t.currentRunning.toLocaleString()} د.ع</strong></td><td>${t.note}</td><td><button class="btn-danger" style="padding:2px 6px; font-size:11px;" onclick="deleteTx('${t.id}')">حذف</button></td>`;
+      tr.innerHTML = `
+        <td>${new Date(t.date).toLocaleDateString("ar-IQ")}</td>
+        <td><span class="badge ${t.type==='plus'?'badge-plus':'badge-minus'}">${t.type==='plus'?'+ فاتورة مشتريات':'- وصل تسديد'}</span></td>
+        <td>${parseFloat(t.amount).toLocaleString()}</td>
+        <td><strong>${t.currentRunning.toLocaleString()} د.ع</strong></td>
+        <td style="text-align:right;">${t.note}</td>
+        <td><button class="btn-danger" style="padding:2px 6px; font-size:11px;" onclick="deleteTx('${t.id}')">حذف</button></td>
+      `;
       tbody.appendChild(tr);
     });
   }
 
   function addManualTxPrompt(type) {
     let amount = prompt("أدخل قيمة المبلغ النقدي بالدينار العراقي:"); if(!amount || isNaN(amount)) return;
-    let note = prompt("أدخل بيان الوصل أو الملاحظة:", "وصل استلام/تسديد نقدي");
-    let txType = prompt("اكتب (plus) لزيادة الدين أو (minus) لتنزيل وتسديد الدين:", "minus");
+    let note = prompt("أدخل بيان الوصل أو الملاحظة:", "وصل استلام/تسديد نقدي يدوي");
+    let txType = prompt("اكتب (plus) لزيادة رصيد الحساب أو (minus) لتنزيل وتسديد الحساب مالياً:", "minus");
     if(txType !== "plus" && txType !== "minus") return;
     if(dbRef && activeId) {
       dbRef.child("transactions").push().set({ personId: activeId, type: txType, amount: parseFloat(amount), note: note, date: new Date().toISOString() });
