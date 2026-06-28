@@ -5,6 +5,7 @@
   <title>نظام الحسابات والمخزن السحابي - محل الدباغ</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+  <!-- تضمين مكتبات Firebase السحابية من جوجل -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
@@ -30,6 +31,36 @@
       direction: rtl;
     }
 
+    /* شاشة تسجيل الدخول */
+    #loginScreen {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: linear-gradient(135deg, #2b6cb0, #2f855a);
+      z-index: 9999;
+    }
+    .login-box {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+    }
+    .login-box h2 {
+      margin-bottom: 20px;
+      color: var(--primary-color);
+      border-bottom: none;
+    }
+
+    /* النظام الرئيسي (مخفي قبل تسجيل الدخول) */
+    #mainApp {
+      display: none;
+    }
+
     header {
       background: linear-gradient(135deg, var(--supplier-color), var(--customer-color), var(--stock-color));
       color: white;
@@ -38,6 +69,14 @@
       font-size: 24px;
       font-weight: bold;
       box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      position: relative;
+    }
+    .logout-btn {
+      position: absolute;
+      left: 20px; top: 20px;
+      background: var(--danger-color);
+      color: white; padding: 6px 12px;
+      font-size: 13px; border-radius: 6px;
     }
 
     .container {
@@ -185,185 +224,207 @@
 </head>
 <body>
 
-<header>
-  نظام الحسابات والمخزن السحابي المتكامل - محل الدباغ
-</header>
-
-<div class="container">
-  
-  <div id="cloudStatus" style="color: #4a5568;">🔄 جاري الاتصال بقاعدة البيانات السحابية...</div>
-
-  <div class="stats-bar">
-    <div class="stat-card suppliers-debt">
-      <h3>إجمالي ديون المجهّزين (عليك)</h3>
-      <div class="value" id="statTotalSupplierDebts" style="color: var(--supplier-color);">0 د.ع</div>
-    </div>
-    <div class="stat-card customers-debt">
-      <h3>إجمالي ديون الزبائن (لك)</h3>
-      <div class="value" id="statTotalCustomerDebts" style="color: var(--customer-color);">0 د.ع</div>
-    </div>
-    <div class="stat-card stock-val">
-      <h3>إجمالي القيمة المالية للمخزن</h3>
-      <div class="value" id="statTotalStockValue" style="color: var(--stock-color);">0 د.ع</div>
-    </div>
+<!-- شاشة تسجيل الدخول -->
+<div id="loginScreen">
+  <div class="login-box">
+    <h2>🔐 تسجيل دخول النظام</h2>
+    <form id="loginForm">
+      <input type="text" id="loginUser" placeholder="اسم المستخدم (اليوزر)" required />
+      <input type="password" id="loginPass" placeholder="كلمة المرور (الباسورد)" required />
+      <button type="submit" class="btn-primary btn-full">دخول للنظام سحابياً</button>
+      <div id="loginError" style="color: red; margin-top: 10px; font-size: 14px; font-weight: bold;"></div>
+    </form>
   </div>
+</div>
 
-  <div class="tabs">
-    <button class="tab-btn active" data-tab="suppliers">📦 إدارة المجهّجين</button>
-    <button class="tab-btn" data-tab="customers">👥 إدارة الزبائن</button>
-    <button class="tab-btn" data-tab="stock">🏪 إدارة المخزن والمواد</button>
-  </div>
+<!-- واجهة التطبيق الرئيسية المحمية -->
+<div id="mainApp">
+  <header>
+    نظام الحسابات والمخزن السحابي المتكامل - محل الدباغ
+    <button class="logout-btn" onclick="logout()">🚪 خروج</button>
+  </header>
 
-  <div id="suppliersSection" class="tab-content active">
-    <div class="flex-grid">
-      <div>
-        <div class="card">
-          <h2 style="color: var(--supplier-color);">إضافة مجهّز جديد</h2>
-          <form id="supplierForm">
-            <input type="text" id="supplierName" placeholder="اسم المجهّز" required />
-            <input type="text" id="supplierPhone" placeholder="رقم الهاتف" />
-            <input type="number" id="supplierOpeningBalance" placeholder="الرصيد السابق" value="0" />
-            <textarea id="supplierNotes" placeholder="ملاحظات..." rows="2"></textarea>
-            <button type="submit" class="btn-supplier btn-full">حفظ المجهّز سحابياً</button>
-          </form>
-        </div>
+  <div class="container">
+    
+    <div id="cloudStatus" style="color: #4a5568;">🔄 جاري الاتصال بقاعدة البيانات السحابية...</div>
+
+    <div class="stats-bar">
+      <div class="stat-card suppliers-debt">
+        <h3>إجمالي ديون المجهّزين (عليك)</h3>
+        <div class="value" id="statTotalSupplierDebts" style="color: var(--supplier-color);">0 د.ع</div>
       </div>
-      <div>
-        <div class="card">
-          <h2 style="color: var(--supplier-color);">قائمة المجهّجين والأرصدة</h2>
-          <input type="text" id="searchSupplier" placeholder="🔍 ابحث عن مجهّز..." />
-          <div class="table-wrapper">
-            <table id="suppliersTable">
-              <thead><tr><th>#</th><th>اسم المجهّز</th><th>الهاتف</th><th>الرصيد الحالي</th><th>الإجراء</th></tr></thead>
-              <tbody></tbody>
-            </table>
+      <div class="stat-card customers-debt">
+        <h3>إجمالي ديون الزبائن (لك)</h3>
+        <div class="value" id="statTotalCustomerDebts" style="color: var(--customer-color);">0 د.ع</div>
+      </div>
+      <div class="stat-card stock-val">
+        <h3>إجمالي القيمة المالية للمخزن</h3>
+        <div class="value" id="statTotalStockValue" style="color: var(--stock-color);">0 د.ع</div>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="suppliers">📦 إدارة المجهّجين</button>
+      <button class="tab-btn" data-tab="customers">👥 إدارة الزبائن</button>
+      <button class="tab-btn" data-tab="stock">🏪 إدارة المخزن والمواد</button>
+    </div>
+
+    <!-- قسم المجهّجين -->
+    <div id="suppliersSection" class="tab-content active">
+      <div class="flex-grid">
+        <div>
+          <div class="card">
+            <h2 style="color: var(--supplier-color);">إضافة مجهّز جديد</h2>
+            <form id="supplierForm">
+              <input type="text" id="supplierName" placeholder="اسم المجهّز" required />
+              <input type="text" id="supplierPhone" placeholder="رقم الهاتف" />
+              <input type="number" id="supplierOpeningBalance" placeholder="الرصيد السابق" value="0" />
+              <textarea id="supplierNotes" placeholder="ملاحظات..." rows="2"></textarea>
+              <button type="submit" class="btn-supplier btn-full">حفظ المجهّز سحابياً</button>
+            </form>
           </div>
         </div>
-      </div>
-    </div>
-  </div>
-
-  <div id="customersSection" class="tab-content">
-    <div class="flex-grid">
-      <div>
-        <div class="card">
-          <h2 style="color: var(--customer-color);">إضافة زبون جديد</h2>
-          <form id="customerForm">
-            <input type="text" id="customerName" placeholder="اسم الزبون" required />
-            <input type="text" id="customerPhone" placeholder="رقم الهاتف" />
-            <input type="number" id="customerOpeningBalance" placeholder="الرصيد السابق" value="0" />
-            <textarea id="customerNotes" placeholder="ملاحظات..." rows="2"></textarea>
-            <button type="submit" class="btn-customer btn-full">حفظ الزبون سحابياً</button>
-          </form>
-        </div>
-      </div>
-      <div>
-        <div class="card">
-          <h2 style="color: var(--customer-color);">قائمة الزبائن والأرصدة</h2>
-          <input type="text" id="searchCustomer" placeholder="🔍 ابحث عن زبون..." />
-          <div class="table-wrapper">
-            <table id="customersTable">
-              <thead><tr><th>#</th><th>اسم الزبون</th><th>الهاتف</th><th>الرصيد الحالي</th><th>الإجراء</th></tr></thead>
-              <tbody></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div id="stockSection" class="tab-content">
-    <div class="flex-grid">
-      <div>
-        <div class="card">
-          <h2 style="color: var(--stock-color);">إضافة مادة جديدة للمخزن</h2>
-          <form id="stockForm">
-            <input type="text" id="itemName" placeholder="اسم المادة" required />
-            <input type="number" id="itemQty" placeholder="الكمية المتوفرة الحالية" required min="0" />
-            <input type="number" id="itemMinQty" placeholder="حد التنبيه الأدنى للكمية" value="5" min="0" />
-            <input type="number" id="itemBuyPrice" placeholder="سعر الشراء (دينار)" required min="0" />
-            <input type="number" id="itemSellPrice" placeholder="سعر البيع (دينار)" required min="0" />
-            <button type="submit" class="btn-stock btn-full">إضافة المادة للمخزن سحابياً</button>
-          </form>
-        </div>
-      </div>
-      <div>
-        <div class="card">
-          <h2 style="color: var(--stock-color);">جرد المخزن الفوري</h2>
-          <input type="text" id="searchStock" placeholder="🔍 ابحث عن مادة في المخزن..." />
-          <div class="table-wrapper">
-            <table id="stockTable">
-              <thead><tr><th>#</th><th>اسم المادة</th><th>الكمية</th><th>سعر الشراء</th><th>سعر البيع</th><th>إجمالي القيمة</th><th>إجراء</th></tr></thead>
-              <tbody></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="card" id="accountingCore" style="margin-top: 20px;">
-    <h2>تفاصيل كشف الحساب والعمليات الماليّة المزامنة</h2>
-    <div id="activePersonInfo" class="card" style="background: #edf2f7; box-shadow: none;">
-      الرجاء اختيار (مجهّز أو زبون) من الجداول أعلاه لبدء العمل الحسابي.
-    </div>
-
-    <div class="flex-grid" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));">
-      <div>
-        <h3>تسجيل حركة / فاتورة جديدة</h3>
-        <form id="mainTransactionForm">
-          <label>نوع العملية</label>
-          <select id="txType" required>
-            <option value="plus">شراء آجل / بيع آجل (+) زيادة الدين</option>
-            <option value="minus">تسديد نقدي / خصم / مرجع (-) إنقاص الدين</option>
-          </select>
-
-          <div class="invoice-builder">
-            <strong>🧮 حاسبة الفاتورة الذكية من المخزن</strong>
-            <div id="invoiceItemsContainer">
-              <div class="invoice-item-row">
-                <select class="item-select" style="flex:2;" onchange="onItemSelectChange(this)">
-                  <option value="">-- اختر مادة من المخزن --</option>
-                </select>
-                <input type="number" placeholder="الكمية" style="flex:1;" class="item-qty">
-                <input type="number" placeholder="السعر" style="flex:1.5;" class="item-price">
-              </div>
+        <div>
+          <div class="card">
+            <h2 style="color: var(--supplier-color);">قائمة المجهّجين والأرصدة</h2>
+            <input type="text" id="searchSupplier" placeholder="🔍 ابحث عن مجهّز..." />
+            <div class="table-wrapper">
+              <table id="suppliersTable">
+                <thead><tr><th>#</th><th>اسم المجهّز</th><th>الهاتف</th><th>الرصيد الحالي</th><th>الإجراء</th></tr></thead>
+                <tbody></tbody>
+              </table>
             </div>
-            <button type="button" id="addInvoiceItemBtn" style="padding: 4px 8px; font-size: 12px; background: #cbd5e0; margin-top:5px;">+ إضافة مادة للفاتورة</button>
           </div>
-
-          <label>المبلغ الإجمالي النهائي (دينار)</label>
-          <input type="number" id="txAmount" min="0" required placeholder="المبلغ الكلي" />
-
-          <label>ملاحظة البيان العامة</label>
-          <input type="text" id="txNote" placeholder="بيان الحركة أو الفاتورة..." />
-
-          <button type="submit" class="btn-primary btn-full">تسجيل وإرسال للسحابة وتحديث المخزن</button>
-        </form>
-      </div>
-
-      <div>
-        <h3>سجل الحركات المنفذة</h3>
-        <button type="button" id="printDocBtn" class="btn-primary btn-full" style="background:#4a5568;">🖨️ طباعة كشف الحساب التفصيلي</button>
-        <div class="table-wrapper" style="margin-top:15px;">
-          <table id="txTable">
-            <thead>
-              <tr><th>التاريخ</th><th>النوع</th><th>المبلغ</th><th>الرصيد</th><th>البيان والمواد</th><th>إجراء</th></tr>
-            </thead>
-            <tbody></tbody>
-          </table>
         </div>
       </div>
     </div>
-  </div>
 
-  <div class="backup-section">
-    <strong>💾 أدوات النسخ الاحتياطي اليدوي الشامل:</strong>
-    <button type="button" id="exportBackupBtn" class="btn-supplier" style="background: #4a5568;">📥 تصدير نسخة احتياطية للكمبيوتر (JSON)</button>
-    <button type="button" id="importBackupBtn" class="btn-customer" style="background: #718096;">📤 استيراد نسخة احتياطية للسحابة</button>
-    <input type="file" id="backupFileInput" accept=".json" style="display: none;" />
-  </div>
+    <!-- قسم الزبائن -->
+    <div id="customersSection" class="tab-content">
+      <div class="flex-grid">
+        <div>
+          <div class="card">
+            <h2 style="color: var(--customer-color);">إضافة زبون جديد</h2>
+            <form id="customerForm">
+              <input type="text" id="customerName" placeholder="اسم الزبون" required />
+              <input type="text" id="customerPhone" placeholder="رقم الهاتف" />
+              <input type="number" id="customerOpeningBalance" placeholder="الرصيد السابق" value="0" />
+              <textarea id="customerNotes" placeholder="ملاحظات..." rows="2"></textarea>
+              <button type="submit" class="btn-customer btn-full">حفظ الزبون سحابياً</button>
+            </form>
+          </div>
+        </div>
+        <div>
+          <div class="card">
+            <h2 style="color: var(--customer-color);">قائمة الزبائن والأرصدة</h2>
+            <input type="text" id="searchCustomer" placeholder="🔍 ابحث عن زبون..." />
+            <div class="table-wrapper">
+              <table id="customersTable">
+                <thead><tr><th>#</th><th>اسم الزبون</th><th>الهاتف</th><th>الرصيد الحالي</th><th>الإجراء</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
+    <!-- قسم المخزن -->
+    <div id="stockSection" class="tab-content">
+      <div class="flex-grid">
+        <div>
+          <div class="card">
+            <h2 style="color: var(--stock-color);">إضافة مادة جديدة للمخزن</h2>
+            <form id="stockForm">
+              <input type="text" id="itemName" placeholder="اسم المادة" required />
+              <input type="number" id="itemQty" placeholder="الكمية المتوفرة الحالية" required min="0" />
+              <input type="number" id="itemMinQty" placeholder="حد التنبيه الأدنى للكمية" value="5" min="0" />
+              <input type="number" id="itemBuyPrice" placeholder="سعر الشراء (دينار)" required min="0" />
+              <input type="number" id="itemSellPrice" placeholder="سعر البيع (دينار)" required min="0" />
+              <button type="submit" class="btn-stock btn-full">إضافة المادة للمخزن سحابياً</button>
+            </form>
+          </div>
+        </div>
+        <div>
+          <div class="card">
+            <h2 style="color: var(--stock-color);">جرد المخزن الفوري</h2>
+            <input type="text" id="searchStock" placeholder="🔍 ابحث عن مادة في المخزن..." />
+            <div class="table-wrapper">
+              <table id="stockTable">
+                <thead><tr><th>#</th><th>اسم المادة</th><th>الكمية</th><th>سعر الشراء</th><th>سعر البيع</th><th>إجمالي القيمة</th><th>إجراء</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- كشف الحساب والعمليات الماليّة -->
+    <div class="card" id="accountingCore" style="margin-top: 20px;">
+      <h2>تفاصيل كشف الحساب والعمليات الماليّة المزامنة</h2>
+      <div id="activePersonInfo" class="card" style="background: #edf2f7; box-shadow: none;">
+        الرجاء اختيار (مجهّز أو زبون) من الجداول أعلاه لبدء العمل الحسابي.
+      </div>
+
+      <div class="flex-grid" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));">
+        <div>
+          <h3>تسجيل حركة / فاتورة جديدة</h3>
+          <form id="mainTransactionForm">
+            <label>نوع العملية</label>
+            <select id="txType" required>
+              <option value="plus">شراء آجل / بيع آجل (+) زيادة الدين</option>
+              <option value="minus">تسديد نقدي / خصم / مرجع (-) إنقاص الدين</option>
+            </select>
+
+            <div class="invoice-builder">
+              <strong>🧮 حاسبة الفاتورة الذكية من المخزن</strong>
+              <div id="invoiceItemsContainer">
+                <div class="invoice-item-row">
+                  <select class="item-select" style="flex:2;" onchange="onItemSelectChange(this)">
+                    <option value="">-- اختر مادة من المخزن --</option>
+                  </select>
+                  <input type="number" placeholder="الكمية" style="flex:1;" class="item-qty">
+                  <input type="number" placeholder="السعر" style="flex:1.5;" class="item-price">
+                </div>
+              </div>
+              <button type="button" id="addInvoiceItemBtn" style="padding: 4px 8px; font-size: 12px; background: #cbd5e0; margin-top:5px;">+ إضافة مادة للفاتورة</button>
+            </div>
+
+            <label>المبلغ الإجمالي النهائي (دينار)</label>
+            <input type="number" id="txAmount" min="0" required placeholder="المبلغ الكلي" />
+
+            <label>ملاحظة البيان العامة</label>
+            <input type="text" id="txNote" placeholder="بيان الحركة أو الفاتورة..." />
+
+            <button type="submit" class="btn-primary btn-full">تسجيل وإرسال للسحابة وتحديث المخزن</button>
+          </form>
+        </div>
+
+        <div>
+          <h3>سجل الحركات المنفذة</h3>
+          <button type="button" id="printDocBtn" class="btn-primary btn-full" style="background:#4a5568;">🖨️ طباعة كشف الحساب التفصيلي</button>
+          <div class="table-wrapper" style="margin-top:15px;">
+            <table id="txTable">
+              <thead>
+                <tr><th>التاريخ</th><th>النوع</th><th>المبلغ</th><th>الرصيد</th><th>البيان والمواد</th><th>إجراء</th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- قسم النسخ الاحتياطي اليدوي المستعاد -->
+    <div class="backup-section">
+      <strong>💾 أدوات النسخ الاحتياطي اليدوي الشامل:</strong>
+      <button type="button" id="exportBackupBtn" class="btn-supplier" style="background: #4a5568;">📥 تصدير نسخة احتياطية للكمبيوتر (JSON)</button>
+      <button type="button" id="importBackupBtn" class="btn-customer" style="background: #718096;">📤 استيراد نسخة احتياطية للسحابة</button>
+      <input type="file" id="backupFileInput" accept=".json" style="display: none;" />
+    </div>
+
+  </div>
 </div>
 
 <script>
@@ -378,41 +439,78 @@
     appId: "1:642364940251:web:6dd47f47d500ae9ed791fe"
   };
 
+  // التحكم ببيانات الدخول الافتراضية
+  const CONFIG_USER = "ali";
+  const CONFIG_PASS = "1234";
+
   let dbRef;
   let dbData = { suppliers: {}, customers: {}, transactions: {}, stock: {} };
   let activeMode = "suppliers";
   let activeId = null;
 
-  try {
-    firebase.initializeApp(firebaseConfig);
-    dbRef = firebase.database().ref("aldabbagh_store");
-    document.getElementById("cloudStatus").innerHTML = "🟢 متصل بالسحابة بنجاح ومزامن مع كل الأجهزة والمخزن!";
-    document.getElementById("cloudStatus").style.backgroundColor = "#c6f6d5";
-    document.getElementById("cloudStatus").style.color = "#22543d";
-  } catch (e) {
-    document.getElementById("cloudStatus").innerHTML = "🔴 خطأ في الاتصال: يرجى التحقق من الإعدادات.";
-    document.getElementById("cloudStatus").style.backgroundColor = "#fed7d7";
-    document.getElementById("cloudStatus").style.color = "#9b2c2c";
+  // التحقق مما إذا كان المستخدم مسجلاً دخوله مسبقاً لحفظ الجلسة عند التحديث
+  if (sessionStorage.getItem("isLoggedIn") === "true") {
+    showApp();
   }
 
-  if (dbRef) {
-    dbRef.on("value", (snapshot) => {
-      const val = snapshot.val();
-      if (val) {
-        dbData.suppliers = val.suppliers || {};
-        dbData.customers = val.customers || {};
-        dbData.transactions = val.transactions || {};
-        dbData.stock = val.stock || {};
-      } else {
-        dbData = { suppliers: {}, customers: {}, transactions: {}, stock: {} };
+  // معالجة فورم تسجيل الدخول
+  document.getElementById("loginForm").onsubmit = (e) => {
+    e.preventDefault();
+    const userInput = document.getElementById("loginUser").value.trim();
+    const passInput = document.getElementById("loginPass").value.trim();
+
+    if (userInput === CONFIG_USER && passInput === CONFIG_PASS) {
+      sessionStorage.setItem("isLoggedIn", "true");
+      showApp();
+    } else {
+      document.getElementById("loginError").textContent = "❌ اسم المستخدم أو كلمة المرور غير صحيحة!";
+    }
+  };
+
+  function showApp() {
+    document.getElementById("loginScreen").style.display = "none";
+    document.getElementById("mainApp").style.display = "block";
+    initFirebase();
+  }
+
+  function logout() {
+    sessionStorage.removeItem("isLoggedIn");
+    window.location.reload();
+  }
+
+  function initFirebase() {
+    if (dbRef) return; // تم التهيئة مسبقاً
+    try {
+      if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
       }
-      renderStats();
-      renderTables();
-      renderActiveInfo();
-      renderTxTable();
-      renderStockTable();
-      updateInvoiceSelects();
-    });
+      dbRef = firebase.database().ref("aldabbagh_store");
+      document.getElementById("cloudStatus").innerHTML = "🟢 متصل بالسحابة بنجاح ومزامن مع كل الأجهزة والمخزن!";
+      document.getElementById("cloudStatus").style.backgroundColor = "#c6f6d5";
+      document.getElementById("cloudStatus").style.color = "#22543d";
+
+      dbRef.on("value", (snapshot) => {
+        const val = snapshot.val();
+        if (val) {
+          dbData.suppliers = val.suppliers || {};
+          dbData.customers = val.customers || {};
+          dbData.transactions = val.transactions || {};
+          dbData.stock = val.stock || {};
+        } else {
+          dbData = { suppliers: {}, customers: {}, transactions: {}, stock: {} };
+        }
+        renderStats();
+        renderTables();
+        renderActiveInfo();
+        renderTxTable();
+        renderStockTable();
+        updateInvoiceSelects();
+      });
+    } catch (e) {
+      document.getElementById("cloudStatus").innerHTML = "🔴 خطأ في الاتصال السحابي.";
+      document.getElementById("cloudStatus").style.backgroundColor = "#fed7d7";
+      document.getElementById("cloudStatus").style.color = "#9b2c2c";
+    }
   }
 
   function getSuppliersList() { return Object.keys(dbData.suppliers).map(k => ({id: k, ...dbData.suppliers[k]})); }
@@ -449,7 +547,6 @@
       let tr = document.createElement("tr"); if(activeId === x.id) tr.className = "selected-row";
       tr.style.cursor = "pointer";
       
-      // النقر على السطر يحدد المجهز، والنقر على الأزرار لا يتداخل معه
       tr.onclick = (e) => {
         if(e.target.tagName === "BUTTON") return;
         activeId = x.id; activeMode = "suppliers"; renderTables(); renderActiveInfo(); renderTxTable();
@@ -493,7 +590,6 @@
     });
   }
 
-  // ميزة تعديل بيانات المجهز أو العميل الأساسية (الاسم والرصيد السابق)
   function editPersonPrompt(id, path) {
     let currentData = dbData[path][id];
     if (!currentData) return;
@@ -509,12 +605,11 @@
         name: newName,
         openingBalance: parseFloat(newBalance) || 0
       }).then(() => {
-        alert("🟢 تم تعديل اسم الحساب والمبلغ السابق بنجاح!");
+        alert("🟢 تم تعديل حساب المجهّز والملغ بنجاح!");
       });
     }
   }
 
-  // حذف المجهز أو الزبون بالكامل
   function deletePerson(id, path) {
     if (confirm("هل أنت متأكد من حذف هذا الحساب نهائياً من السحابة؟ سيمسح الحساب بالكامل.")) {
       if (dbRef) {
