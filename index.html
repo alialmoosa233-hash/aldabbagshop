@@ -5,6 +5,7 @@
   <title>نظام المبيعات والمخزن السحابي - محل الدباغ</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+  <!-- تضمين مكتبات Firebase السحابية من جوجل -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
@@ -117,21 +118,23 @@
     .flex-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px; }
     .selected-row { font-weight: bold; background-color: #ebf8ff; }
 
-    /* تصميم شاشة الـ POS الجديدة */
+    /* تصميم شاشة الـ POS ومحرك البحث السريع */
     .pos-layout { display: grid; grid-template-columns: 1fr 1.2fr; gap: 20px; }
     @media (max-width: 900px) { .pos-layout { grid-template-columns: 1fr; } }
     
-    .pos-search-results {
-      max-height: 250px; overflow-y: auto; background: white;
+    .pos-search-results, .purchase-search-results {
+      max-height: 200px; overflow-y: auto; background: white;
       border: 1px solid var(--border-color); border-radius: 6px; margin-top: -10px; margin-bottom: 15px;
+      position: absolute; width: calc(100% - 40px); z-index: 10; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }
-    .pos-search-item {
+    .pos-search-item, .purchase-search-item {
       padding: 10px; border-bottom: 1px solid var(--border-color); cursor: pointer;
       display: flex; justify-content: space-between; align-items: center;
     }
-    .pos-search-item:hover { background: #edf2f7; }
+    .pos-search-item:hover, .purchase-search-item:hover { background: #edf2f7; }
     
     .pos-cart-table th { background: var(--sales-color); color: white; }
+    .purchase-cart-table th { background: #dd6b20; color: white; }
     
     .badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
     .badge-plus { background: #e2f0fe; color: #2b6cb0; }
@@ -142,6 +145,17 @@
     .backup-section { background: #edf2f7; padding: 15px; border-radius: 8px; margin-top: 25px; display: flex; gap: 15px; align-items: center; justify-content: center; border: 1px solid #cbd5e0; }
     .action-btn { padding: 3px 8px; font-size: 11px; margin: 2px; border-radius: 4px; }
 
+    /* تصميم النافذة المنبثقة لفاتورة المشتريات المتقدمة */
+    .modal {
+      display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;
+    }
+    .modal-content {
+      background: white; padding: 25px; border-radius: 12px; width: 90%; max-width: 850px;
+      max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.2); position: relative;
+    }
+    .close-modal { position: absolute; left: 20px; top: 20px; font-size: 24px; cursor: pointer; color: #718096; }
+
     @media print {
       body * { visibility: hidden; }
       .print-window, .print-window * { visibility: visible; }
@@ -151,6 +165,7 @@
 </head>
 <body>
 
+<!-- شاشة تسجيل الدخول -->
 <div id="loginScreen">
   <div class="login-box">
     <h2>🔐 تسجيل دخول النظام</h2>
@@ -163,6 +178,7 @@
   </div>
 </div>
 
+<!-- واجهة التطبيق الرئيسية المحمية -->
 <div id="mainApp">
   <header>
     نظام الحسابات الذكي والمبيعات السحابية - محل الدباغ
@@ -194,9 +210,10 @@
       <button class="tab-btn" data-tab="suppliers">📦 ديون وحسابات المجهّجين</button>
     </div>
 
+    <!-- شاشة المبيعات الفورية (POS) -->
     <div id="posSection" class="tab-content active">
       <div class="pos-layout">
-        <div class="card">
+        <div class="card" style="position: relative;">
           <h2 style="color: var(--sales-color);">🔍 اختيار المواد والبحث السريع</h2>
           <input type="text" id="posSearchInput" placeholder="اكتب اسم المادة للبحث السريع وإضافتها للفاتورة..." autocomplete="off"/>
           <div id="posSearchResults" class="pos-search-results" style="display:none;"></div>
@@ -257,6 +274,7 @@
       </div>
     </div>
 
+    <!-- قسم المخزن -->
     <div id="stockSection" class="tab-content">
       <div class="flex-grid">
         <div>
@@ -287,6 +305,7 @@
       </div>
     </div>
 
+    <!-- قسم الزبائن -->
     <div id="customersSection" class="tab-content">
       <div class="flex-grid">
         <div>
@@ -330,6 +349,7 @@
       </div>
     </div>
 
+    <!-- قسم المجهّجين والمشتريات -->
     <div id="suppliersSection" class="tab-content">
       <div class="flex-grid">
         <div>
@@ -363,7 +383,7 @@
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
           <button type="button" id="printSupplierBtn" class="btn-primary">🖨️ طباعة كشف حساب المجهّز</button>
           <div style="display:flex; gap:10px;">
-            <button type="button" class="btn-stock" style="background:#dd6b20;" onclick="addSupplierInvoicePrompt()">📥 تسجيل فاتورة مشتريات (مخزن + دين)</button>
+            <button type="button" class="btn-stock" style="background:#dd6b20;" onclick="openPurchaseModal()">📥 تسجيل قائمة مشتريات (فاتورة مجهّز كاملة)</button>
             <button type="button" class="btn-danger" style="background:#718096;" onclick="addManualTxPrompt('supplier')">➕ تسجيل وصل تسديد يدوياً للمجهز</button>
           </div>
         </div>
@@ -376,6 +396,49 @@
       </div>
     </div>
 
+    <!-- نافذة منبثقة احترافية: فاتورة شراء مجهّز جديدة -->
+    <div id="purchaseModal" class="modal">
+      <div class="modal-content">
+        <span class="close-modal" onclick="closePurchaseModal()">&times;</span>
+        <h2 style="color: var(--stock-color); margin-bottom:20px;">📥 إنشاء قائمة فاتورة مشتريات واردة جديدة</h2>
+        <p style="font-weight: bold; font-size:15px;" id="purchaseModalSupplierName"></p>
+        
+        <div style="position: relative; margin-bottom:20px;">
+          <label><strong>ابحث عن المواد المشتراة لإضافتها للقائمة:</strong></label>
+          <input type="text" id="purchaseSearchInput" placeholder="اكتب اسم المادة المخزنية للبحث والإضافة..." autocomplete="off"/>
+          <div id="purchaseSearchResults" class="purchase-search-results" style="display:none;"></div>
+        </div>
+
+        <h3>📦 المواد المدرجة في قائمة الشراء الحالية</h3>
+        <div class="table-wrapper">
+          <table class="purchase-cart-table" id="purchaseCartTable">
+            <thead>
+              <tr><th>اسم المادة</th><th>الكمية المشتراة</th><th>سعر شراء القطعة (د.ع)</th><th>الإجمالي</th><th>إجراء</th></tr>
+            </thead>
+            <tbody>
+              <tr><td colspan="5" style="color:#718096; padding:20px;">القائمة فارغة، ابحث عن مادة لإضافتها وتعديل تفاصيلها</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div style="background: #edf2f7; padding: 15px; border-radius: 8px; margin-top: 20px; display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <span style="font-size:18px; font-weight:bold; color:var(--supplier-color);">الصافي الإجمالي للقائمة:</span>
+            <span id="purchaseFinalTotal" style="font-size:22px; font-weight:bold; margin-right:10px; color:var(--supplier-color);">0</span> <span style="font-weight:bold;">د.ع</span>
+          </div>
+          <div style="width: 50%;">
+            <input type="text" id="purchaseInvoiceNote" placeholder="ملاحظات أو بيان الفاتورة (مثال: قائمة رقم 104)" style="margin:0;"/>
+          </div>
+        </div>
+
+        <div style="margin-top:20px; display:flex; gap:10px; justify-content:flex-end;">
+          <button type="button" class="btn-danger" style="background:#718096;" onclick="closePurchaseModal()">إلغاء</button>
+          <button type="button" class="btn-supplier" style="padding:10px 30px;" onclick="submitPurchaseInvoice()">💾 اعتماد وحفظ القائمة (مخزن + حساب المجهز)</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- أدوات النسخ الاحتياطي -->
     <div class="backup-section">
       <strong>💾 أدوات النسخ الاحتياطي اليدوي الشامل:</strong>
       <button type="button" id="exportBackupBtn" class="btn-supplier" style="background: #4a5568;">📥 تصدير نسخة احتياطية للكمبيوتر (JSON)</button>
@@ -403,6 +466,7 @@
   let dbRef;
   let dbData = { suppliers: {}, customers: {}, transactions: {}, stock: {} };
   let posCart = []; 
+  let purchaseCart = []; // مصفوفة سلة المشتريات الجديدة المفتوحة
   let activeId = null; 
   let activeMode = ""; 
 
@@ -483,6 +547,7 @@
     document.getElementById("statTotalStockValue").textContent = stTotal.toLocaleString() + " د.ع";
   }
 
+  // --- شاشة البيع الفوري POS ---
   document.getElementById("posSearchInput").oninput = function() {
     let query = this.value.trim();
     let resultsDiv = document.getElementById("posSearchResults");
@@ -662,8 +727,7 @@
     if(!dbRef) { alert("⚠️ تعذر الحفظ، يرجى التأكد من أن النظام متصل بالإنترنت حالياً."); return; }
 
     if(payType === "credit") {
-      let newTxRef = dbRef.child("transactions").push();
-      newTxRef.set({
+      dbRef.child("transactions").push().set({
         personId: customerId, type: "plus", amount: finalAmount,
         note: note, itemsStr: itemsNames.join(" - "), date: new Date().toISOString()
       });
@@ -678,76 +742,141 @@
     });
 
     printPosInvoice({
-      items: itemsArrayForPrint,
-      payType: payType,
-      customerId: customerId,
-      subtotal: subtotal,
-      discount: discount,
-      finalTotal: finalAmount,
-      note: note
+      items: itemsArrayForPrint, payType: payType, customerId: customerId,
+      subtotal: subtotal, discount: discount, finalTotal: finalAmount, note: note
     });
 
     posCart = []; renderPosCart(); document.getElementById("posCheckoutForm").reset(); toggleCustomerSelect();
   };
 
-  // دالة المشتريات وإدخال فواتير المجهّزين الشاملة للمخزن والدين
-  function addSupplierInvoicePrompt() {
-    if (!activeId) { alert("رجاءً اختر مجهزاً أولاً من القائمة الجانبية."); return; }
 
-    let stockList = getStockList();
-    if (stockList.length === 0) {
-      alert("❌ المخزن فارغ! يرجى إضافة المواد أولاً في قسم المخزن حتى تتمكن من الشراء عليها.");
+  // --- 🌟 شاشة الفاتورة ونظام المشتريات المطور والجديد 🌟 ---
+  function openPurchaseModal() {
+    if (!activeId) { alert("رجاءً اختر مجهزاً من القائمة الجانبية أولاً."); return; }
+    let p = dbData.suppliers[activeId];
+    document.getElementById("purchaseModalSupplierName").textContent = `المجهّز الحالي: ${p.name}`;
+    purchaseCart = []; 
+    renderPurchaseCart();
+    document.getElementById("purchaseInvoiceNote").value = "";
+    document.getElementById("purchaseModal").style.display = "flex";
+  }
+
+  function closePurchaseModal() {
+    document.getElementById("purchaseModal").style.display = "none";
+  }
+
+  document.getElementById("purchaseSearchInput").oninput = function() {
+    let query = this.value.trim();
+    let resultsDiv = document.getElementById("purchaseSearchResults");
+    if(!query) { resultsDiv.style.display = "none"; return; }
+    
+    let matches = getStockList().filter(x => x.name.toLowerCase().includes(query.toLowerCase()));
+    if(matches.length === 0) { resultsDiv.innerHTML = "<div class='purchase-search-item'>لا توجد مواد مخزنية تطابق البحث</div>"; resultsDiv.style.display = "block"; return; }
+    
+    resultsDiv.innerHTML = "";
+    matches.forEach(item => {
+      let div = document.createElement("div");
+      div.className = "purchase-search-item";
+      div.innerHTML = `<span><strong>${item.name}</strong> (المخزن الحالي: ${item.qty})</span> <span style="color:var(--supplier-color); font-weight:bold;">آخر شراء: ${parseFloat(item.buyPrice).toLocaleString()} د.ع</span>`;
+      div.onclick = () => { addProductToPurchaseCart(item); resultsDiv.style.display = "none"; document.getElementById("purchaseSearchInput").value = ""; };
+      resultsDiv.appendChild(div);
+    });
+    resultsDiv.style.display = "block";
+  };
+
+  function addProductToPurchaseCart(item) {
+    let existing = purchaseCart.find(x => x.id === item.id);
+    if(existing) {
+      existing.qtyBought++;
+    } else {
+      purchaseCart.push({ id: item.id, name: item.name, buyPrice: item.buyPrice, qtyBought: 1 });
+    }
+    renderPurchaseCart();
+  }
+
+  function updatePurchaseCartRow(id, field, value) {
+    let item = purchaseCart.find(x => x.id === id);
+    if(!item) return;
+    if(field === 'qty') item.qtyBought = parseFloat(value) || 0;
+    if(field === 'price') item.buyPrice = parseFloat(value) || 0;
+    renderPurchaseCart();
+  }
+
+  function removePurchaseCartItem(id) {
+    purchaseCart = purchaseCart.filter(x => x.id !== id);
+    renderPurchaseCart();
+  }
+
+  function renderPurchaseCart() {
+    let tbody = document.querySelector("#purchaseCartTable tbody");
+    tbody.innerHTML = "";
+    if(purchaseCart.length === 0) {
+      tbody.innerHTML = "<tr><td colspan='5' style='color:#718096; padding:20px;'>القائمة فارغة، ابحث عن مادة لإضافتها وتعديل تفاصيلها</td></tr>";
+      document.getElementById("purchaseFinalTotal").textContent = "0";
       return;
     }
+    
+    let finalTotal = 0;
+    purchaseCart.forEach(x => {
+      let tr = document.createElement("tr");
+      let totalRowPrice = x.qtyBought * x.buyPrice;
+      finalTotal += totalRowPrice;
+      tr.innerHTML = `
+        <td style="text-align:right;"><strong>${x.name}</strong></td>
+        <td><input type="number" value="${x.qtyBought}" min="0.1" step="any" style="width:100px; margin:0; text-align:center;" oninput="updatePurchaseCartRow('${x.id}', 'qty', this.value)"/></td>
+        <td><input type="number" value="${x.buyPrice}" min="0" style="width:150px; margin:0; text-align:center;" oninput="updatePurchaseCartRow('${x.id}', 'price', this.value)"/></td>
+        <td><span style="font-weight:bold;">${totalRowPrice.toLocaleString()}</span> د.ع</td>
+        <td><button type="button" class="btn-danger" style="padding:2px 8px; font-size:12px;" onclick="removePurchaseCartItem('${x.id}')">❌</button></td>
+      `;
+      tbody.appendChild(tr);
+    });
+    document.getElementById("purchaseFinalTotal").textContent = finalTotal.toLocaleString();
+  }
 
-    let menuText = "اختر رقم المادة المراد شراؤها من المجهز لتحديث كمياتها وسعرها:\n";
-    stockList.forEach((item, index) => {
-      menuText += `${index + 1} - ${item.name} (المتوفر حالياً بالمخزن: ${item.qty})\n`;
+  function submitPurchaseInvoice() {
+    if(purchaseCart.length === 0) { alert("❌ القائمة فارغة! لا توجد مواد لحفظها."); return; }
+    if(!dbRef || !activeId) return;
+
+    let finalInvoiceAmount = 0;
+    let itemsDescriptionList = [];
+
+    purchaseCart.forEach(x => {
+      finalInvoiceAmount += (x.qtyBought * x.buyPrice);
+      itemsDescriptionList.push(`${x.name} (${x.qtyBought} قطع)`);
     });
 
-    let choice = prompt(menuText);
-    if (choice === null) return;
-    let idx = parseInt(choice) - 1;
+    let customNote = document.getElementById("purchaseInvoiceNote").value.trim();
+    let note = `فاتورة مشتريات مجهّز ${customNote ? '['+customNote+']' : ''}: شراء ` + itemsDescriptionList.join(" - ");
 
-    if (isNaN(idx) || idx < 0 || idx >= stockList.length) {
-      alert("❌ اختيار رقمي غير صحيح!");
-      return;
-    }
-
-    let selectedItem = stockList[idx];
-
-    let qtyBought = prompt(`كم الكمية المشتراة والواردة من [${selectedItem.name}] لتضاف للمخزن؟`, "10");
-    if (!qtyBought || isNaN(qtyBought) || parseFloat(qtyBought) <= 0) return;
-    qtyBought = parseFloat(qtyBought);
-
-    let newBuyPrice = prompt(`أدخل سعر شراء القطعة الواحدة الجديدة من المجهز (بالدينار):`, selectedItem.buyPrice);
-    if (!newBuyPrice || isNaN(newBuyPrice) || parseFloat(newBuyPrice) <= 0) return;
-    newBuyPrice = parseFloat(newBuyPrice);
-
-    let totalInvoiceAmount = qtyBought * newBuyPrice;
-    let note = `فاتورة مشتريات مجهز: شراء (${qtyBought}) قطع من [${selectedItem.name}] بسعر قطعة (${newBuyPrice.toLocaleString()} د.ع)`;
-
-    if (confirm(`هل تريد اعتماد وحفظ الفاتورة؟\nالمادة: ${selectedItem.name}\nإجمالي القيمة: ${totalInvoiceAmount.toLocaleString()} د.ع\nسيتم زيادة الكمية للمخزن فوراً وزيادة حساب المجهز.`)) {
-      if (dbRef) {
-        let currentQtyInStock = parseFloat(selectedItem.qty || 0);
-        dbRef.child("stock").child(selectedItem.id).update({
-          qty: currentQtyInStock + qtyBought,
-          buyPrice: newBuyPrice
-        });
-
-        dbRef.child("transactions").push().set({
-          personId: activeId,
-          type: "plus", 
-          amount: totalInvoiceAmount,
-          note: note,
-          date: new Date().toISOString()
-        });
+    if (confirm(`هل أنت متأكد من اعتماد وحفظ القائمة بالكامل؟\nإجمالي المبلغ المضاف لدين المجهّز: ${finalInvoiceAmount.toLocaleString()} د.ع\nسيتم تحديث كميات وأسعار الشراء لكافة المواد سحابياً الفاتورة.`)) {
+      
+      // 1. تحديث المواد في المخزن (زيادة الكمية وتحديث سعر الشراء)
+      purchaseCart.forEach(item => {
+        let currentStockItem = dbData.stock[item.id];
+        let currentQtyInStock = currentStockItem ? parseFloat(currentStockItem.qty || 0) : 0;
         
-        alert("✅ تم حفظ الفاتورة بنجاح وتحديث أرقام المخزن وحساب المجهّز سحابياً!");
-      }
+        dbRef.child("stock").child(item.id).update({
+          qty: currentQtyInStock + item.qtyBought,
+          buyPrice: item.buyPrice
+        });
+      });
+
+      // 2. تسجيل القيد المالي وزيادة رصيد الدين للمجهز
+      dbRef.child("transactions").push().set({
+        personId: activeId,
+        type: "plus", 
+        amount: finalInvoiceAmount,
+        note: note,
+        date: new Date().toISOString()
+      });
+
+      alert("✅ تم ترحيل وحفظ قائمة المشتريات، وتحديث جرد المخزن وحساب المجهّز سحابياً بنجاح!");
+      closePurchaseModal();
     }
   }
 
+
+  // --- المخزن والزبائن وجرد الأرصدة ---
   function renderStockTable() {
     const tbody = document.querySelector("#stockTable tbody"); tbody.innerHTML = "";
     let search = document.getElementById("searchStock").value;
@@ -812,7 +941,7 @@
         <td><span class="badge ${t.type==='plus'?'badge-plus':'badge-minus'}">${t.type==='plus'?'+ فاتورة مشتريات':'- وصل تسديد'}</span></td>
         <td>${parseFloat(t.amount).toLocaleString()}</td>
         <td><strong>${t.currentRunning.toLocaleString()} د.ع</strong></td>
-        <td style="text-align:right;">${t.note}</td>
+        <td style="text-align:right; font-size:13px; max-width:350px;">${t.note}</td>
         <td><button class="btn-danger" style="padding:2px 6px; font-size:11px;" onclick="deleteTx('${t.id}')">حذف</button></td>
       `;
       tbody.appendChild(tr);
