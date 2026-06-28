@@ -610,4 +610,98 @@
     getSuppliersList().filter(x => x.name.includes(sSearch)).forEach((x, i) => {
       let tr = document.createElement("tr"); if(activeId === x.id) tr.className = "selected-row";
       tr.style.cursor = "pointer"; tr.onclick = (e) => { if(e.target.tagName === "BUTTON") return; activeId = x.id; activeMode = "suppliers"; renderTables(); renderSupplierTxTable(); };
-      tr.innerHTML = `<td>${i+1}</td><td><strong>${x.
+      tr.innerHTML = `<td>${i+1}</td><td><strong>${x.name}</strong></td><td>${x.phone||'-'}</td><td style="color:var(--supplier-color); font-weight:bold;">${calcBalance(x.id,'supplier').toLocaleString()} د.ع</td><td><button class="action-btn btn-stock" onclick="editPersonPrompt('${x.id}', 'suppliers')">✏️ تعديل</button> <button class="action-btn btn-danger" onclick="deletePerson('${x.id}', 'suppliers')">🗑️ حذف</button></td>`;
+      sTbody.appendChild(tr);
+    });
+
+    const cTbody = document.querySelector("#customersTable tbody"); cTbody.innerHTML = "";
+    let cSearch = document.getElementById("searchCustomer").value;
+    getCustomersList().filter(x => x.name.includes(cSearch)).forEach((x, i) => {
+      let tr = document.createElement("tr"); if(activeId === x.id) tr.className = "selected-row";
+      tr.style.cursor = "pointer"; tr.onclick = (e) => { if(e.target.tagName === "BUTTON") return; activeId = x.id; activeMode = "customers"; renderTables(); renderCustomerTxTable(); };
+      tr.innerHTML = `<td>${i+1}</td><td><strong>${x.name}</strong></td><td>${x.phone||'-'}</td><td style="color:var(--customer-color); font-weight:bold;">${calcBalance(x.id,'customer').toLocaleString()} د.ع</td><td><button class="action-btn btn-stock" onclick="editPersonPrompt('${x.id}', 'customers')">✏️ تعديل</button> <button class="action-btn btn-danger" onclick="deletePerson('${x.id}', 'customers')">🗑️ حذف</button></td>`;
+      cTbody.appendChild(tr);
+    });
+  }
+
+  function renderCustomerTxTable() {
+    document.getElementById("customerTxArea").style.display = "block";
+    let p = dbData.customers[activeId]; if(!p) return;
+    document.getElementById("customerTxHeader").textContent = `📑 كشف الحساب والديون التفصيلي للزبون: ${p.name}`;
+    const tbody = document.querySelector("#customerTxTable tbody"); tbody.innerHTML = "";
+    let run = parseFloat(p.openingBalance || 0);
+    let txs = getTxList().filter(t => t.personId === activeId).sort((a,b) => new Date(a.date) - new Date(b.date));
+    let rows = []; txs.forEach(t => { if(t.type === "plus") run += parseFloat(t.amount); else run -= parseFloat(t.amount); rows.push({...t, currentRunning: run}); });
+    rows.reverse().forEach(t => {
+      let tr = document.createElement("tr");
+      tr.innerHTML = `<td>${new Date(t.date).toLocaleDateString("ar-IQ")}</td><td><span class="badge ${t.type==='plus'?'badge-plus':'badge-minus'}">${t.type==='plus'?'+ فاتورة دين':'- وصل تسديد'}</span></td><td>${parseFloat(t.amount).toLocaleString()}</td><td><strong>${t.currentRunning.toLocaleString()} د.ع</strong></td><td style='text-align:right;'>${t.note} ${t.itemsStr?`<br><span style="color:blue;">📦 ${t.itemsStr}</span>`:''}</td><td><button class="btn-danger" style="padding:2px 6px; font-size:11px;" onclick="deleteTx('${t.id}')">حذف</button></td>`;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function renderSupplierTxTable() {
+    document.getElementById("supplierTxArea").style.display = "block";
+    let p = dbData.suppliers[activeId]; if(!p) return;
+    document.getElementById("supplierTxHeader").textContent = `📑 كشف حساب وديون المجهّز: ${p.name}`;
+    const tbody = document.querySelector("#supplierTxTable tbody"); tbody.innerHTML = "";
+    let run = parseFloat(p.openingBalance || 0);
+    let txs = getTxList().filter(t => t.personId === activeId).sort((a,b) => new Date(a.date) - new Date(b.date));
+    let rows = []; txs.forEach(t => { if(t.type === "plus") run += parseFloat(t.amount); else run -= parseFloat(t.amount); rows.push({...t, currentRunning: run}); });
+    rows.reverse().forEach(t => {
+      let tr = document.createElement("tr");
+      tr.innerHTML = `<td>${new Date(t.date).toLocaleDateString("ar-IQ")}</td><td><span class="badge ${t.type==='plus'?'badge-plus':'badge-minus'}">${t.type==='plus'?'+ زيادة دين':'- وصل تسديد'}</span></td><td>${parseFloat(t.amount).toLocaleString()}</td><td><strong>${t.currentRunning.toLocaleString()} د.ع</strong></td><td>${t.note}</td><td><button class="btn-danger" style="padding:2px 6px; font-size:11px;" onclick="deleteTx('${t.id}')">حذف</button></td>`;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function addManualTxPrompt(type) {
+    let amount = prompt("أدخل قيمة المبلغ النقدي بالدينار العراقي:"); if(!amount || isNaN(amount)) return;
+    let note = prompt("أدخل بيان الوصل أو الملاحظة:", "وصل استلام/تسديد نقدي");
+    let txType = prompt("اكتب (plus) لزيادة الدين أو (minus) لتنزيل وتسديد الدين:", "minus");
+    if(txType !== "plus" && txType !== "minus") return;
+    if(dbRef && activeId) {
+      dbRef.child("transactions").push().set({ personId: activeId, type: txType, amount: parseFloat(amount), note: note, date: new Date().toISOString() });
+    }
+  }
+
+  function deleteTx(id) { if(confirm("حذف الحركة ماليّاً وسحابيّاً؟") && dbRef) dbRef.child("transactions").child(id).remove(); }
+  function editPersonPrompt(id, path) { let currentData = dbData[path][id]; if (!currentData) return; let newName = prompt("تعديل الاسم:", currentData.name); if (!newName) return; let newBalance = prompt("تعديل الرصيد السابق:", currentData.openingBalance || 0); if (newBalance !== null && dbRef) { dbRef.child(path).child(id).update({ name: newName, openingBalance: parseFloat(newBalance) || 0 }); } }
+  function deletePerson(id, path) { if (confirm("مسح الحساب نهائياً؟") && dbRef) { dbRef.child(path).child(id).remove().then(() => { if(activeId === id) activeId = null; }); } }
+
+  window.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll(".tab-btn").forEach(btn => {
+      btn.onclick = () => {
+        document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+        document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+        btn.classList.add("active"); document.getElementById(btn.dataset.tab + "Section").classList.add("active");
+        activeId = null; document.getElementById("customerTxArea").style.display = "none"; document.getElementById("supplierTxArea").style.display = "none";
+        renderTables();
+      };
+    });
+
+    document.getElementById("supplierForm").onsubmit = (e) => { e.preventDefault(); if(!dbRef) return; dbRef.child("suppliers").push().set({ name: document.getElementById("supplierName").value, phone: document.getElementById("supplierPhone").value, openingBalance: parseFloat(document.getElementById("supplierOpeningBalance").value)||0, notes: document.getElementById("supplierNotes").value }); e.target.reset(); };
+    document.getElementById("customerForm").onsubmit = (e) => { e.preventDefault(); if(!dbRef) return; dbRef.child("customers").push().set({ name: document.getElementById("customerName").value, phone: document.getElementById("customerPhone").value, openingBalance: parseFloat(document.getElementById("customerOpeningBalance").value)||0, notes: document.getElementById("customerNotes").value }); e.target.reset(); };
+    document.getElementById("stockForm").onsubmit = (e) => { e.preventDefault(); if(!dbRef) return; dbRef.child("stock").push().set({ name: document.getElementById("itemName").value, qty: parseFloat(document.getElementById("itemQty").value) || 0, minQty: parseFloat(document.getElementById("itemMinQty").value) || 5, buyPrice: parseFloat(document.getElementById("itemBuyPrice").value) || 0, sellPrice: parseFloat(document.getElementById("itemSellPrice").value) || 0 }); e.target.reset(); };
+
+    document.getElementById("searchSupplier").oninput = renderTables; document.getElementById("searchCustomer").oninput = renderTables; document.getElementById("searchStock").oninput = renderStockTable;
+
+    // أدوات استيراد وتصدير JSON
+    document.getElementById("exportBackupBtn").onclick = () => { const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dbData, null, 2)); const downloadAnchor = document.createElement('a'); downloadAnchor.setAttribute("href", dataStr); downloadAnchor.setAttribute("download", `aldabbagh_complete_backup_${new Date().toISOString().slice(0,10)}.json`); document.body.appendChild(downloadAnchor); downloadAnchor.click(); downloadAnchor.remove(); };
+    document.getElementById("importBackupBtn").onclick = () => { document.getElementById("backupFileInput").click(); };
+    document.getElementById("backupFileInput").onchange = (e) => { const file = e.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = function(evt) { try { const importedData = JSON.parse(evt.target.result); if (confirm("دمج النسخة الشاملة الآن سحابياً؟")) { if (dbRef) dbRef.update(importedData); } } catch (err) { alert("الملف غير صالح."); } }; reader.readAsText(file); };
+
+    // طباعة الكشوفات
+    document.getElementById("printCustomerBtn").onclick = () => { printReport('customers'); };
+    document.getElementById("printSupplierBtn").onclick = () => { printReport('suppliers'); };
+    
+    function printReport(path) {
+      let p = dbData[path][activeId]; let run = parseFloat(p.openingBalance || 0);
+      let txs = getTxList().filter(t => t.personId === activeId).sort((a,b) => new Date(a.date) - new Date(b.date));
+      let rows = `<tr><td>-</td><td>رصيد افتتاحي سابق</td><td>-</td><td>${run.toLocaleString()} د.ع</td><td>-</td></tr>`;
+      txs.forEach(t => { if(t.type === "plus") run += parseFloat(t.amount); else run -= parseFloat(t.amount); rows += `<tr><td>${new Date(t.date).toLocaleDateString("ar-IQ")}</td><td>${t.type==='plus'?'+ دين/فاتورة':'- تسديد نقدي'}</td><td>${parseFloat(t.amount).toLocaleString()}</td><td>${run.toLocaleString()} د.ع</td><td>${t.note} ${t.itemsStr?'['+t.itemsStr+']':''}</td></tr>`; });
+      let win = window.open("",""); win.document.write(`<html lang="ar" dir="rtl"><head><title>كشف حساب</title><style>body{font-family:sans-serif;padding:20px;direction:rtl;} table{width:100%;border-collapse:collapse;} th,td{border:1px solid #000;padding:8px;text-align:center;}</style></head><body><h2>محل الدباغ للحسابات والمخزن السحابي</h2><p>كشف حساب الاسم: <strong>${p.name}</strong> | هاتف: ${p.phone||'-'}</p><table><thead><tr><th>التاريخ</th><th>النوع</th><th>المبلغ</th><th>الرصيد المتبقي</th><th>التفاصيل والمواد المشتراة</th></tr></thead><tbody>${rows}</tbody></table></body></html>`); win.document.close(); win.print();
+    }
+  });
+</script>
+</body>
+</html>
