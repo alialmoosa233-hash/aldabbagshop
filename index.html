@@ -5,6 +5,7 @@
   <title>نظام المبيعات والمخزن السحابي - محل الدباغ</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+  <!-- تضمين مكتبات Firebase السحابية من جوجل -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
@@ -44,7 +45,7 @@
     .login-box h2 { margin-bottom: 20px; color: var(--primary-color); border-bottom: none; }
 
     /* النظام الرئيسي */
-    #mainApp { display: none; }
+    #mainApp { display: block; }
 
     header {
       background: linear-gradient(135deg, var(--sales-color), var(--customer-color), var(--stock-color));
@@ -155,15 +156,20 @@
     }
     .close-modal { position: absolute; left: 20px; top: 20px; font-size: 24px; cursor: pointer; color: #718096; }
 
+    /* إعدادات الطباعة لكشوفات الحسابات النظيفة */
     @media print {
       body * { visibility: hidden; }
-      .print-window, .print-window * { visibility: visible; }
-      .print-window { position: absolute; left: 0; top: 0; width: 100%; }
+      .print-area, .print-area * { visibility: visible; }
+      .print-area { position: absolute; left: 0; top: 0; width: 100%; background: white; padding: 20px; }
+      .print-area button, .print-area .btn-danger, .print-area h2::after { display: none !important; }
+      table { width: 100% !important; min-width: 100% !important; }
+      th { background-color: #edf2f7 !important; -webkit-print-color-adjust: exact; }
     }
   </style>
 </head>
 <body>
 
+<!-- شاشة تسجيل الدخول -->
 <div id="loginScreen">
   <div class="login-box">
     <h2>🔐 تسجيل دخول النظام</h2>
@@ -176,6 +182,7 @@
   </div>
 </div>
 
+<!-- واجهة التطبيق الرئيسية المحمية -->
 <div id="mainApp">
   <header>
     نظام الحسابات الذكي والمبيعات السحابية - محل الدباغ
@@ -207,6 +214,7 @@
       <button class="tab-btn" data-tab="suppliers">📦 ديون وحسابات المجهّجين</button>
     </div>
 
+    <!-- شاشة المبيعات الفورية (POS) -->
     <div id="posSection" class="tab-content active">
       <div class="pos-layout">
         <div class="card" style="position: relative;">
@@ -219,7 +227,7 @@
             <div class="table-wrapper">
               <table class="pos-cart-table" id="posCartTable">
                 <thead>
-                  <tr><th>المادة</th><th>السعر</th><th>الكمية</th><th>الإجمالي</th><th>إجراء</th></tr>
+                  <tr><th>المادة</th><th>السعر</th><th>الكمية</th><th>إجمالي</th><th>إجراء</th></tr>
                 </thead>
                 <tbody>
                   <tr><td colspan="5" style="color:#718096;">السلة فارغة، ابحث عن مادة لإضافتها</td></tr>
@@ -270,6 +278,7 @@
       </div>
     </div>
 
+    <!-- قسم المخزن وجرد المواد وسجل الحركة -->
     <div id="stockSection" class="tab-content">
       <div class="flex-grid">
         <div>
@@ -325,6 +334,7 @@
       </div>
     </div>
 
+    <!-- قسم الزبائن -->
     <div id="customersSection" class="tab-content">
       <div class="flex-grid">
         <div>
@@ -353,21 +363,22 @@
         </div>
       </div>
       
-      <div class="card" id="customerTxArea" style="margin-top:20px; display:none;">
+      <div class="card print-area" id="customerTxArea" style="margin-top:20px; display:none;">
         <h2 id="customerTxHeader">كشف حساب الزبون</h2>
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-          <button type="button" id="printCustomerBtn" class="btn-primary">🖨️ طباعة كشف حساب الزبون</button>
+          <button type="button" class="btn-primary" onclick="window.print()">🖨️ طباعة كشف حساب الزبون</button>
           <button type="button" class="btn-danger" style="background:#718096;" onclick="addManualTxPrompt('customer')">➕ تسجيل دفعة سداد نقدي يدوية</button>
         </div>
         <div class="table-wrapper">
           <table id="customerTxTable">
-            <thead><tr><th>التاريخ</th><th>النوع</th><th>المبلغ</th><th>الرصيد المتبقي</th><th>البيان والمواد</th><th>إجراء</th></tr></thead>
+            <thead><tr><th>التاريخ</th><th>النوع</th><th>المبلغ</th><th>الرصيد المتبقي</th><th>البيان العام</th><th>إجراء</th></tr></thead>
             <tbody></tbody>
           </table>
         </div>
       </div>
     </div>
 
+    <!-- قسم المجهّجين والمشتريات -->
     <div id="suppliersSection" class="tab-content">
       <div class="flex-grid">
         <div>
@@ -396,10 +407,10 @@
         </div>
       </div>
 
-      <div class="card" id="supplierTxArea" style="margin-top:20px; display:none;">
+      <div class="card print-area" id="supplierTxArea" style="margin-top:20px; display:none;">
         <h2 id="supplierTxHeader">كشف حساب المجهّز</h2>
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-          <button type="button" id="printSupplierBtn" class="btn-primary">🖨️ طباعة كشف حساب المجهّز</button>
+          <button type="button" class="btn-primary" onclick="window.print()">🖨️ طباعة كشف حساب المجهّز</button>
           <div style="display:flex; gap:10px;">
             <button type="button" class="btn-stock" style="background:#dd6b20;" onclick="openPurchaseModal()">📥 تسجيل قائمة مشتريات (فاتورة مجهّز كاملة)</button>
             <button type="button" class="btn-danger" style="background:#718096;" onclick="addManualTxPrompt('supplier')">➕ تسجيل وصل تسديد يدوياً للمجهز</button>
@@ -407,13 +418,14 @@
         </div>
         <div class="table-wrapper">
           <table id="supplierTxTable">
-            <thead><tr><th>التاريخ</th><th>النوع</th><th>المبلغ</th><th>الرصيد</th><th>البيان والمواد</th><th>إجراء</th></tr></thead>
+            <thead><tr><th>التاريخ</th><th>النوع</th><th>المبلغ</th><th>الرصيد</th><th>البيان العام</th><th>إجراء</th></tr></thead>
             <tbody></tbody>
           </table>
         </div>
       </div>
     </div>
 
+    <!-- نافذة منبثقة احترافية: فاتورة شراء مجهّز جديدة -->
     <div id="purchaseModal" class="modal">
       <div class="modal-content">
         <span class="close-modal" onclick="closePurchaseModal()">&times;</span>
@@ -444,7 +456,7 @@
             <span id="purchaseFinalTotal" style="font-size:22px; font-weight:bold; margin-right:10px; color:var(--supplier-color);">0</span> <span style="font-weight:bold;">د.ع</span>
           </div>
           <div style="width: 50%;">
-            <input type="text" id="purchaseInvoiceNote" placeholder="ملاحظات أو بيان الفاتورة (مثال: قائمة رقم 104)" style="margin:0;"/>
+            <input type="text" id="purchaseInvoiceNote" placeholder="ملاحظات أو بيان الفاتورة العام (مثال: قائمة رقم 104)" style="margin:0;"/>
           </div>
         </div>
 
@@ -455,6 +467,7 @@
       </div>
     </div>
 
+    <!-- أدوات النسخ الاحتياطي -->
     <div class="backup-section">
       <strong>💾 أدوات النسخ الاحتياطي اليدوي الشامل:</strong>
       <button type="button" id="exportBackupBtn" class="btn-supplier" style="background: #4a5568;">📥 تصدير نسخة احتياطية للكمبيوتر (JSON)</button>
@@ -565,13 +578,12 @@
     document.getElementById("statTotalStockValue").textContent = stTotal.toLocaleString() + " د.ع";
   }
 
-  // دالة مساعدة لتسجيل حركة في سجل المخزن سحابياً
   function pushStockLog(itemName, logType, affectedQty, finalQty, note) {
     if (!dbRef) return;
     dbRef.child("stockLogs").push().set({
       date: new Date().toISOString(),
       itemName: itemName,
-      logType: logType, // 'وارد' ، 'صادر' ، 'تعديل يدوياً'
+      logType: logType,
       affectedQty: affectedQty,
       finalQty: finalQty,
       note: note
@@ -671,36 +683,32 @@
     
     if(payType === "credit" && !customerId) { alert("❌ يجب اختيار الزبون لترحيل الفاتورة الآجلة إلى حسابه!"); return; }
     
-    let subtotal = 0; let itemsNames = []; let itemsArrayForPrint = [];
+    let subtotal = 0; let itemsNames = [];
     posCart.forEach(x => { 
       subtotal += (x.cartQty * x.sellPrice); 
       itemsNames.push(`${x.name} (${x.cartQty}قطع)`);
-      itemsArrayForPrint.push({ name: x.name, qty: x.cartQty, price: x.sellPrice });
     });
     let discount = parseFloat(document.getElementById("posDiscount").value) || 0;
     let finalAmount = subtotal - discount; if(finalAmount < 0) finalAmount = 0;
-    let note = document.getElementById("posInvoiceNote").value || "فاتورة مبيعات نظام POS";
+    
+    // تم الفصل: الحسابات تحفظ البيان الأساسي والـ itemsStr يحمل التفاصيل (لكن لن يتم عرضه في الجدول)
+    let baseNote = document.getElementById("posInvoiceNote").value.trim() || "قائمة مبيعات POS";
 
     if(!dbRef) { alert("⚠️ تعذر الحفظ، يرجى التأكد من أن النظام متصل بالإنترنت حالياً."); return; }
 
     if(payType === "credit") {
       dbRef.child("transactions").push().set({
         personId: customerId, type: "plus", amount: finalAmount,
-        note: note, itemsStr: itemsNames.join(" - "), date: new Date().toISOString()
+        note: baseNote, itemsStr: itemsNames.join(" - "), date: new Date().toISOString()
       });
     }
 
-    // ترحيل المخزن وتوثيق الحركة التلقائية
     posCart.forEach(item => {
       let currentStockItem = dbData.stock[item.id];
       if(currentStockItem) {
         let oldQty = parseFloat(currentStockItem.qty || 0);
-        let newQty = oldQty - item.cartQty;
-        if(newQty < 0) newQty = 0;
-        
+        let newQty = oldQty - item.cartQty; if(newQty < 0) newQty = 0;
         dbRef.child("stock").child(item.id).update({ qty: newQty });
-        
-        // 📉 تسجيل في سجل حركات المخزن (صادر)
         let logNote = `مبيعات POS ${payType === 'cash' ? '[نقدي]' : '[آجل]'}`;
         pushStockLog(item.name, "صادر 📉", -item.cartQty, newQty, logNote);
       }
@@ -710,7 +718,7 @@
     posCart = []; renderPosCart(); document.getElementById("posCheckoutForm").reset(); toggleCustomerSelect();
   };
 
-  // --- شاشة الفاتورة ونظام المشتريات المطور والجديد ---
+  // --- شاشة الفاتورة ونظام المشتريات المطور ---
   function openPurchaseModal() {
     if (!activeId) { alert("رجاءً اختر مجهزاً من القائمة الجانبية أولاً."); return; }
     let p = dbData.suppliers[activeId];
@@ -796,32 +804,27 @@
     });
 
     let customNote = document.getElementById("purchaseInvoiceNote").value.trim();
-    let note = `فاتورة مشتريات مجهّز ${customNote ? '['+customNote+']' : ''}: شراء ` + itemsDescriptionList.join(" - ");
+    // البيان الرئيسي نظيف ومختصر، والتفاصيل تذهب لخانة فرعية منفصلة
+    let baseNote = customNote ? `فاتورة مشتريات [${customNote}]` : "فاتورة مشتريات مجهّز";
 
     if (confirm(`هل أنت متأكد من اعتماد وحفظ القائمة بالكامل؟\nإجمالي المبلغ: ${finalInvoiceAmount.toLocaleString()} د.ع`)) {
       let currentSupplierName = dbData.suppliers[activeId].name;
 
-      // 1. تحديث المخزن وتوثيق الحركة للوارد
       purchaseCart.forEach(item => {
         let currentStockItem = dbData.stock[item.id];
         let currentQtyInStock = currentStockItem ? parseFloat(currentStockItem.qty || 0) : 0;
         let newQty = currentQtyInStock + item.qtyBought;
         
-        dbRef.child("stock").child(item.id).update({
-          qty: newQty,
-          buyPrice: item.buyPrice
-        });
-
-        // 📈 تسجيل في سجل حركات المخزن (وارد)
+        dbRef.child("stock").child(item.id).update({ qty: newQty, buyPrice: item.buyPrice });
         pushStockLog(item.name, "وارد 📈", item.qtyBought, newQty, `شراء بموجب قائمة من المجهز: ${currentSupplierName}`);
       });
 
-      // 2. تسجيل القيد المالي
       dbRef.child("transactions").push().set({
-        personId: activeId, type: "plus", amount: finalInvoiceAmount, note: note, date: new Date().toISOString()
+        personId: activeId, type: "plus", amount: finalInvoiceAmount, 
+        note: baseNote, itemsStr: itemsDescriptionList.join(" - "), date: new Date().toISOString()
       });
 
-      alert("✅ تم ترحيل قائمة المشتريات، وتحديث المخزن وحساب المجهّز سحابياً بنجاح!");
+      alert("✅ تم ترحيل قائمة المشتريات بنجاح!");
       closePurchaseModal();
     }
   }
@@ -841,64 +844,39 @@
   function adjustStockPrompt(id, currentQty, name) { 
     let newVal = prompt(`أدخل الكمية الجديدة الكلية للمادة [${name}] مباشرة:`, currentQty); 
     if(newVal !== null && dbRef) { 
-      let targetQty = parseFloat(newVal) || 0;
-      let difference = targetQty - currentQty;
+      let targetQty = parseFloat(newVal) || 0; let difference = targetQty - currentQty;
       dbRef.child("stock").child(id).update({ qty: targetQty }); 
-      
-      // ⚙️ تسجيل في سجل حركات المخزن (تعديل يدوي)
       pushStockLog(name, "تعديل يدوي ⚙️", difference >= 0 ? `+${difference}` : difference, targetQty, "تعديل كمية مباشر من شاشة الجرد");
     } 
   }
   
   function deleteStockItem(id, name) { 
-    if(confirm(`هل أنت متأكد من حذف المادة [${name}] نهائياً من المخزن؟`) && dbRef) { 
+    if(confirm(`هل أنت متأكد من حذف المادة [${name}] نهائياً؟`) && dbRef) { 
       dbRef.child("stock").child(id).remove(); 
-      pushStockLog(name, "حذف مادة 🗑️", "كل الكمية", 0, "تم مسح كرت المادة بالكامل من جرد المخزن");
+      pushStockLog(name, "حذف مادة 🗑️", "كل الكمية", 0, "تم مسح كرت المادة بالكامل");
     } 
   }
 
-  // دالة بناء وعرض سجل حركات المخزن التفصيلي
   function renderStockLogsTable() {
-    const tbody = document.querySelector("#stockLogsTable tbody");
-    tbody.innerHTML = "";
+    const tbody = document.querySelector("#stockLogsTable tbody"); tbody.innerHTML = "";
     let search = document.getElementById("searchStockLog").value.trim().toLowerCase();
-    
-    let logs = getStockLogsList().sort((a, b) => new Date(b.date) - new Date(a.date)); // ترتيب من الأحدث للأقدم
-    
-    let filteredLogs = logs.filter(log => {
-      return log.itemName.toLowerCase().includes(search) || log.logType.toLowerCase().includes(search);
-    });
+    let logs = getStockLogsList().sort((a, b) => new Date(b.date) - new Date(a.date));
+    let filteredLogs = logs.filter(log => log.itemName.toLowerCase().includes(search) || log.logType.toLowerCase().includes(search));
 
     if(filteredLogs.length === 0) {
-      tbody.innerHTML = "<tr><td colspan='6' style='color:#718096; padding:15px;'>لا توجد حركات تطابق التصفية الحالية</td></tr>";
-      return;
+      tbody.innerHTML = "<tr><td colspan='6' style='color:#718096; padding:15px;'>لا توجد حركات تطابق التصفية الحالية</td></tr>"; return;
     }
-
     filteredLogs.forEach(log => {
-      let tr = document.createElement("tr");
-      let dateObj = new Date(log.date);
+      let tr = document.createElement("tr"); let dateObj = new Date(log.date);
       let formattedDate = dateObj.toLocaleDateString("ar-IQ") + " | " + dateObj.toLocaleTimeString("ar-IQ");
-      
-      let badgeClass = "badge-plus";
-      if(log.logType.includes("صادر")) badgeClass = "badge-alert";
-      if(log.logType.includes("تعديل")) badgeClass = "badge-minus";
-
-      tr.innerHTML = `
-        <td><span style="font-size:12px; color:#4a5568;">${formattedDate}</span></td>
-        <td><strong>${log.itemName}</strong></td>
-        <td><span class="badge ${badgeClass}">${log.logType}</span></td>
-        <td dir="ltr" style="font-weight:bold;">${log.affectedQty}</td>
-        <td style="font-weight:bold; color:var(--primary-color);">${log.finalQty}</td>
-        <td style="text-align:right; font-size:13px; color:#4a5568;">${log.note || '-'}</td>
-      `;
+      let badgeClass = log.logType.includes("صادر") ? "badge-alert" : (log.logType.includes("تعديل") ? "badge-minus" : "badge-plus");
+      tr.innerHTML = `<td><span style="font-size:12px; color:#4a5568;">${formattedDate}</span></td><td><strong>${log.itemName}</strong></td><td><span class="badge ${badgeClass}">${log.logType}</span></td><td dir="ltr" style="font-weight:bold;">${log.affectedQty}</td><td style="font-weight:bold; color:var(--primary-color);">${log.finalQty}</td><td style="text-align:right; font-size:13px; color:#4a5568;">${log.note || '-'}</td>`;
       tbody.appendChild(tr);
     });
   }
 
   function clearAllStockLogs() {
-    if(confirm("⚠️ تحذير: هل أنت متأكد من تفريغ وأرشفة سجل حركات المخزن بالكامل بشكل نهائي؟\n(لن تتأثر كميات المواد الحالية بالمخزن).")) {
-      if(dbRef) dbRef.child("stockLogs").remove();
-    }
+    if(confirm("⚠️ تحذير: هل أنت متأكد من تفريغ وأرشفة سجل حركات المخزن بالكامل؟")) { if(dbRef) dbRef.child("stockLogs").remove(); }
   }
 
   function renderTables() {
@@ -921,21 +899,30 @@
     });
   }
 
+  // تم التعديل هنا: كشف حساب الزبون يظهر البيان العام فقط بدون تفاصيل المواد
   function renderCustomerTxTable() {
     document.getElementById("customerTxArea").style.display = "block";
     let p = dbData.customers[activeId]; if(!p) return;
-    document.getElementById("customerTxHeader").textContent = `📑 كشف الحساب والديون التفصيلي للزبون: ${p.name}`;
+    document.getElementById("customerTxHeader").textContent = `📑 كشف حساب وديون الزبون: ${p.name}`;
     const tbody = document.querySelector("#customerTxTable tbody"); tbody.innerHTML = "";
     let run = parseFloat(p.openingBalance || 0);
     let txs = getTxList().filter(t => t.personId === activeId).sort((a,b) => new Date(a.date) - new Date(b.date));
     let rows = []; txs.forEach(t => { if(t.type === "plus") run += parseFloat(t.amount); else run -= parseFloat(t.amount); rows.push({...t, currentRunning: run}); });
     rows.reverse().forEach(t => {
       let tr = document.createElement("tr");
-      tr.innerHTML = `<td>${new Date(t.date).toLocaleDateString("ar-IQ")}</td><td><span class="badge ${t.type==='plus'?'badge-plus':'badge-minus'}">${t.type==='plus'?'+ فاتورة دين':'- وصل تسديد'}</span></td><td>${parseFloat(t.amount).toLocaleString()}</td><td><strong>${t.currentRunning.toLocaleString()} د.ع</strong></td><td style='text-align:right;'>${t.note} ${t.itemsStr?`<br><span style="color:blue;">📦 ${t.itemsStr}</span>`:''}</td><td><button class="btn-danger" style="padding:2px 6px; font-size:11px;" onclick="deleteTx('${t.id}')">حذف</button></td>`;
+      tr.innerHTML = `
+        <td>${new Date(t.date).toLocaleDateString("ar-IQ")}</td>
+        <td><span class="badge ${t.type==='plus'?'badge-plus':'badge-minus'}">${t.type==='plus'?'قائمة بيع آجل':'وصل تسديد'}</span></td>
+        <td>${parseFloat(t.amount).toLocaleString()}</td>
+        <td><strong>${t.currentRunning.toLocaleString()} د.ع</strong></td>
+        <td style='text-align:right;'>${t.note}</td>
+        <td><button class="btn-danger" style="padding:2px 6px; font-size:11px;" onclick="deleteTx('${t.id}')">حذف</button></td>
+      `;
       tbody.appendChild(tr);
     });
   }
 
+  // تم التعديل هنا: كشف حساب المجهز يظهر البيان العام (قائمة مشتريات / وصل تسديد) فقط، بدون إظهار تفاصيل المواد الطويلة
   function renderSupplierTxTable() {
     document.getElementById("supplierTxArea").style.display = "block";
     let p = dbData.suppliers[activeId]; if(!p) return;
@@ -946,15 +933,22 @@
     let rows = []; txs.forEach(t => { if(t.type === "plus") run += parseFloat(t.amount); else run -= parseFloat(t.amount); rows.push({...t, currentRunning: run}); });
     rows.reverse().forEach(t => {
       let tr = document.createElement("tr");
-      tr.innerHTML = `<td>${new Date(t.date).toLocaleDateString("ar-IQ")}</td><td><span class="badge ${t.type==='plus'?'badge-plus':'badge-minus'}">${t.type==='plus'?'+ فاتورة مشتريات':'- وصل تسديد'}</span></td><td>${parseFloat(t.amount).toLocaleString()}</td><td><strong>${t.currentRunning.toLocaleString()} د.ع</strong></td><td style="text-align:right; font-size:13px; max-width:350px;">${t.note}</td><td><button class="btn-danger" style="padding:2px 6px; font-size:11px;" onclick="deleteTx('${t.id}')">حذف</button></td>`;
+      tr.innerHTML = `
+        <td>${new Date(t.date).toLocaleDateString("ar-IQ")}</td>
+        <td><span class="badge ${t.type==='plus'?'badge-plus':'badge-minus'}">${t.type==='plus'?'قائمة مشتريات':'وصل تسديد'}</span></td>
+        <td>${parseFloat(t.amount).toLocaleString()}</td>
+        <td><strong>${t.currentRunning.toLocaleString()} د.ع</strong></td>
+        <td style="text-align:right; font-size:13px;">${t.note}</td>
+        <td><button class="btn-danger" style="padding:2px 6px; font-size:11px;" onclick="deleteTx('${t.id}')">حذف</button></td>
+      `;
       tbody.appendChild(tr);
     });
   }
 
   function addManualTxPrompt(type) {
     let amount = prompt("أدخل قيمة المبلغ النقدي بالدينار العراقي:"); if(!amount || isNaN(amount)) return;
-    let note = prompt("أدخل بيان الوصل أو الملاحظة:", "وصل استلام/تسديد نقدي يدوي");
-    let txType = prompt("اكتب (plus) لزيادة رصيد الحساب أو (minus) لتنزيل وتسديد الحساب مالياً:", "minus");
+    let note = prompt("أدخل بيان الوصل أو الملاحظة العامة:", type === 'supplier' ? "وصل تسديد نقدي" : "وصل استلام نقدي");
+    let txType = prompt("اكتب (plus) لزيادة رصيد الحساب المالي أو (minus) لتنزيل وتسديد الحساب:", "minus");
     if(txType !== "plus" && txType !== "minus") return;
     if(dbRef && activeId) { dbRef.child("transactions").push().set({ personId: activeId, type: txType, amount: parseFloat(amount), note: note, date: new Date().toISOString() }); }
   }
@@ -977,16 +971,13 @@
     document.getElementById("supplierForm").onsubmit = (e) => { e.preventDefault(); if(!dbRef) return; dbRef.child("suppliers").push().set({ name: document.getElementById("supplierName").value, phone: document.getElementById("supplierPhone").value, openingBalance: parseFloat(document.getElementById("supplierOpeningBalance").value)||0, notes: document.getElementById("supplierNotes").value }); e.target.reset(); };
     document.getElementById("customerForm").onsubmit = (e) => { e.preventDefault(); if(!dbRef) return; dbRef.child("customers").push().set({ name: document.getElementById("customerName").value, phone: document.getElementById("customerPhone").value, openingBalance: parseFloat(document.getElementById("customerOpeningBalance").value)||0, notes: document.getElementById("customerNotes").value }); e.target.reset(); };
     document.getElementById("stockForm").onsubmit = (e) => { e.preventDefault(); if(!dbRef) return; 
-      let name = document.getElementById("itemName").value;
-      let qty = parseFloat(document.getElementById("itemQty").value) || 0;
+      let name = document.getElementById("itemName").value; let qty = parseFloat(document.getElementById("itemQty").value) || 0;
       dbRef.child("stock").push().set({ name: name, qty: qty, minQty: parseFloat(document.getElementById("itemMinQty").value) || 5, buyPrice: parseFloat(document.getElementById("itemBuyPrice").value) || 0, sellPrice: parseFloat(document.getElementById("itemSellPrice").value) || 0 }); 
-      pushStockLog(name, "تأسيس مادة 🆕", qty, qty, "إدخال كرت مادة جديد بالكامل للمخزن");
-      e.target.reset(); 
+      pushStockLog(name, "تأسيس مادة 🆕", qty, qty, "إدخل كرت مادة جديد بالكامل"); e.target.reset(); 
     };
 
     document.getElementById("searchSupplier").oninput = renderTables; document.getElementById("searchCustomer").oninput = renderTables; 
-    document.getElementById("searchStock").oninput = renderStockTable;
-    document.getElementById("searchStockLog").oninput = renderStockLogsTable; // ربط بحث فلترة الحركات
+    document.getElementById("searchStock").oninput = renderStockTable; document.getElementById("searchStockLog").oninput = renderStockLogsTable;
 
     document.getElementById("exportBackupBtn").onclick = () => { const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dbData, null, 2)); const downloadAnchor = document.createElement('a'); downloadAnchor.setAttribute("href", dataStr); downloadAnchor.setAttribute("download", `aldabbagh_complete_backup_${new Date().toISOString().slice(0,10)}.json`); document.body.appendChild(downloadAnchor); downloadAnchor.click(); downloadAnchor.remove(); };
     document.getElementById("importBackupBtn").onclick = () => { document.getElementById("backupFileInput").click(); };
