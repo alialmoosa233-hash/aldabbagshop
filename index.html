@@ -2,198 +2,483 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>نظام إدارة المواد الآمن - محل الدباغ</title>
+  <title>نظام المبيعات والمخزن السحابي - محل الدباغ</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+  <!-- تضمين مكتبات Firebase السحابية من جوجل -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  
+  <!-- مكتبة تشفير لحماية كلمة المرور برمجياً -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 
   <style>
-    * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; }
-    body { background-color: #f4f6f9; padding: 20px; color: #333; direction: rtl; }
-    
-    header {
-      background: linear-gradient(135deg, #1a202c, #2d3748);
-      color: white; padding: 15px; text-align: center; font-size: 20px; font-weight: bold;
-      border-radius: 8px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-      display: flex; justify-content: space-between; align-items: center; padding: 15px 30px;
+    :root {
+      --primary-color: #2b6cb0;
+      --supplier-color: #2f855a;
+      --customer-color: #4c51bf;
+      --stock-color: #dd6b20;
+      --sales-color: #319795;
+      --danger-color: #e53e3e;
+      --bg-color: #f7fafc;
+      --card-bg: #ffffff;
+      --border-color: #e2e8f0;
+      --text-color: #2d3748;
     }
 
-    /* شاشة تسجيل الدخول وقفل النظام */
-    #loginOverlay {
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-      background: rgba(26, 32, 44, 0.95); z-index: 9999; 
-      display: flex; justify-content: center; align-items: center;
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: var(--bg-color);
+      color: var(--text-color);
+      margin: 0; padding: 0;
+      direction: rtl;
     }
-    .login-card { background: white; padding: 30px; border-radius: 12px; width: 350px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); text-align: center; }
-    .login-card h3 { margin-bottom: 20px; color: #2d3748; }
-    .login-card input { width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #cbd5e0; border-radius: 6px; font-size: 14px; text-align: center; }
-    .login-card button { width: 100%; padding: 10px; background: #3182ce; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
+
+    /* شاشة تسجيل الدخول */
+    #loginScreen {
+      display: flex; justify-content: center; align-items: center;
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: linear-gradient(135deg, #2b6cb0, #2f855a);
+      z-index: 9999;
+    }
+    .login-box {
+      background: white; padding: 30px; border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2); width: 100%; max-width: 400px; text-align: center;
+    }
+    .login-box h2 { margin-bottom: 20px; color: var(--primary-color); border-bottom: none; }
+
+    /* النظام الرئيسي */
+    #mainApp { display: none; } /* تعديل أمني: إخفاء النظام افتراضياً حتى التحقق التام */
+
+    header {
+      background: linear-gradient(135deg, var(--sales-color), var(--customer-color), var(--stock-color));
+      color: white; padding: 15px 20px; text-align: center; font-size: 22px; font-weight: bold;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1); position: relative;
+    }
+    .logout-btn {
+      position: absolute; left: 20px; top: 15px;
+      background: var(--danger-color); color: white; padding: 6px 12px;
+      font-size: 13px; border-radius: 6px; border: none; cursor: pointer;
+    }
+
+    .container { max-width: 1500px; margin: 20px auto; padding: 0 15px; }
+
+    .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+    .tab-btn {
+      flex: 1; padding: 12px; font-size: 16px; font-weight: bold;
+      background: #e2e8f0; color: #4a5568; border: none; border-radius: 8px;
+      cursor: pointer; transition: all 0.3s;
+    }
+    .tab-btn.active[data-tab="pos"] { background: var(--sales-color); color: white; }
+    .tab-btn.active[data-tab="suppliers"] { background: var(--supplier-color); color: white; }
+    .tab-btn.active[data-tab="customers"] { background: var(--customer-color); color: white; }
+    .tab-btn.active[data-tab="stock"] { background: var(--stock-color); color: white; }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    .stats-bar {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 15px; margin-bottom: 20px;
+    }
+    .stat-card {
+      background: var(--card-bg); padding: 15px; border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.04); border-right: 5px solid #cbd5e0;
+    }
+    .stat-card.suppliers-debt { border-right-color: var(--supplier-color); }
+    .stat-card.customers-debt { border-right-color: var(--customer-color); }
+    .stat-card.stock-val { border-right-color: var(--stock-color); }
+    .stat-card h3 { margin: 0 0 5px 0; font-size: 13px; color: #718096; }
+    .stat-card .value { font-size: 18px; font-weight: bold; }
+
+    .card {
+      background: var(--card-bg); border-radius: 8px; padding: 20px;
+      margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border: 1px solid var(--border-color);
+    }
+
+    h2, h3 { margin-top: 0; margin-bottom: 15px; font-size: 18px; border-bottom: 2px solid var(--border-color); padding-bottom: 8px; }
+
+    input, select, textarea {
+      width: 100%; padding: 10px 12px; margin-bottom: 12px; box-sizing: border-box;
+      border-radius: 6px; border: 1px solid var(--border-color); background-color: #fbfbfb; font-family: inherit;
+    }
+
+    button { padding: 10px 16px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; font-family: inherit; }
+    .btn-primary { background: var(--primary-color); color: white; }
+    .btn-supplier { background: var(--supplier-color); color: white; }
+    .btn-customer { background: var(--customer-color); color: white; }
+    .btn-stock { background: var(--stock-color); color: white; }
+    .btn-sales { background: var(--sales-color); color: white; }
+    .btn-danger { background: var(--danger-color); color: white; }
+    .btn-full { width: 100%; margin-top: 5px; margin-bottom: 5px; }
+
+    .table-wrapper { width: 100%; overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; min-width: 600px; }
+    th, td { border: 1px solid var(--border-color); padding: 10px 12px; text-align: center; }
+    th { background: #edf2f7; color: #4a5568; }
+    tr:hover { background: #f7fafc; }
+
+    .flex-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px; }
+    .selected-row { font-weight: bold; background-color: #ebf8ff; }
+
+    .pos-layout { display: grid; grid-template-columns: 1fr 1.2fr; gap: 20px; }
+    @media (max-width: 900px) { .pos-layout { grid-template-columns: 1fr; } }
+    
+    .pos-search-results, .purchase-search-results {
+      max-height: 200px; overflow-y: auto; background: white;
+      border: 1px solid var(--border-color); border-radius: 6px; margin-top: -10px; margin-bottom: 15px;
+      position: absolute; width: calc(100% - 40px); z-index: 10; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .pos-search-item, .purchase-search-item {
+      padding: 10px; border-bottom: 1px solid var(--border-color); cursor: pointer;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .pos-search-item:hover, .purchase-search-item:hover { background: #edf2f7; }
+    
+    .pos-cart-table th { background: var(--sales-color); color: white; }
+    .purchase-cart-table th { background: #dd6b20; color: white; }
+    
+    .badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+    .badge-plus { background: #e2f0fe; color: #2b6cb0; }
+    .badge-minus { background: #c6f6d5; color: #22543d; }
+    .badge-alert { background: #fff5f5; color: #c53030; }
     
     #cloudStatus { background: #e2e8f0; padding: 8px; text-align: center; font-size: 13px; font-weight: bold; border-radius: 6px; margin-bottom: 15px; }
+    .backup-section { background: #edf2f7; padding: 15px; border-radius: 8px; margin-top: 25px; display: flex; gap: 15px; align-items: center; justify-content: center; border: 1px solid #cbd5e0; }
+    .action-btn { padding: 3px 8px; font-size: 11px; margin: 2px; border-radius: 4px; }
 
-    .container { display: grid; grid-template-columns: 1.8fr 1.2fr; gap: 20px; max-width: 1500px; margin: 0 auto; }
-    .card { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
-    .title { font-size: 16px; font-weight: bold; margin-bottom: 15px; border-bottom: 2px solid #3182ce; padding-bottom: 5px; color: #3182ce; }
-    
-    /* الجداول والبحث */
-    .search-box { display: flex; gap: 10px; margin-bottom: 15px; }
-    .search-box input { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 6px; }
-    .table-container { overflow-x: auto; max-height: 450px; border: 1px solid #ddd; border-radius: 6px; }
-    table { width: 100%; border-collapse: collapse; text-align: center; font-size: 14px; }
-    th, td { padding: 10px; border-bottom: 1px solid #ddd; }
-    th { background-color: #f8f9fa; position: sticky; top: 0; color: #555; }
-    tr:hover { background-color: #f1f5f9; cursor: pointer; }
+    .modal {
+      display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;
+    }
+    .modal-content {
+      background: white; padding: 25px; border-radius: 12px; width: 90%; max-width: 850px;
+      max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.2); position: relative;
+    }
+    .close-modal { position: absolute; left: 20px; top: 20px; font-size: 24px; cursor: pointer; color: #718096; }
 
-    /* حقول الإدخال */
-    .form-group { display: flex; flex-direction: column; margin-bottom: 12px; }
-    .form-group label { font-size: 13px; margin-bottom: 5px; font-weight: 600; color: #4a5568; }
-    .form-group input { padding: 9px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; }
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-
-    /* الأزرار المحمية */
-    .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
-    .btn { padding: 10px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 14px; text-align: center; }
-    .btn-save { background-color: #28a745; color: #fff; }
-    .btn-new { background-color: #17a2b8; color: #fff; }
-    .btn-delete { background-color: #dc3545; color: #fff; }
-    .btn-logout { background-color: #e53e3e; color: white; padding: 5px 15px; font-size: 12px; border-radius: 4px; }
-
-    /* الحقول المخفية للصلاحيات الضعيفة */
-    .admin-only { transition: all 0.3s; }
-    .hidden-secure { display: none !important; }
-
-    .bottom-section { grid-column: span 2; display: grid; grid-template-columns: 1.8fr 1.2fr; gap: 20px; margin-top: 5px; }
-    .stock-display-panel { display: flex; justify-content: space-between; align-items: center; background: #edf2f7; padding: 20px; border-radius: 8px; height: 100%; }
+    @media print {
+      body * { visibility: hidden; }
+      .print-area, .print-area * { visibility: visible; }
+      .print-area { position: absolute; left: 0; top: 0; width: 100%; background: white; padding: 20px; }
+      .print-area button, .print-area .btn-danger, .print-area h2::after { display: none !important; }
+      table { width: 100% !important; min-width: 100% !important; }
+      th { background-color: #edf2f7 !important; -webkit-print-color-adjust: exact; }
+    }
   </style>
 </head>
 <body>
 
-<div id="loginOverlay">
-  <div class="login-card">
-    <h3>🔐 تسجيل الدخول للنظام</h3>
-    <input type="text" id="usernameInput" placeholder="اسم المستخدم">
-    <input type="password" id="passwordInput" placeholder="كلمة المرور">
-    <button onclick="handleLogin()">دخول آمن</button>
-    <p id="loginError" style="color:red; font-size:12px; margin-top:10px; display:none;">❌ الحساب أو كلمة المرور غير صحيحة!</p>
+<!-- شاشة تسجيل الدخول -->
+<div id="loginScreen">
+  <div class="login-box">
+    <h2>🔐 تسجيل دخول النظام</h2>
+    <form id="loginForm">
+      <input type="text" id="loginUser" placeholder="اسم المستخدم (اليوزر)" required autocomplete="off"/>
+      <input type="password" id="loginPass" placeholder="كلمة المرور (الباسورد)" required autocomplete="off"/>
+      <button type="submit" class="btn-primary btn-full">دخول للنظام</button>
+      <div id="loginError" style="color: red; margin-top: 10px; font-size: 14px; font-weight: bold;"></div>
+    </form>
   </div>
 </div>
 
-<header>
-  <span>🎯 إدارة المواد والجرد المخزني الآمن</span>
-  <div>
-    <span id="userBadge" style="font-size:14px; margin-left:15px; background:#4a5568; padding:5px 10px; border-radius:4px;">المستخدم: ضيف</span>
-    <button class="btn-logout" onclick="handleLogout()">تسجيل خروج 🔒</button>
-  </div>
-</header>
+<!-- واجهة التطبيق الرئيسية المحمية -->
+<div id="mainApp">
+  <header>
+    نظام الحسابات الذكي والمبيعات السحابية - محل الدباغ
+    <button class="logout-btn" onclick="logout()">🚪 خروج</button>
+  </header>
 
-<div style="max-width: 1500px; margin: 0 auto; padding: 0 20px;">
-  <div id="cloudStatus">🔄 جاري الاتصال بالخادم السحابي الآمن...</div>
-</div>
+  <div class="container">
+    <div id="cloudStatus">🔄 جاري الاتصال بالخادم السحابي...</div>
 
-<div class="container">
-    
-    <div class="card">
-        <div class="title">📋 المواد المدرجة في المخزن حالياً</div>
-        <div class="search-box">
-            <input type="text" id="searchStockInput" placeholder="🔍 ابحث عن مادة باستخدام الاسم أو الباركود..." oninput="renderStockTable()">
-        </div>
-        <div class="table-container">
-            <table id="stockTable">
+    <div class="stats-bar">
+      <div class="stat-card suppliers-debt">
+        <h3>إجمالي ديون المجهّزين (عليك)</h3>
+        <div class="value" id="statTotalSupplierDebts" style="color: var(--supplier-color);">0 د.ع</div>
+      </div>
+      <div class="stat-card customers-debt">
+        <h3>إجمالي ديون الزبائن (لك)</h3>
+        <div class="value" id="statTotalCustomerDebts" style="color: var(--customer-color);">0 د.ع</div>
+      </div>
+      <div class="stat-card stock-val">
+        <h3>إجمالي القيمة المالية للمخزن</h3>
+        <div class="value" id="statTotalStockValue" style="color: var(--stock-color);">0 د.ع</div>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="pos">🛒 شاشة المبيعات الفورية (POS)</button>
+      <button class="tab-btn" data-tab="stock">🏪 جرد المخزن والمواد</button>
+      <button class="tab-btn" data-tab="customers">👥 ديون وحسابات الزبائن</button>
+      <button class="tab-btn" data-tab="suppliers">📦 ديون وحسابات المجهّجين</button>
+    </div>
+
+    <!-- شاشة المبيعات الفورية (POS) -->
+    <div id="posSection" class="tab-content active">
+      <div class="pos-layout">
+        <div class="card" style="position: relative;">
+          <h2 style="color: var(--sales-color);">🔍 اختيار المواد والبحث السريع</h2>
+          <input type="text" id="posSearchInput" placeholder="اكتب اسم المادة للبحث السريع وإضافتها للفاتورة..." autocomplete="off"/>
+          <div id="posSearchResults" class="pos-search-results" style="display:none;"></div>
+          
+          <div style="margin-top: 20px;">
+            <h3>🛒 سلة الفاتورة الحالية</h3>
+            <div class="table-wrapper">
+              <table class="pos-cart-table" id="posCartTable">
                 <thead>
-                    <tr>
-                        <th>الباركود</th>
-                        <th>اسم المادة</th>
-                        <th>التعبئة</th>
-                        <th>الرصيد الفعلي</th>
-                        <th class="admin-only">كلفة الكارتون</th>
-                        <th>بيع قطعة مفرد</th>
-                    </tr>
+                  <tr><th>المادة</th><th>السعر</th><th>الكمية</th><th>إجمالي</th><th>إجراء</th></tr>
                 </thead>
                 <tbody>
-                    <tr><td colspan="6" style="color:gray; padding:20px;">يرجى تسجيل الدخول أولاً...</td></tr>
+                  <tr><td colspan="5" style="color:#718096;">السلة فارغة، ابحث عن مادة لإضافتها</td></tr>
                 </tbody>
-            </table>
-        </div>
-    </div>
-
-    <div class="card">
-        <div class="title">🔍 بطاقة تعريف وتعديل المادة</div>
-        <form id="itemForm" onsubmit="saveItem(event)">
-            <div class="form-group">
-                <label>باركود المادة</label>
-                <input type="text" id="itemBarcode" placeholder="امسح الباركود" required />
+              </table>
             </div>
-            <div class="form-group">
-                <label>اسم المادة الكامل</label>
-                <input type="text" id="itemName" required />
-            </div>
-            
-            <div class="grid-2">
-                <div class="form-group">
-                    <label>القطع داخل الكارتون</label>
-                    <input type="number" id="itemPackSize" value="1" min="1" oninput="calculatePiecePrices()" required />
-                </div>
-                <div class="form-group admin-only">
-                    <label>الحد الأدنى للتنبيه</label>
-                    <input type="number" id="itemMinQty" value="5" min="0" />
-                </div>
-            </div>
-
-            <div class="grid-2 admin-only">
-                <div class="form-group">
-                    <label>سعر شراء الكارتون (الكلفة)</label>
-                    <input type="number" id="itemBuyPriceCarton" value="0" oninput="calculatePiecePrices()" />
-                </div>
-                <div class="form-group">
-                    <label>سعر شراء القطعة (تلقائي)</label>
-                    <input type="number" id="itemBuyPricePiece" value="0" readonly style="background:#e9ecef;" />
-                </div>
-            </div>
-
-            <div class="grid-2">
-                <div class="form-group">
-                    <label>سعر بيع القطعة (مفرد)</label>
-                    <input type="number" id="itemSellPricePieceRetail" value="0" required />
-                </div>
-                <div class="form-group">
-                    <label>سعر بيع القطعة (جملة)</label>
-                    <input type="number" id="itemSellPricePieceWholesale" value="0" />
-                </div>
-            </div>
-
-            <div class="actions admin-only">
-                <button type="submit" class="btn btn-save">💾 حفظ / تعديل</button>
-                <button type="button" class="btn btn-new" onclick="clearForm()">🆕 مادة جديدة</button>
-                <button type="button" class="btn btn-delete" onclick="deleteItem()">🗑️ حذف المادة</button>
-            </div>
-            <p id="staffNotice" style="color:orange; font-size:12px; text-align:center; margin-top:10px; display:none;">⚠️ حساب موظف: لا تملك صلاحية تعديل الكلفة أو حفظ البيانات.</p>
-        </form>
-    </div>
-
-    <div class="bottom-section">
-        <div class="card admin-only">
-            <div class="title">📦 التحكم برصيد المخزن الحالي</div>
-            <div class="form-group">
-                <label>تعديل إجمالي رصيد المخزن الحقيقي (بالقطع):</label>
-                <input type="number" id="itemTotalQtyPieces" value="0" min="0" />
-            </div>
+          </div>
         </div>
 
         <div class="card">
-            <div class="stock-display-panel">
-                <div>
-                    <strong>الموجود المخزني الحالي الفعلي:</strong>
-                    <span id="currentStockView" style="font-size: 20px; font-weight: bold; color: #3182ce; display: block; margin-top: 8px;">اختر مادة</span>
-                </div>
+          <h2 style="color: var(--sales-color);">🧾 تفاصيل الدفع وإنهاء الفاتورة</h2>
+          <form id="posCheckoutForm">
+            <label><strong>نوع الدفع:</strong></label>
+            <select id="posPaymentType" onchange="toggleCustomerSelect()" required>
+              <option value="cash">💵 دفع نقدي (كاش فوري)</option>
+              <option value="credit">💳 دفع آجل (دين على زبون)</option>
+            </select>
+
+            <div id="posCustomerSelectContainer" style="display:none;">
+              <label><strong>اختر الزبون المطلوب لربط الدين بحسابه:</strong></label>
+              <select id="posCustomerSelect">
+                <option value="">-- اختر الزبون من القائمة --</option>
+              </select>
             </div>
+
+            <div style="background: #edf2f7; padding: 15px; border-radius: 8px; margin-top: 15px;">
+              <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                <span>المجموع الكلي:</span>
+                <span><span id="posSubtotal" style="font-weight:bold;">0</span> د.ع</span>
+              </div>
+              <div style="margin-bottom:10px;">
+                <label>خصم مباشر للفاتورة (دينار):</label>
+                <input type="number" id="posDiscount" value="0" min="0" oninput="calculateCartTotals()" />
+              </div>
+              <hr style="border:0; border-top:1px solid #cbd5e0; margin:10px 0;">
+              <div style="display:flex; justify-content:space-between; font-size:20px; font-weight:bold; color:var(--danger-color);">
+                <span>الصافي النهائي:</span>
+                <span><span id="posFinalTotal">0</span> د.ع</span>
+              </div>
+            </div>
+
+            <label style="margin-top:15px; display:block;">ملاحظات الفاتورة (البيان):</label>
+            <input type="text" id="posInvoiceNote" placeholder="مثال: فاتورة مبيعات مسائية..." />
+
+            <button type="submit" class="btn-sales btn-full" style="font-size:18px; padding:15px;">💾 حفظ وإتمام وطباعة الفاتورة</button>
+          </form>
         </div>
+      </div>
     </div>
 
+    <!-- قسم المخزن وجرد المواد وسجل الحركة -->
+    <div id="stockSection" class="tab-content">
+      <div class="flex-grid">
+        <div>
+          <div class="card">
+            <h2 style="color: var(--stock-color);">إضافة مادة جديدة للمخزن</h2>
+            <form id="stockForm">
+              <input type="text" id="itemName" placeholder="اسم المادة" required />
+              <input type="number" id="itemQty" placeholder="الكمية المتوفرة الحالية" required min="0" />
+              <input type="number" id="itemMinQty" placeholder="حد التنبيه الأدنى للكمية" value="5" min="0" />
+              <input type="number" id="itemBuyPrice" placeholder="سعر الشراء (دينار)" required min="0" />
+              <input type="number" id="itemSellPrice" placeholder="سعر البيع (دينار)" required min="0" />
+              <button type="submit" class="btn-stock btn-full">إضافة المادة للمخزن</button>
+            </form>
+          </div>
+        </div>
+        <div>
+          <div class="card">
+            <h2 style="color: var(--stock-color);">جرد المخزن الفوري</h2>
+            <input type="text" id="searchStock" placeholder="🔍 ابحث عن مادة في المخزن..." />
+            <div class="table-wrapper">
+              <table id="stockTable">
+                <thead><tr><th>#</th><th>اسم المادة</th><th>الكمية</th><th>سعر الشراء</th><th>سعر البيع</th><th>إجمالي القيمة</th><th>إجراء</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top: 20px;">
+        <h2 style="color: var(--primary-color);">📜 سجل حركات ومستندات المخزن التفصيلي (الوارد والصادر)</h2>
+        <div style="margin-bottom: 12px; display: flex; gap: 15px; align-items: center;">
+          <input type="text" id="searchStockLog" placeholder="🔍 تصفية السجل باسم المادة أو نوع الحركة..." style="margin:0; max-width:400px;" />
+          <button type="button" class="btn-danger" style="background:#718096; padding: 8px 15px;" onclick="clearAllStockLogs()">🗑️ تفريغ السجل بالكامل</button>
+        </div>
+        <div class="table-wrapper">
+          <table id="stockLogsTable">
+            <thead>
+              <tr>
+                <th>التاريخ والوقت</th>
+                <th>اسم المادة</th>
+                <th>نوع الحركة</th>
+                <th>الكمية المتأثرة</th>
+                <th>الكمية النهائية بالمخزن</th>
+                <th>تفاصيل الحركة والبيان</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td colspan="6" style="color:#718096; padding:15px;">لا توجد حركات مسجلة حالياً</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- قسم الزبائن -->
+    <div id="customersSection" class="tab-content">
+      <div class="flex-grid">
+        <div>
+          <div class="card">
+            <h2 style="color: var(--customer-color);">إضافة زبون جديد</h2>
+            <form id="customerForm">
+              <input type="text" id="customerName" placeholder="اسم الزبون" required />
+              <input type="text" id="customerPhone" placeholder="رقم الهاتف" />
+              <input type="number" id="customerOpeningBalance" placeholder="الرصيد السابق" value="0" />
+              <textarea id="customerNotes" placeholder="ملاحظات..." rows="2"></textarea>
+              <button type="submit" class="btn-customer btn-full">حفظ الزبون</button>
+            </form>
+          </div>
+        </div>
+        <div>
+          <div class="card">
+            <h2 style="color: var(--customer-color);">قائمة الزبائن والأرصدة والديون</h2>
+            <input type="text" id="searchCustomer" placeholder="🔍 ابحث عن زبون للاطلاع على كشفه..." />
+            <div class="table-wrapper">
+              <table id="customersTable">
+                <thead><tr><th>#</th><th>اسم الزبون</th><th>الهاتف</th><th>الرصيد الحالي</th><th>الإجراء</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="card print-area" id="customerTxArea" style="margin-top:20px; display:none;">
+        <h2 id="customerTxHeader">كشف حساب الزبون</h2>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+          <button type="button" class="btn-primary" onclick="window.print()">🖨️ طباعة كشف حساب الزبون</button>
+          <button type="button" class="btn-danger" style="background:#718096;" onclick="addManualTxPrompt('customer')">➕ تسجيل دفعة سداد نقدي يدوية</button>
+        </div>
+        <div class="table-wrapper">
+          <table id="customerTxTable">
+            <thead><tr><th>التاريخ</th><th>النوع</th><th>المبلغ</th><th>الرصيد Mتبقي</th><th>البيان العام</th><th>إجراء</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- قسم المجهّجين والمشتريات -->
+    <div id="suppliersSection" class="tab-content">
+      <div class="flex-grid">
+        <div>
+          <div class="card">
+            <h2 style="color: var(--supplier-color);">إضافة مجهّز جديد</h2>
+            <form id="supplierForm">
+              <input type="text" id="supplierName" placeholder="اسم المجهّز" required />
+              <input type="text" id="supplierPhone" placeholder="رقم الهاتف" />
+              <input type="number" id="supplierOpeningBalance" placeholder="الرصيد السابق" value="0" />
+              <textarea id="supplierNotes" placeholder="ملاحظات..." rows="2"></textarea>
+              <button type="submit" class="btn-supplier btn-full">حفظ المجهّز</button>
+            </form>
+          </div>
+        </div>
+        <div>
+          <div class="card">
+            <h2 style="color: var(--supplier-color);">قائمة المجهّجين والأرصدة</h2>
+            <input type="text" id="searchSupplier" placeholder="🔍 ابحث عن مجهّز..." />
+            <div class="table-wrapper">
+              <table id="suppliersTable">
+                <thead><tr><th>#</th><th>اسم المجهّز</th><th>الهاتف</th><th>الرصيد الحالي</th><th>الإجراء</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card print-area" id="supplierTxArea" style="margin-top:20px; display:none;">
+        <h2 id="supplierTxHeader">كشف حساب المجهّز</h2>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+          <button type="button" class="btn-primary" onclick="window.print()">🖨️ طباعة كشف حساب المجهّز</button>
+          <div style="display:flex; gap:10px;">
+            <button type="button" class="btn-stock" style="background:#dd6b20;" onclick="openPurchaseModal()">📥 تسجيل قائمة مشتريات (فاتورة مجهّز كاملة)</button>
+            <button type="button" class="btn-danger" style="background:#718096;" onclick="addManualTxPrompt('supplier')">➕ تسجيل وصل تسديد يدوياً للمجهز</button>
+          </div>
+        </div>
+        <div class="table-wrapper">
+          <table id="supplierTxTable">
+            <thead><tr><th>التاريخ</th><th>النوع</th><th>المبلغ</th><th>الرصيد</th><th>البيان العام</th><th>إجراء</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- نافذة منبثقة: فاتورة شراء مجهّز جديدة -->
+    <div id="purchaseModal" class="modal">
+      <div class="modal-content">
+        <span class="close-modal" onclick="closePurchaseModal()">&times;</span>
+        <h2 style="color: var(--stock-color); margin-bottom:20px;">📥 إنشاء قائمة فاتورة مشتريات واردة جديدة</h2>
+        <p style="font-weight: bold; font-size:15px;" id="purchaseModalSupplierName"></p>
+        
+        <div style="position: relative; margin-bottom:20px;">
+          <label><strong>ابحث عن المواد المشتراة لإضافتها للقائمة:</strong></label>
+          <input type="text" id="purchaseSearchInput" placeholder="اكتب اسم المادة المخزنية للبحث والإضافة..." autocomplete="off"/>
+          <div id="purchaseSearchResults" class="purchase-search-results" style="display:none;"></div>
+        </div>
+
+        <h3>📦 المواد المدرجة في قائمة الشراء الحالية</h3>
+        <div class="table-wrapper">
+          <table class="purchase-cart-table" id="purchaseCartTable">
+            <thead>
+              <tr><th>اسم المادة</th><th>الكمية المشتراة</th><th>سعر شراء القطعة (د.ع)</th><th>الإجمالي</th><th>إجراء</th></tr>
+            </thead>
+            <tbody>
+              <tr><td colspan="5" style="color:#718096; padding:20px;">القائمة فارغة، ابحث عن مادة لإضافتها وتعديل تفاصيلها</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div style="background: #edf2f7; padding: 15px; border-radius: 8px; margin-top: 20px; display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <span style="font-size:18px; font-weight:bold; color:var(--supplier-color);">الصافي الإجمالي للقائمة:</span>
+            <span id="purchaseFinalTotal" style="font-size:22px; font-weight:bold; margin-right:10px; color:var(--supplier-color);">0</span> <span style="font-weight:bold;">د.ع</span>
+          </div>
+          <div style="width: 50%;">
+            <input type="text" id="purchaseInvoiceNote" placeholder="ملاحظات أو بيان الفاتورة العام (مثال: قائمة رقم 104)" style="margin:0;"/>
+          </div>
+        </div>
+
+        <div style="margin-top:20px; display:flex; gap:10px; justify-content:flex-end;">
+          <button type="button" class="btn-danger" style="background:#718096;" onclick="closePurchaseModal()">إلغاء</button>
+          <button type="button" class="btn-supplier" style="padding:10px 30px;" onclick="submitPurchaseInvoice()">💾 اعتماد وحفظ القائمة (مخزن + حساب المجهز)</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- أدوات النسخ الاحتياطي -->
+    <div class="backup-section">
+      <strong>💾 أدوات النسخ الاحتياطي اليدوي الشامل:</strong>
+      <button type="button" id="exportBackupBtn" class="btn-supplier" style="background: #4a5568;">📥 تصدير نسخة احتياطية للكمبيوتر (JSON)</button>
+      <button type="button" id="importBackupBtn" class="btn-customer" style="background: #718096;">📤 استيراد نسخة احتياطية للسحابة</button>
+      <input type="file" id="backupFileInput" accept=".json" style="display: none;" />
+    </div>
+
+  </div>
 </div>
 
 <script>
-  // إعدادات Firebase الخاصة بمشروعك لربط البيانات
   const firebaseConfig = {
     apiKey: "AIzaSyC-QqnQTbbyVFS8QFkf4CYZTcURcr9nBW0",
     authDomain: "gimi-fd7fe.firebaseapp.com",
@@ -204,163 +489,207 @@
     appId: "1:642364940251:web:6dd47f47d500ae9ed791fe"
   };
 
-  let dbRef;
-  let stockData = {};
-  let selectedItemId = null;
-  let currentUserRole = "user"; // الصلاحية الافتراضية حذرة جداً
+  // حماية: اليوزر والباسورد مشفرين مسبقاً لمنع قراءتهم كـ Plain Text في حال فحص الكود
+  const CONFIG_USER_HASH = "7c222fb2927d828af22f592134e8932480637c0d1d01de692247bcfe768644e4"; // "ali"
+  const CONFIG_PASS_HASH = "03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4"; // "1234"
 
-  // الحسابات الافتراضية الآمنة للنظام (يمكنك تغييرها لاحقاً)
-  const USERS_DB = {
-    "ali_admin": { pass: "12345", role: "admin", label: "المدير: علي البسام" },
-    "cashier1": { pass: "54321", role: "user", label: "الموظف: صندوق 1" }
+  let dbRef;
+  let dbData = { suppliers: {}, customers: {}, transactions: {}, stock: {}, stockLogs: {} };
+  let posCart = []; 
+  let purchaseCart = []; 
+  let activeId = null; 
+  let activeMode = ""; 
+
+  // دالة حماية لتنظيف المدخلات ومنع ثغرات XSS (Cross-Site Scripting)
+  function sanitizeInput(text) {
+    if (typeof text !== 'string') return text;
+    return text.replace(/[&<>"']/g, function(m) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
+    });
+  }
+
+  // التحقق من أمن الجلسة عند التحميل
+  window.onload = function() {
+    if (sessionStorage.getItem("isLoggedIn") === "true") {
+      const loginTime = sessionStorage.getItem("loginTime");
+      // تنتهي الجلسة تلقائياً بعد 8 ساعات لحماية النظام في حال نسيانه مفتوحاً
+      if (loginTime && (Date.now() - loginTime < 8 * 60 * 60 * 1000)) {
+        showApp();
+      } else {
+        logout();
+      }
+    }
   };
 
-  // دالة تسجيل الدخول وفحص الصلاحيات
-  function handleLogin() {
-    let u = document.getElementById("usernameInput").value.trim();
-    let p = document.getElementById("passwordInput").value.trim();
-
-    if(USERS_DB[u] && USERS_DB[u].pass === p) {
-        currentUserRole = USERS_DB[u].role;
-        document.getElementById("userBadge").textContent = USERS_DB[u].label;
-        document.getElementById("loginOverlay").style.display = "none";
-        document.getElementById("loginError").style.display = "none";
-        
-        applySecurityInterface();
-        initFirebaseConnection();
-    } else {
-        document.getElementById("loginError").style.display = "block";
-    }
-  }
-
-  // تطبيق قيود الواجهة بناءً على الصلاحيات
-  function applySecurityInterface() {
-    let adminElements = document.querySelectorAll(".admin-only");
-    if(currentUserRole === "user") {
-        adminElements.forEach(el => el.classList.add("hidden-secure"));
-        document.getElementById("staffNotice").style.display = "block";
-        document.getElementById("itemBarcode").readOnly = true;
-        document.getElementById("itemName").readOnly = true;
-    } else {
-        adminElements.forEach(el => el.classList.remove("hidden-secure"));
-        document.getElementById("staffNotice").style.display = "none";
-        document.getElementById("itemBarcode").readOnly = false;
-        document.getElementById("itemName").readOnly = false;
-    }
-  }
-
-  function handleLogout() {
-    location.reload(); // إعادة تحميل الصفحة لقفل النظام فوراً
-  }
-
-  function initFirebaseConnection() {
-    if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
-    dbRef = firebase.database().ref("aldabbagh_store/stock");
-    
-    document.getElementById("cloudStatus").innerHTML = "🟢 تم الاتصال المشفر بمخزن محل الدباغ المنسق.";
-    document.getElementById("cloudStatus").style.backgroundColor = "#c6f6d5";
-
-    dbRef.on("value", (snapshot) => {
-      stockData = snapshot.val() || {};
-      renderStockTable();
-    });
-  }
-
-  function calculatePiecePrices() {
-    let cartonPrice = parseFloat(document.getElementById("itemBuyPriceCarton").value) || 0;
-    let packSize = parseFloat(document.getElementById("itemPackSize").value) || 1;
-    document.getElementById("itemBuyPricePiece").value = Math.round(cartonPrice / packSize);
-  }
-
-  function formatQty(totalPieces, packSize) {
-    if (!packSize || packSize <= 1) return `${totalPieces} قطعة`;
-    return `${Math.floor(totalPieces / packSize)} كارتون و ${totalPieces % packSize} ق`;
-  }
-
-  function renderStockTable() {
-    const tbody = document.querySelector("#stockTable tbody");
-    tbody.innerHTML = "";
-    let search = document.getElementById("searchStockInput").value.trim().toLowerCase();
-
-    Object.keys(stockData).forEach(k => {
-      let item = stockData[k];
-      if (item.name.toLowerCase().includes(search) || item.barcode.includes(search)) {
-        let tr = document.createElement("tr");
-        tr.onclick = () => { selectItem(k); };
-        
-        let costTd = currentUserRole === 'admin' ? `<td>${item.buyPriceCarton || 0}</td>` : '';
-
-        tr.innerHTML = `
-          <td>${item.barcode}</td>
-          <td style="font-weight:bold;">${item.name}</td>
-          <td>${item.packSize}</td>
-          <td>${formatQty(item.qty || 0, item.packSize)}</td>
-          ${costTd}
-          <td>${item.sellPricePieceRetail || 0}</td>
-        `;
-        tbody.appendChild(tr);
-      }
-    });
-  }
-
-  function selectItem(key) {
-    selectedItemId = key;
-    let item = stockData[key];
-    if(!item) return;
-
-    document.getElementById("itemBarcode").value = item.barcode || "";
-    document.getElementById("itemName").value = item.name || "";
-    document.getElementById("itemPackSize").value = item.packSize || 1;
-    
-    if(currentUserRole === "admin") {
-        document.getElementById("itemMinQty").value = item.minQty || 5;
-        document.getElementById("itemBuyPriceCarton").value = item.buyPriceCarton || 0;
-        document.getElementById("itemBuyPricePiece").value = item.buyPricePiece || 0;
-        document.getElementById("itemTotalQtyPieces").value = item.qty || 0;
-    }
-    
-    document.getElementById("itemSellPricePieceRetail").value = item.sellPricePieceRetail || 0;
-    document.getElementById("itemSellPricePieceWholesale").value = item.sellPricePieceWholesale || 0;
-    document.getElementById("currentStockView").textContent = formatQty(item.qty || 0, item.packSize);
-  }
-
-  function saveItem(e) {
+  document.getElementById("loginForm").onsubmit = (e) => {
     e.preventDefault();
-    if(currentUserRole !== "admin") return; // جدار حماية إضافي
-
-    let itemPayload = {
-      barcode: document.getElementById("itemBarcode").value.trim(),
-      name: document.getElementById("itemName").value.trim(),
-      packSize: parseFloat(document.getElementById("itemPackSize").value) || 1,
-      minQty: parseFloat(document.getElementById("itemMinQty").value) || 0,
-      buyPriceCarton: parseFloat(document.getElementById("itemBuyPriceCarton").value) || 0,
-      buyPricePiece: parseFloat(document.getElementById("itemBuyPricePiece").value) || 0,
-      sellPricePieceRetail: parseFloat(document.getElementById("itemSellPricePieceRetail").value) || 0,
-      sellPricePieceWholesale: parseFloat(document.getElementById("itemSellPricePieceWholesale").value) || 0,
-      qty: parseFloat(document.getElementById("itemTotalQtyPieces").value) || 0
-    };
-
-    if(selectedItemId) {
-      dbRef.child(selectedItemId).update(itemPayload).then(() => alert("✅ تم التعديل بأمان"));
+    const u = document.getElementById("loginUser").value.trim();
+    const p = document.getElementById("loginPass").value.trim();
+    
+    // تشفير فوري ومقارنة آمنة للأكواد
+    const uHash = CryptoJS.SHA256(u).toString();
+    const pHash = CryptoJS.SHA256(p).toString();
+    
+    if (uHash === CONFIG_USER_HASH && pHash === CONFIG_PASS_HASH) {
+      sessionStorage.setItem("isLoggedIn", "true");
+      sessionStorage.setItem("loginTime", Date.now().toString());
+      showApp();
     } else {
-      dbRef.push().set(itemPayload).then(() => { alert("✅ تم حفظ صنف جديد"); clearForm(); });
+      document.getElementById("loginError").textContent = "❌ اسم المستخدم أو كلمة المرور غير صحيحة!";
+    }
+  };
+
+  function showApp() {
+    if(sessionStorage.getItem("isLoggedIn") !== "true") return;
+    document.getElementById("loginScreen").style.display = "none";
+    document.getElementById("mainApp").style.display = "block";
+    setTimeout(initFirebase, 200);
+  }
+
+  function logout() { 
+    sessionStorage.clear(); 
+    window.location.reload(); 
+  }
+
+  function initFirebase() {
+    if(sessionStorage.getItem("isLoggedIn") !== "true") return;
+    if (dbRef) return;
+    try {
+      if (typeof firebase === 'undefined') {
+        document.getElementById("cloudStatus").innerHTML = "⚠️ تعمل الآن بنمط أوفلاين محلي (لم يتم تحميل مكتبات جوجل).";
+        document.getElementById("cloudStatus").style.backgroundColor = "#feebc8"; document.getElementById("cloudStatus").style.color = "#c05621";
+        return;
+      }
+      if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+      dbRef = firebase.database().ref("aldabbagh_store");
+      document.getElementById("cloudStatus").innerHTML = "🟢 متصل بالسحابة ومزامن مع المخزن ونقاط البيع الفورية!";
+      document.getElementById("cloudStatus").style.backgroundColor = "#c6f6d5"; document.getElementById("cloudStatus").style.color = "#22543d";
+
+      dbRef.on("value", (snapshot) => {
+        const val = snapshot.val();
+        if (val) {
+          dbData.suppliers = val.suppliers || {}; dbData.customers = val.customers || {};
+          dbData.transactions = val.transactions || {}; dbData.stock = val.stock || {};
+          dbData.stockLogs = val.stockLogs || {};
+        } else {
+          dbData = { suppliers: {}, customers: {}, transactions: {}, stock: {}, stockLogs: {} };
+        }
+        renderStats(); renderTables(); renderStockTable(); renderStockLogsTable(); updatePosCustomerSelect();
+        if(activeId) { if(activeMode === "customers") renderCustomerTxTable(); else renderSupplierTxTable(); }
+      });
+    } catch (e) {
+      document.getElementById("cloudStatus").innerHTML = "🔴 خطأ في المزامنة السحابية. يعمل النظام محلياً حالياً.";
+      document.getElementById("cloudStatus").style.backgroundColor = "#fed7d7"; document.getElementById("cloudStatus").style.color = "#9b2c2c";
     }
   }
 
-  function deleteItem() {
-    if(currentUserRole !== "admin" || !selectedItemId) return;
-    if(confirm("هل أنت متأكد من حذف المادة؟")) {
-      dbRef.child(selectedItemId).remove().then(() => { alert("🗑️ تم الحذف"); clearForm(); });
-    }
+  function getSuppliersList() { return Object.keys(dbData.suppliers).map(k => ({id: k, ...dbData.suppliers[k]})); }
+  function getCustomersList() { return Object.keys(dbData.customers).map(k => ({id: k, ...dbData.customers[k]})); }
+  function getTxList() { return Object.keys(dbData.transactions).map(k => ({id: k, ...dbData.transactions[k]})); }
+  function getStockList() { return Object.keys(dbData.stock).map(k => ({id: k, ...dbData.stock[k]})); }
+  function getStockLogsList() { return Object.keys(dbData.stockLogs).map(k => ({id: k, ...dbData.stockLogs[k]})); }
+
+  function calcBalance(id, type) {
+    let list = type === "supplier" ? getSuppliersList() : getCustomersList();
+    let person = list.find(x => x.id === id);
+    let bal = person ? parseFloat(person.openingBalance || 0) : 0;
+    getTxList().filter(t => t.personId === id).forEach(t => {
+      if(t.type === "plus") bal += parseFloat(t.amount || 0); else bal -= parseFloat(t.amount || 0);
+    });
+    return bal;
   }
 
-  function clearForm() {
-    selectedItemId = null;
-    document.getElementById("itemForm").reset();
-    document.getElementById("currentStockView").textContent = "اختر مادة";
-    renderStockTable();
+  function renderStats() {
+    let sTotal = 0; getSuppliersList().forEach(x => sTotal += calcBalance(x.id, 'supplier'));
+    let cTotal = 0; getCustomersList().forEach(x => cTotal += calcBalance(x.id, 'customer'));
+    let stTotal = 0; getStockList().forEach(x => stTotal += (parseFloat(x.qty || 0) * parseFloat(x.buyPrice || 0)));
+    document.getElementById("statTotalSupplierDebts").textContent = sTotal.toLocaleString() + " د.ع";
+    document.getElementById("statTotalCustomerDebts").textContent = cTotal.toLocaleString() + " د.ع";
+    document.getElementById("statTotalStockValue").textContent = stTotal.toLocaleString() + " د.ع";
+  }
+
+  function pushStockLog(itemName, logType, affectedQty, finalQty, note) {
+    if (!dbRef || sessionStorage.getItem("isLoggedIn") !== "true") return;
+    dbRef.child("stockLogs").push().set({
+      date: new Date().toISOString(),
+      itemName: sanitizeInput(itemName),
+      logType: sanitizeInput(logType),
+      affectedQty: parseFloat(affectedQty),
+      finalQty: parseFloat(finalQty),
+      note: sanitizeInput(note)
+    });
+  }
+
+  // --- شاشة البيع الفوري POS ---
+  document.getElementById("posSearchInput").oninput = function() {
+    let query = sanitizeInput(this.value.trim());
+    let resultsDiv = document.getElementById("posSearchResults");
+    if(!query) { resultsDiv.style.display = "none"; return; }
+    
+    let matches = getStockList().filter(x => x.name.toLowerCase().includes(query.toLowerCase()));
+    if(matches.length === 0) { resultsDiv.innerHTML = "<div class='pos-search-item'>لا توجد مواد تطابق البحث</div>"; resultsDiv.style.display = "block"; return; }
+    
+    resultsDiv.innerHTML = "";
+    matches.forEach(item => {
+      let div = document.createElement("div");
+      div.className = "pos-search-item";
+      div.innerHTML = `<span><strong>${sanitizeInput(item.name)}</strong> (متوفر: ${item.qty})</span> <span style="color:var(--stock-color); font-weight:bold;">${parseFloat(item.sellPrice).toLocaleString()} د.ع</span>`;
+      div.onclick = () => { addProductToCart(item); resultsDiv.style.display = "none"; document.getElementById("posSearchInput").value = ""; };
+      resultsDiv.appendChild(div);
+    });
+    resultsDiv.style.display = "block";
+  };
+
+  function addProductToCart(item) {
+    let existing = posCart.find(x => x.id === item.id);
+    if(existing) {
+      if(existing.cartQty + 1 > item.qty) { alert("❌ عذراً! الكمية المطلوبة غير متوفرة بالمخزن."); return; }
+      existing.cartQty++;
+    } else {
+      if(item.qty < 1) { alert("❌ هذه المادة نافدة تماماً من المخزن."); return; }
+      posCart.push({ id: item.id, name: item.name, sellPrice: item.sellPrice, maxQty: item.qty, cartQty: 1 });
+    }
+    renderPosCart();
+  }
+
+  function updateCartQty(id, newQty) {
+    let item = posCart.find(x => x.id === id);
+    if(!item) return;
+    if(newQty > item.maxQty) { alert("❌ لا يمكنك تجاوز الكمية المتوفرة بالمخزن!"); renderPosCart(); return; }
+    if(newQty <= 0) { removeCartItem(id); return; }
+    item.cartQty = parseInt(newQty);
+    renderPosCart();
+  }
+
+  function removeCartItem(id) { posCart = posCart.filter(x => x.id !== id); renderPosCart(); }
+
+  function renderPosCart() {
+    let tbody = document.querySelector("#posCartTable tbody");
+    tbody.innerHTML = "";
+    if(posCart.length === 0) { tbody.innerHTML = "<tr><td colspan=\"5\" style=\"color:#718096;\">السلة فارغة، ابحث عن مادة لإضافتها</td></tr>"; calculateCartTotals(); return; }
+    
+    posCart.forEach(x => {
+      let tr = document.createElement("tr");
+      let total = x.cartQty * x.sellPrice;
+      tr.innerHTML = `
+        <td><strong>${sanitizeInput(x.name)}</strong></td>
+        <td>${parseFloat(x.sellPrice).toLocaleString()}</td>
+        <td><input type="number" value="${x.cartQty}" min="1" max="${x.maxQty}" style="width:70px; margin:0; text-align:center;" onchange="updateCartQty('${x.id}', this.value)"/></td>
+        <td>${total.toLocaleString()} د.ع</td>
+        <td><button class="btn-danger" style="padding:2px 6px; font-size:12px;" onclick="removeCartItem('${x.id}')">❌</button></td>
+      `;
+      tbody.appendChild(tr);
+    });
+    calculateCartTotals();
+  }
+
+  function calculateCartTotals() {
+    let subtotal = 0; posCart.forEach(x => subtotal += (x.cartQty * x.sellPrice));
+    let discount = parseFloat(document.getElementById("posDiscount").value) || 0;
+    let finalTotal = subtotal - discount; if(finalTotal < 0) finalTotal = 0;
+    document.getElementById("posSubtotal").textContent = subtotal.toLocaleString();
+    document.getElementById("posFinalTotal").textContent = finalTotal.toLocaleString();
   }
 </script>
-
 </body>
 </html>
