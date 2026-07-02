@@ -5,11 +5,9 @@
   <title>نظام المبيعات والمخزن السحابي - محل الدباغ</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- تضمين مكتبات Firebase السحابية من جوجل -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
   
-  <!-- مكتبة تشفير لحماية كلمة المرور برمجياً -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 
   <style>
@@ -123,43 +121,25 @@
     .pos-layout { display: grid; grid-template-columns: 1fr 1.2fr; gap: 20px; }
     @media (max-width: 900px) { .pos-layout { grid-template-columns: 1fr; } }
     
-    .pos-search-results, .purchase-search-results {
+    .pos-search-results {
       max-height: 200px; overflow-y: auto; background: white;
       border: 1px solid var(--border-color); border-radius: 6px; margin-top: -10px; margin-bottom: 15px;
       position: absolute; width: calc(100% - 40px); z-index: 10; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }
-    .pos-search-item, .purchase-search-item {
+    .pos-search-item {
       padding: 10px; border-bottom: 1px solid var(--border-color); cursor: pointer;
       display: flex; justify-content: space-between; align-items: center;
     }
-    .pos-search-item:hover, .purchase-search-item:hover { background: #edf2f7; }
+    .pos-search-item:hover { background: #edf2f7; }
     
     .pos-cart-table th { background: var(--sales-color); color: white; }
     
     #cloudStatus { background: #e2e8f0; padding: 8px; text-align: center; font-size: 13px; font-weight: bold; border-radius: 6px; margin-bottom: 15px; }
     .backup-section { background: #edf2f7; padding: 15px; border-radius: 8px; margin-top: 25px; display: flex; gap: 15px; align-items: center; justify-content: center; border: 1px solid #cbd5e0; }
-
-    .modal {
-      display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;
-    }
-    .modal-content {
-      background: white; padding: 25px; border-radius: 12px; width: 90%; max-width: 850px;
-      max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.2); position: relative;
-    }
-    .close-modal { position: absolute; left: 20px; top: 20px; font-size: 24px; cursor: pointer; color: #718096; }
-
-    @media print {
-      body * { visibility: hidden; }
-      .print-area, .print-area * { visibility: visible; }
-      .print-area { position: absolute; left: 0; top: 0; width: 100%; background: white; padding: 20px; }
-      table { width: 100% !important; min-width: 100% !important; }
-    }
   </style>
 </head>
 <body>
 
-<!-- شاشة تسجيل الدخول -->
 <div id="loginScreen">
   <div class="login-box">
     <h2>🔐 تسجيل دخول النظام</h2>
@@ -172,7 +152,6 @@
   </div>
 </div>
 
-<!-- واجهة التطبيق الرئيسية المحمية -->
 <div id="mainApp">
   <header>
     نظام الحسابات الذكي والمبيعات السحابية - محل الدباغ
@@ -204,12 +183,11 @@
       <button class="tab-btn" data-tab="suppliers">📦 ديون وحسابات المجهّجين</button>
     </div>
 
-    <!-- شاشة المبيعات الفورية (POS) -->
     <div id="posSection" class="tab-content active">
       <div class="pos-layout">
         <div class="card" style="position: relative;">
           <h2 style="color: var(--sales-color);">🔍 اختيار المواد والبحث السريع</h2>
-          <input type="text" id="posSearchInput" placeholder="اكتب اسم المادة للبحث السريع وإضافتها للفاتورة..." autocomplete="off"/>
+          <input type="text" id="posSearchInput" placeholder="اكتب اسم المادة أو الباركود للبحث السريع..." autocomplete="off"/>
           <div id="posSearchResults" class="pos-search-results" style="display:none;"></div>
           
           <div style="margin-top: 20px;">
@@ -268,7 +246,6 @@
       </div>
     </div>
 
-    <!-- قسم المخزن وجرد المواد -->
     <div id="stockSection" class="tab-content">
       <div class="flex-grid">
         <div>
@@ -276,9 +253,9 @@
             <h2 style="color: var(--stock-color);">إضافة مادة جديدة للمخزن</h2>
             <form id="stockForm">
               <input type="text" id="itemName" placeholder="اسم المادة" required />
+              <input type="text" id="itemBarcode" placeholder="الباركود (إن وجد)" />
               <input type="number" id="itemQty" placeholder="الكمية المتوفرة الحالية" required min="0" />
-              <input type="number" id="itemMinQty" placeholder="حد التنبيه الأدنى للكمية" value="5" min="0" />
-              <input type="number" id="itemBuyPrice" placeholder="سعر الشراء (دينار)" required min="0" />
+              <input type="number" id="itemBuyPrice" placeholder="سعر الشراء / الكلفة (دينار)" required min="0" />
               <input type="number" id="itemSellPrice" placeholder="سعر البيع (دينار)" required min="0" />
               <button type="submit" class="btn-stock btn-full">إضافة المادة للمخزن</button>
             </form>
@@ -286,11 +263,11 @@
         </div>
         <div>
           <div class="card">
-            <h2 style="color: var(--stock-color);">جرد المخزن الفوري</h2>
-            <input type="text" id="searchStock" placeholder="🔍 ابحث عن مادة في المخزن..." />
+            <h2 style="color: var(--stock-color);">جرد المخزن الفوري السحابي</h2>
+            <input type="text" id="searchStock" placeholder="🔍 ابحث عن مادة في المخزن..." oninput="renderStockTable()"/>
             <div class="table-wrapper">
               <table id="stockTable">
-                <thead><tr><th>#</th><th>اسم المادة</th><th>الكمية</th><th>سعر الشراء</th><th>سعر البيع</th><th>إجمالي القيمة</th></tr></thead>
+                <thead><tr><th>#</th><th>الباركود</th><th>اسم المادة</th><th>الكمية</th><th>سعر الكلفة</th><th>سعر البيع</th><th>إجمالي القيمة</th></tr></thead>
                 <tbody></tbody>
               </table>
             </div>
@@ -299,7 +276,6 @@
       </div>
     </div>
 
-    <!-- قسم الزبائن -->
     <div id="customersSection" class="tab-content">
       <div class="flex-grid">
         <div>
@@ -329,7 +305,6 @@
       </div>
     </div>
 
-    <!-- قسم المجهّجين -->
     <div id="suppliersSection" class="tab-content">
       <div class="flex-grid">
         <div>
@@ -359,11 +334,9 @@
       </div>
     </div>
 
-    <!-- أدوات النسخ الاحتياطي -->
     <div class="backup-section">
-      <strong>💾 أدوات النسخ الاحتياطي اليدوي الشامل:</strong>
-      <button type="button" id="exportBackupBtn" class="btn-supplier" style="background: #4a5568;">📥 تصدير نسخة احتياطية للكمبيوتر (JSON)</button>
-      <input type="file" id="backupFileInput" accept=".json" style="display: none;" />
+      <strong>💾 أدوات إدارة البيانات:</strong>
+      <button type="button" id="exportBackupBtn" class="btn-supplier" style="background: #4a5568;" onclick="exportData()">📥 تصدير نسخة احتياطية (JSON)</button>
     </div>
 
   </div>
@@ -381,10 +354,9 @@
   };
 
   let dbRef;
-  let dbData = { suppliers: {}, customers: {}, transactions: {}, stock: {}, stockLogs: {} };
+  let dbData = { suppliers: {}, customers: {}, transactions: {}, stock: {} };
   let posCart = []; 
 
-  // دالة حماية لتنظيف المدخلات ومنع ثغرات XSS
   function sanitizeInput(text) {
     if (typeof text !== 'string') return text;
     return text.replace(/[&<>"']/g, function(m) {
@@ -392,7 +364,6 @@
     });
   }
 
-  // التحقق من أمن الجلسة عند التحميل
   window.onload = function() {
     if (sessionStorage.getItem("isLoggedIn") === "true") {
       const loginTime = sessionStorage.getItem("loginTime");
@@ -404,7 +375,6 @@
     }
   };
 
-  // معالجة تسجيل الدخول بشكل آمن وصارم
   document.getElementById("loginForm").onsubmit = (e) => {
     e.preventDefault();
     const u = document.getElementById("loginUser").value.trim().toLowerCase();
@@ -419,7 +389,7 @@
       sessionStorage.setItem("loginTime", Date.now().toString());
       showApp();
     } else {
-      document.getElementById("loginError").textContent = "❌ اسم المستخدم أو كلمة المرور غير صحيحة!";
+      document.getElementById("loginError").textContent = `❌ خطأ! المدخل الحالي: يوزر (${u.length} أحرف) - باسوورد (${p.length} أحرف). تأكد من إدخال الرمز الصحيح تماماً.`;
     }
   };
 
@@ -430,10 +400,7 @@
     setTimeout(initFirebase, 200);
   }
 
-  function logout() { 
-    sessionStorage.clear(); 
-    window.location.reload(); 
-  }
+  function logout() { sessionStorage.clear(); window.location.reload(); }
 
   function initFirebase() {
     if(sessionStorage.getItem("isLoggedIn") !== "true") return;
@@ -470,7 +437,6 @@
     document.getElementById("statTotalStockValue").textContent = stTotal.toLocaleString() + " د.ع";
   }
 
-  // التحكم بالتبويبات
   document.querySelectorAll(".tab-btn").forEach(btn => {
     btn.onclick = function() {
       document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
@@ -480,20 +446,22 @@
     };
   });
 
-  // التحكم بقوائم ومواد شاشة البيع الفوري POS
   document.getElementById("posSearchInput").oninput = function() {
-    let query = sanitizeInput(this.value.trim());
+    let query = sanitizeInput(this.value.trim().toLowerCase());
     let resultsDiv = document.getElementById("posSearchResults");
     if(!query) { resultsDiv.style.display = "none"; return; }
     
-    let matches = getStockList().filter(x => x.name.toLowerCase().includes(query.toLowerCase()));
+    let matches = getStockList().filter(x => 
+      x.name.toLowerCase().includes(query) || 
+      (x.barcode && x.barcode.toLowerCase().includes(query))
+    );
     if(matches.length === 0) { resultsDiv.innerHTML = "<div class='pos-search-item'>لا توجد مواد تطابق البحث</div>"; resultsDiv.style.display = "block"; return; }
     
     resultsDiv.innerHTML = "";
     matches.forEach(item => {
       let div = document.createElement("div");
       div.className = "pos-search-item";
-      div.innerHTML = `<span><strong>${sanitizeInput(item.name)}</strong> (متوفر: ${item.qty})</span> <span style="color:var(--stock-color); font-weight:bold;">${parseFloat(item.sellPrice).toLocaleString()} د.ع</span>`;
+      div.innerHTML = `<span><strong>${sanitizeInput(item.name)}</strong> (الباركود: ${sanitizeInput(item.barcode || '-')})</span> <span style="color:var(--stock-color); font-weight:bold;">${parseFloat(item.sellPrice).toLocaleString()} د.ع</span>`;
       div.onclick = () => { addProductToCart(item); resultsDiv.style.display = "none"; document.getElementById("posSearchInput").value = ""; };
       resultsDiv.appendChild(div);
     });
@@ -503,11 +471,9 @@
   function addProductToCart(item) {
     let existing = posCart.find(x => x.id === item.id);
     if(existing) {
-      if(existing.cartQty + 1 > item.qty) { alert("❌ عذراً! الكمية المطلوبة غير متوفرة بالمخزن."); return; }
       existing.cartQty++;
     } else {
-      if(item.qty < 1) { alert("❌ هذه المادة نافدة تماماً من المخزن."); return; }
-      posCart.push({ id: item.id, name: item.name, sellPrice: item.sellPrice, maxQty: item.qty, cartQty: 1 });
+      posCart.push({ id: item.id, name: item.name, sellPrice: item.sellPrice, cartQty: 1 });
     }
     renderPosCart();
   }
@@ -515,7 +481,7 @@
   function renderPosCart() {
     let tbody = document.querySelector("#posCartTable tbody");
     tbody.innerHTML = "";
-    if(posCart.length === 0) { tbody.innerHTML = "<tr><td colspan='5' style='color:#718096;'>السلة فارغة، ابحث عن مادة لإضافتها</td></tr>"; calculateCartTotals(); return; }
+    if(posCart.length === 0) { tbody.innerHTML = "<tr><td colspan='5' style='color:#718096;'>السلة فارغة</td></tr>"; calculateCartTotals(); return; }
     
     posCart.forEach(x => {
       let tr = document.createElement("tr");
@@ -523,7 +489,7 @@
       tr.innerHTML = `
         <td><strong>${sanitizeInput(x.name)}</strong></td>
         <td>${parseFloat(x.sellPrice).toLocaleString()}</td>
-        <td><input type="number" value="${x.cartQty}" min="1" max="${x.maxQty}" style="width:70px; margin:0; text-align:center;" onchange="updateCartQty('${x.id}', this.value)"/></td>
+        <td><input type="number" value="${x.cartQty}" min="1" style="width:70px; margin:0; text-align:center;" onchange="updateCartQty('${x.id}', this.value)"/></td>
         <td>${total.toLocaleString()} د.ع</td>
         <td><button class="btn-danger" style="padding:2px 6px; font-size:12px;" onclick="removeCartItem('${x.id}')">❌</button></td>
       `;
@@ -535,7 +501,6 @@
   function updateCartQty(id, newQty) {
     let item = posCart.find(x => x.id === id);
     if(!item) return;
-    if(parseInt(newQty) > item.maxQty) { alert("❌ لا يمكنك تجاوز الكمية المتوفرة بالمخزن!"); renderPosCart(); return; }
     if(parseInt(newQty) <= 0) { removeCartItem(id); return; }
     item.cartQty = parseInt(newQty);
     renderPosCart();
@@ -566,9 +531,16 @@
 
   function renderStockTable() {
     let tbody = document.querySelector("#stockTable tbody"); tbody.innerHTML = "";
-    getStockList().forEach((x, i) => {
+    let query = sanitizeInput(document.getElementById("searchStock").value.trim().toLowerCase());
+    
+    let filtered = getStockList().filter(x => 
+      x.name.toLowerCase().includes(query) || 
+      (x.barcode && x.barcode.toLowerCase().includes(query))
+    );
+
+    filtered.forEach((x, i) => {
       let tr = document.createElement("tr");
-      tr.innerHTML = `<td>${i+1}</td><td>${sanitizeInput(x.name)}</td><td>${x.qty}</td><td>${parseFloat(x.buyPrice).toLocaleString()}</td><td>${parseFloat(x.sellPrice).toLocaleString()}</td><td>${(x.qty * x.buyPrice).toLocaleString()}</td>`;
+      tr.innerHTML = `<td>${i+1}</td><td>${sanitizeInput(x.barcode || '-')}</td><td>${sanitizeInput(x.name)}</td><td>${x.qty}</td><td>${parseFloat(x.buyPrice).toLocaleString()}</td><td>${parseFloat(x.sellPrice).toLocaleString()}</td><td>${(x.qty * x.buyPrice).toLocaleString()}</td>`;
       tbody.appendChild(tr);
     });
   }
@@ -584,40 +556,27 @@
     });
   }
 
-  // معالجة النماذج وإرسال البيانات للـ Firebase
   document.getElementById("stockForm").onsubmit = (e) => {
     e.preventDefault();
     dbRef.child("stock").push().set({
       name: sanitizeInput(document.getElementById("itemName").value.trim()),
+      barcode: sanitizeInput(document.getElementById("itemBarcode").value.trim()),
       qty: parseInt(document.getElementById("itemQty").value),
-      minQty: parseInt(document.getElementById("itemMinQty").value),
       buyPrice: parseFloat(document.getElementById("itemBuyPrice").value),
       sellPrice: parseFloat(document.getElementById("itemSellPrice").value)
     });
     document.getElementById("stockForm").reset();
   };
 
-  document.getElementById("customerForm").onsubmit = (e) => {
-    e.preventDefault();
-    dbRef.child("customers").push().set({
-      name: sanitizeInput(document.getElementById("customerName").value.trim()),
-      phone: sanitizeInput(document.getElementById("customerPhone").value.trim()),
-      openingBalance: parseFloat(document.getElementById("customerOpeningBalance").value || 0),
-      notes: sanitizeInput(document.getElementById("customerNotes").value.trim())
-    });
-    document.getElementById("customerForm").reset();
-  };
-
-  document.getElementById("supplierForm").onsubmit = (e) => {
-    e.preventDefault();
-    dbRef.child("suppliers").push().set({
-      name: sanitizeInput(document.getElementById("supplierName").value.trim()),
-      phone: sanitizeInput(document.getElementById("supplierPhone").value.trim()),
-      openingBalance: parseFloat(document.getElementById("supplierOpeningBalance").value || 0),
-      notes: sanitizeInput(document.getElementById("supplierNotes").value.trim())
-    });
-    document.getElementById("supplierForm").reset();
-  };
+  function exportData() {
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dbData));
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.setAttribute("href", dataStr);
+    downloadAnchor.setAttribute("download", "aldabbagh_store_backup.json");
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+  }
 </script>
 </body>
 </html>
