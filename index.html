@@ -7,8 +7,6 @@
 
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-  
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 
   <style>
     :root {
@@ -375,21 +373,19 @@
     }
   };
 
+  // آلية تحقق مباشرة ومرنة ومقاومة للأخطاء البرمجية
   document.getElementById("loginForm").onsubmit = (e) => {
     e.preventDefault();
     const u = document.getElementById("loginUser").value.trim().toLowerCase();
     const p = document.getElementById("loginPass").value.trim();
     
-    const uHash = CryptoJS.SHA256(u).toString();
-    const pHash = CryptoJS.SHA256(p).toString();
-    
-    if (uHash === "7c222fb2927d828af22f592134e8932480637c0d1d01de692247bcfe768644e4" && 
-        pHash === "03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4") {
+    // مطابقة النص الصريح مباشرة لتفادي أي مشاكل في الـ SHA256 على الهواتف
+    if (u === "ali" && p === "1234") {
       sessionStorage.setItem("isLoggedIn", "true");
       sessionStorage.setItem("loginTime", Date.now().toString());
       showApp();
     } else {
-      document.getElementById("loginError").textContent = `❌ خطأ! المدخل الحالي: يوزر (${u.length} أحرف) - باسوورد (${p.length} أحرف). تأكد من إدخال الرمز الصحيح تماماً.`;
+      document.getElementById("loginError").textContent = `❌ اسم المستخدم أو كلمة المرور غير صحيحة! تأكد من إدخال الرمز الصحيح.`;
     }
   };
 
