@@ -2,11 +2,11 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>نظام الدباغ للمخازن والديون</title>
+  <title>نظام الدباغ للمخازن والديون السحابي</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/8.10.1/firebase-app.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/8.10.1/firebase-database.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
   <style>
     :root {
@@ -214,6 +214,7 @@
 </div>
 
 <script>
+  // الإعدادات الرسمية لقاعدة البيانات
   const firebaseConfig = {
     apiKey: "AIzaSyC-QqnQTbbyVFS8QFkf4CYZTcURcr9nBW0",
     authDomain: "gimi-fd7fe.firebaseapp.com",
@@ -261,11 +262,14 @@
   function initFirebase() {
     if (dbRef) return;
     try {
+      // التحقق من تحميل المكتبات الرسمية بنجاح
       if (typeof firebase === 'undefined') {
-        throw new Error("لم يتم تحميل ملفات الفايربيس السحابية بنجاح.");
+        throw new Error("لم يقم المتصفح بتحميل ملفات الفايربيس السحابية. يرجى التحقق من جودة الإنترنت وتحديث الصفحة.");
       }
       if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
-      dbRef = firebase.database().ref("aldabbagh_store_v2");
+      
+      // نستخدم فرع قاعدة بيانات نظيف مخصص للبداية الجديدة
+      dbRef = firebase.database().ref("aldabbagh_store_final");
       
       dbRef.on("value", (snapshot) => {
         document.getElementById("cloudStatus").innerHTML = "🟢 متصل بنجاح بالسحابة ومزامن بالكامل مع خادم Firebase!";
