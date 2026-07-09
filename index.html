@@ -105,7 +105,7 @@
 
     .flex-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px; }
     
-    #cloudStatus { background: #e2e8f0; padding: 8px; text-align: center; font-size: 13px; font-weight: bold; border-radius: 6px; margin-bottom: 15px; }
+    #cloudStatus { background: #e2e8f0; padding: 12px; text-align: center; font-size: 14px; font-weight: bold; border-radius: 6px; margin-bottom: 15px; transition: all 0.3s; }
     .backup-section { background: #edf2f7; padding: 15px; border-radius: 8px; margin-top: 25px; display: flex; gap: 15px; align-items: center; justify-content: center; border: 1px solid #cbd5e0; }
   </style>
 </head>
@@ -132,7 +132,7 @@
   </header>
 
   <div class="container">
-    <div id="cloudStatus">🔄 جاري الاتصال بالخادم السحابي...</div>
+    <div id="cloudStatus">🔄 جاري الاتصال بالخادم السحابي وفحص قواعد البيانات...</div>
 
     <div class="stats-bar">
       <div class="stat-card suppliers-debt">
@@ -217,6 +217,7 @@
 </div>
 
 <script>
+  // الإعدادات السحابية المحدثة والمطابقة لرابط خادمك الذكي
   const firebaseConfig = {
     apiKey: "AIzaSyC-QqnQTbbyVFS8QFkf4CYZTcURcr9nBW0",
     authDomain: "gimi-fd7fe.firebaseapp.com",
@@ -264,12 +265,19 @@
   function initFirebase() {
     if (dbRef) return;
     try {
+      if (typeof firebase === 'undefined') {
+        throw new Error("لم يتم تحميل ملفات برمجيات Firebase. يرجى التحقق من جودة الإنترنت وتحديث الصفحة.");
+      }
+
       if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
       dbRef = firebase.database().ref("aldabbagh_store");
-      document.getElementById("cloudStatus").innerHTML = "🟢 متصل بالسحابة ومزامن مع المخزن وديون المجهزين الفورية!";
-      document.getElementById("cloudStatus").style.backgroundColor = "#c6f6d5"; document.getElementById("cloudStatus").style.color = "#22543d";
 
+      // بدء الاستماع ومزامنة البيانات السحابية الحية
       dbRef.on("value", (snapshot) => {
+        const statusDiv = document.getElementById("cloudStatus");
+        statusDiv.innerHTML = "🟢 متصل بنجاح بالسحابة! تم مزامنة المخزن وحسابات المجهّجين فوريّاً.";
+        statusDiv.style.backgroundColor = "#c6f6d5"; statusDiv.style.color = "#22543d";
+
         const val = snapshot.val();
         if (val) {
           dbData.suppliers = val.suppliers || {};
@@ -278,10 +286,16 @@
           dbData.suppliers = {}; dbData.stock = {};
         }
         renderStats(); renderTables(); renderStockTable();
+      }, (error) => {
+        const statusDiv = document.getElementById("cloudStatus");
+        statusDiv.innerHTML = `🔴 خطأ صلاحيات (Firebase Rules): ${error.message}. يرجى تغيير القواعد داخل تبويب Rules إلى true.`;
+        statusDiv.style.backgroundColor = "#fed7d7"; statusDiv.style.color = "#9b2c2c";
       });
+
     } catch (e) {
-      document.getElementById("cloudStatus").innerHTML = "🔴 خطأ في المزامنة السحابية. يعمل النظام محلياً حالياً.";
-      document.getElementById("cloudStatus").style.backgroundColor = "#fed7d7"; document.getElementById("cloudStatus").style.color = "#9b2c2c";
+      const statusDiv = document.getElementById("cloudStatus");
+      statusDiv.innerHTML = `🔴 خطأ محلي: ${e.message}`;
+      statusDiv.style.backgroundColor = "#fed7d7"; statusDiv.style.color = "#9b2c2c";
     }
   }
 
@@ -333,6 +347,7 @@
 
   document.getElementById("stockForm").onsubmit = (e) => {
     e.preventDefault();
+    if(!dbRef) { alert("النظام غير متصل بالسحابة حالياً، تأكد من الاتصال أولاً."); return; }
     dbRef.child("stock").push().set({
       name: sanitizeInput(document.getElementById("itemName").value.trim()),
       barcode: sanitizeInput(document.getElementById("itemBarcode").value.trim()),
@@ -345,6 +360,7 @@
 
   document.getElementById("supplierForm").onsubmit = (e) => {
     e.preventDefault();
+    if(!dbRef) { alert("النظام غير متصل بالسحابة حالياً، تأكد من الاتصال أولاً."); return; }
     dbRef.child("suppliers").push().set({
       name: sanitizeInput(document.getElementById("supplierName").value.trim()),
       phone: sanitizeInput(document.getElementById("supplierPhone").value.trim()),
