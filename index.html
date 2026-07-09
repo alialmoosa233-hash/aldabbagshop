@@ -2,9 +2,10 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>نظام الدباغ السحابي المحترف للمبيعات والمخازن</title>
+  <title>نظام الدباغ للمخازن والديون السحابي</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+  <!-- مكتبات Firebase السحابية -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
@@ -12,9 +13,7 @@
     :root {
       --primary-color: #2b6cb0;
       --supplier-color: #2f855a;
-      --customer-color: #4c51bf;
       --stock-color: #dd6b20;
-      --sales-color: #319795;
       --danger-color: #e53e3e;
       --bg-color: #f7fafc;
       --card-bg: #ffffff;
@@ -44,7 +43,7 @@
     #mainApp { display: none; }
 
     header {
-      background: linear-gradient(135deg, var(--sales-color), var(--customer-color), var(--stock-color));
+      background: linear-gradient(135deg, var(--primary-color), var(--supplier-color));
       color: white; padding: 15px 20px; text-align: center; font-size: 22px; font-weight: bold;
       box-shadow: 0 4px 6px rgba(0,0,0,0.1); position: relative;
     }
@@ -54,25 +53,22 @@
       font-size: 13px; border-radius: 6px; border: none; cursor: pointer;
     }
 
-    .container { max-width: 1600px; margin: 20px auto; padding: 0 15px; }
+    .container { max-width: 1400px; margin: 20px auto; padding: 0 15px; }
 
-    .tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+    .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
     .tab-btn {
-      flex: 1; min-width: 150px; padding: 12px; font-size: 16px; font-weight: bold;
+      flex: 1; padding: 12px; font-size: 16px; font-weight: bold;
       background: #e2e8f0; color: #4a5568; border: none; border-radius: 8px;
       cursor: pointer; transition: all 0.3s;
     }
-    .tab-btn.active[data-tab="pos"] { background: var(--sales-color); color: white; }
     .tab-btn.active[data-tab="stock"] { background: var(--stock-color); color: white; }
-    .tab-btn.active[data-tab="customers"] { background: var(--customer-color); color: white; }
     .tab-btn.active[data-tab="suppliers"] { background: var(--supplier-color); color: white; }
-    .tab-btn.active[data-tab="invoices"] { background: #4a5568; color: white; }
 
     .tab-content { display: none; }
     .tab-content.active { display: block; }
 
     .stats-bar {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
       gap: 15px; margin-bottom: 20px;
     }
     .stat-card {
@@ -80,30 +76,25 @@
       box-shadow: 0 2px 4px rgba(0,0,0,0.04); border-right: 5px solid #cbd5e0;
     }
     .stat-card.suppliers-debt { border-right-color: var(--supplier-color); }
-    .stat-card.customers-debt { border-right-color: var(--customer-color); }
     .stat-card.stock-val { border-right-color: var(--stock-color); }
-    .stat-card h3 { margin: 0 0 5px 0; font-size: 13px; color: #718096; }
-    .stat-card .value { font-size: 18px; font-weight: bold; }
+    .stat-card h3 { margin: 0 0 5px 0; font-size: 14px; color: #718096; }
+    .stat-card .value { font-size: 20px; font-weight: bold; }
 
     .card {
       background: var(--card-bg); border-radius: 8px; padding: 20px;
       margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border: 1px solid var(--border-color);
     }
 
-    h2, h3 { margin-top: 0; margin-bottom: 15px; font-size: 18px; border-bottom: 2px solid var(--border-color); padding-bottom: 8px; }
+    h2 { margin-top: 0; margin-bottom: 15px; font-size: 18px; border-bottom: 2px solid var(--border-color); padding-bottom: 8px; }
 
-    input, select, textarea {
+    input, select {
       width: 100%; padding: 10px 12px; margin-bottom: 12px; box-sizing: border-box;
       border-radius: 6px; border: 1px solid var(--border-color); background-color: #fbfbfb; font-family: inherit;
     }
 
     button { padding: 10px 16px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; font-family: inherit; }
-    .btn-primary { background: var(--primary-color); color: white; }
     .btn-supplier { background: var(--supplier-color); color: white; }
-    .btn-customer { background: var(--customer-color); color: white; }
     .btn-stock { background: var(--stock-color); color: white; }
-    .btn-sales { background: var(--sales-color); color: white; }
-    .btn-danger { background: var(--danger-color); color: white; }
     .btn-full { width: 100%; margin-top: 5px; margin-bottom: 5px; }
 
     .table-wrapper { width: 100%; overflow-x: auto; }
@@ -111,52 +102,32 @@
     th, td { border: 1px solid var(--border-color); padding: 10px 12px; text-align: center; }
     th { background: #edf2f7; color: #4a5568; }
     tr:hover { background: #f7fafc; }
-    
-    .low-stock { background-color: #fff5f5 !important; color: #c53030; font-weight: bold; }
 
     .flex-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px; }
-    .pos-layout { display: grid; grid-template-columns: 1.3fr 1fr; gap: 20px; }
-    @media (max-width: 900px) { .pos-layout { grid-template-columns: 1fr; } }
-    
-    .pos-search-results {
-      max-height: 200px; overflow-y: auto; background: white;
-      border: 1px solid var(--border-color); border-radius: 6px; margin-top: -10px; margin-bottom: 15px;
-      position: absolute; width: calc(100% - 40px); z-index: 10; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    }
-    .pos-search-item {
-      padding: 10px; border-bottom: 1px solid var(--border-color); cursor: pointer;
-      display: flex; justify-content: space-between; align-items: center;
-    }
-    .pos-search-item:hover { background: #edf2f7; }
     
     #cloudStatus { background: #e2e8f0; padding: 8px; text-align: center; font-size: 13px; font-weight: bold; border-radius: 6px; margin-bottom: 15px; }
     .backup-section { background: #edf2f7; padding: 15px; border-radius: 8px; margin-top: 25px; display: flex; gap: 15px; align-items: center; justify-content: center; border: 1px solid #cbd5e0; }
-
-    /* تنسيق نافذة الطباعة للفاتورة */
-    @media print {
-      body * { visibility: hidden; }
-      #printArea, #printArea * { visibility: visible; }
-      #printArea { position: absolute; left: 0; top: 0; width: 100%; direction: rtl; }
-    }
   </style>
 </head>
 <body>
 
+<!-- شاشة تسجيل الدخول -->
 <div id="loginScreen">
   <div class="login-box">
     <h2>🔐 تسجيل دخول النظام</h2>
     <form id="loginForm">
       <input type="text" id="loginUser" placeholder="اسم المستخدم (اليوزر)" required autocomplete="off"/>
       <input type="password" id="loginPass" placeholder="كلمة المرور (الباسورد)" required autocomplete="off"/>
-      <button type="submit" class="btn-primary btn-full">دخول للنظام</button>
+      <button type="submit" class="btn-supplier btn-full" style="background: var(--primary-color);">دخول للنظام</button>
       <div id="loginError" style="color: red; margin-top: 10px; font-size: 14px; font-weight: bold;"></div>
     </form>
   </div>
 </div>
 
+<!-- الواجهة الرئيسية -->
 <div id="mainApp">
   <header>
-    نظام الحسابات الذكي والمبيعات السحابية - محل الدباغ
+    نظام الحسابات والمخازن - محل الدباغ
     <button class="logout-btn" onclick="logout()">🚪 خروج</button>
   </header>
 
@@ -165,110 +136,43 @@
 
     <div class="stats-bar">
       <div class="stat-card suppliers-debt">
-        <h3>إجمالي ديون المجهّزين (عليك)</h3>
+        <h3>إجمالي ديون المجهّزين (عليك للشركات)</h3>
         <div class="value" id="statTotalSupplierDebts" style="color: var(--supplier-color);">0 د.ع</div>
       </div>
-      <div class="stat-card customers-debt">
-        <h3>إجمالي ديون الزبائن (لك)</h3>
-        <div class="value" id="statTotalCustomerDebts" style="color: var(--customer-color);">0 د.ع</div>
-      </div>
       <div class="stat-card stock-val">
-        <h3>إجمالي القيمة المالية للمخزن</h3>
+        <h3>إجمالي القيمة المالية للمخزن (بالكلفة)</h3>
         <div class="value" id="statTotalStockValue" style="color: var(--stock-color);">0 د.ع</div>
       </div>
     </div>
 
     <div class="tabs">
-      <button class="tab-btn active" data-tab="pos">🛒 شاشة المبيعات الفورية (POS)</button>
-      <button class="tab-btn" data-tab="stock">🏪 جرد المخزن والمواد</button>
-      <button class="tab-btn" data-tab="customers">👥 ديون وحسابات الزبائن</button>
+      <button class="tab-btn active" data-tab="stock">🏪 جرد المخزن والمواد</button>
       <button class="tab-btn" data-tab="suppliers">📦 ديون وحسابات المجهّجين</button>
-      <button class="tab-btn" data-tab="invoices">🧾 سجل الفواتير المحفوظة</button>
     </div>
 
-    <div id="posSection" class="tab-content active">
-      <div class="pos-layout">
-        <div class="card" style="position: relative;">
-          <h2 style="color: var(--sales-color);">🔍 اختيار المواد وقارئ الباركود</h2>
-          <input type="text" id="posSearchInput" placeholder="اقرأ الباركود بالجهاز أو اكتب اسم المادة للبحث..." autocomplete="off"/>
-          <div id="posSearchResults" class="pos-search-results" style="display:none;"></div>
-          
-          <div style="margin-top: 20px;">
-            <h3>🛒 سلة الفاتورة الحالية</h3>
-            <div class="table-wrapper">
-              <table id="posCartTable">
-                <thead>
-                  <tr><th>المادة</th><th>السعر</th><th>الكمية</th><th>إجمالي</th><th>إجراء</th></tr>
-                </thead>
-                <tbody>
-                  <tr><td colspan="5" style="color:#718096;">السلة فارغة، مرر الباركود أو ابحث لإضافة مواد</td></tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
-        <div class="card">
-          <h2 style="color: var(--sales-color);">🧾 إنهاء الفاتورة والدفع</h2>
-          <form id="posCheckoutForm">
-            <label><strong>نوع الدفع:</strong></label>
-            <select id="posPaymentType" onchange="toggleCustomerSelect()" required>
-              <option value="cash">💵 دفع نقدي (كاش فوري)</option>
-              <option value="credit">💳 دفع آجل (دين على زبون)</option>
-            </select>
-
-            <div id="posCustomerSelectContainer" style="display:none;">
-              <label><strong>اختر الزبون لربط حساب الدين:</strong></label>
-              <select id="posCustomerSelect"><option value="">-- اختر الزبون --</option></select>
-            </div>
-
-            <div style="background: #edf2f7; padding: 15px; border-radius: 8px; margin-top: 15px;">
-              <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-                <span>المجموع الكلي:</span>
-                <span><span id="posSubtotal">0</span> د.ع</span>
-              </div>
-              <div style="margin-bottom:10px;">
-                <label>خصم مباشر للفاتورة:</label>
-                <input type="number" id="posDiscount" value="0" min="0" oninput="calculateCartTotals()" />
-              </div>
-              <hr style="border:0; border-top:1px solid #cbd5e0; margin:10px 0;">
-              <div style="display:flex; justify-content:space-between; font-size:20px; font-weight:bold; color:var(--danger-color);">
-                <span>الصافي النهائي:</span>
-                <span><span id="posFinalTotal">0</span> د.ع</span>
-              </div>
-            </div>
-
-            <label style="margin-top:15px; display:block;">ملاحظات الفاتورة:</label>
-            <input type="text" id="posInvoiceNote" placeholder="ملاحظات اختيارية..." />
-
-            <button type="submit" class="btn-sales btn-full" style="font-size:18px; padding:12px;">💾 حفظ وطباعة الفاتورة الفورية</button>
-          </form>
-        </div>
-      </div>
-    </div>
-
-    <div id="stockSection" class="tab-content">
+    <!-- 1. جرد المخزن والمواد -->
+    <div id="stockSection" class="tab-content active">
       <div class="flex-grid">
         <div>
           <div class="card">
-            <h2 style="color: var(--stock-color);">إضافة مادة جديدة</h2>
+            <h2 style="color: var(--stock-color);">إضافة مادة جديدة للمخزن</h2>
             <form id="stockForm">
               <input type="text" id="itemName" placeholder="اسم المادة" required />
-              <input type="text" id="itemBarcode" placeholder="الباركود (اقرأه بالجهاز أو اكتبه)" />
+              <input type="text" id="itemBarcode" placeholder="الباركود (اختياري)" />
               <input type="number" id="itemQty" placeholder="الكمية المتوفرة" required min="0" />
               <input type="number" id="itemBuyPrice" placeholder="سعر الكلفة / الشراء (دينار)" required min="0" />
-              <input type="number" id="itemSellPrice" placeholder="سعر البيع للزبون (دينار)" required min="0" />
-              <button type="submit" class="btn-stock btn-full">إضافة المادة للمخزن السحابي</button>
+              <input type="number" id="itemSellPrice" placeholder="سعر البيع المقترح (دينار)" required min="0" />
+              <button type="submit" class="btn-stock btn-full">إضافة المادة للمخزن</button>
             </form>
           </div>
         </div>
         <div>
           <div class="card">
-            <h2 style="color: var(--stock-color);">جرد المواد وحالة المخزون</h2>
-            <input type="text" id="searchStock" placeholder="🔍 ابحث عن مادة..." oninput="renderStockTable()"/>
+            <h2 style="color: var(--stock-color);">جرد المواد وحالة المخزون الحالي</h2>
+            <input type="text" id="searchStock" placeholder="🔍 ابحث عن مادة باسمها أو الباركود..." oninput="renderStockTable()"/>
             <div class="table-wrapper">
               <table id="stockTable">
-                <thead><tr><th>#</th><th>الباركود</th><th>اسم المادة</th><th>الكمية</th><th>الكلفة</th><th>البيع</th><th>إجمالي القيمة</th></tr></thead>
+                <thead><tr><th>#</th><th>الباركود</th><th>اسم المادة</th><th>الكمية</th><th>الكلفة</th><th>البيع</th><th>إجمالي الكلفة</th></tr></thead>
                 <tbody></tbody>
               </table>
             </div>
@@ -277,33 +181,7 @@
       </div>
     </div>
 
-    <div id="customersSection" class="tab-content">
-      <div class="flex-grid">
-        <div>
-          <div class="card">
-            <h2 style="color: var(--customer-color);">إضافة زبون جديد</h2>
-            <form id="customerForm">
-              <input type="text" id="customerName" placeholder="اسم الزبون الكامل" required />
-              <input type="text" id="customerPhone" placeholder="رقم الهاتف" />
-              <input type="number" id="customerOpeningBalance" placeholder="الدين المترتب عليه سابقاً (إن وجد)" value="0" />
-              <button type="submit" class="btn-customer btn-full">حفظ الحساب</button>
-            </form>
-          </div>
-        </div>
-        <div>
-          <div class="card">
-            <h2 style="color: var(--customer-color);">ديون وأرصدة الزبائن الحالية</h2>
-            <div class="table-wrapper">
-              <table id="customersTable">
-                <thead><tr><th>#</th><th>اسم الزبون</th><th>الهاتف</th><th>الدين المترتب عليه</th></tr></thead>
-                <tbody></tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
+    <!-- 2. حسابات المجهّجين -->
     <div id="suppliersSection" class="tab-content">
       <div class="flex-grid">
         <div>
@@ -311,8 +189,8 @@
             <h2 style="color: var(--supplier-color);">إضافة مجهّز / شركة جديدة</h2>
             <form id="supplierForm">
               <input type="text" id="supplierName" placeholder="اسم الشركة أو المجهز" required />
-              <input type="text" id="supplierPhone" placeholder="رقم الهاتف" />
-              <input type="number" id="supplierOpeningBalance" placeholder="الحساب الحالي المطلوبة منك له" value="0" />
+              <input type="text" id="supplierPhone" placeholder="رقم الهاتف (اختياري)" />
+              <input type="number" id="supplierOpeningBalance" placeholder="الحساب الحالي المطلوب منك له (دينار)" value="0" />
               <button type="submit" class="btn-supplier btn-full">حفظ المجهّز</button>
             </form>
           </div>
@@ -331,20 +209,6 @@
       </div>
     </div>
 
-    <div id="invoicesSection" class="tab-content">
-      <div class="card">
-        <h2 style="color: #4a5568;">🧾 سجل وحركة الفواتير الصادرة</h2>
-        <div class="table-wrapper">
-          <table id="invoicesTable">
-            <thead><tr><th>رقم الفاتورة</th><th>التاريخ والوقت</th><th>نوع الدفع</th><th>الزبون</th><th>الصافي النهائي</th><th>إجراء</th></tr></thead>
-            <tbody>
-              <tr><td colspan="6" style="color:#718096;">لا توجد فواتير مسجلة حالياً</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
     <div class="backup-section">
       <strong>💾 إدارة النظام والنسخ الاحتياطي:</strong>
       <button type="button" class="btn-supplier" style="background: #4a5568;" onclick="exportData()">📥 تصدير نسخة احتياطية فورية (JSON)</button>
@@ -352,13 +216,11 @@
   </div>
 </div>
 
-<div id="printArea" style="display:none; padding:20px; font-family:monospace;"></div>
-
 <script>
   const firebaseConfig = {
     apiKey: "AIzaSyC-QqnQTbbyVFS8QFkf4CYZTcURcr9nBW0",
     authDomain: "gimi-fd7fe.firebaseapp.com",
-    databaseURL: "https://gimi-fd7fe-default-rtdb.firebaseio.com/",
+    databaseURL: "https://gimi-fd7fe-default-rtdb.firebaseio.com",
     projectId: "gimi-fd7fe",
     storageBucket: "gimi-fd7fe.firebasestorage.app",
     messagingSenderId: "642364940251",
@@ -366,8 +228,7 @@
   };
 
   let dbRef;
-  let dbData = { suppliers: {}, customers: {}, invoices: {}, stock: {} };
-  let posCart = []; 
+  let dbData = { suppliers: {}, stock: {} };
 
   function sanitizeInput(text) {
     if (typeof text !== 'string') return text;
@@ -405,33 +266,32 @@
     try {
       if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
       dbRef = firebase.database().ref("aldabbagh_store");
-      document.getElementById("cloudStatus").innerHTML = "🟢 متصل بالسحابة ومزامن مع المخزن ونقاط البيع الفورية!";
+      document.getElementById("cloudStatus").innerHTML = "🟢 متصل بالسحابة ومزامن مع المخزن وديون المجهزين الفورية!";
       document.getElementById("cloudStatus").style.backgroundColor = "#c6f6d5"; document.getElementById("cloudStatus").style.color = "#22543d";
 
       dbRef.on("value", (snapshot) => {
         const val = snapshot.val();
         if (val) {
-          dbData.suppliers = val.suppliers || {}; dbData.customers = val.customers || {};
-          dbData.invoices = val.invoices || {}; dbData.stock = val.stock || {};
+          dbData.suppliers = val.suppliers || {};
+          dbData.stock = val.stock || {};
+        } else {
+          dbData.suppliers = {}; dbData.stock = {};
         }
-        renderStats(); renderTables(); renderStockTable(); updatePosCustomerSelect(); renderInvoicesTable();
+        renderStats(); renderTables(); renderStockTable();
       });
     } catch (e) {
-      document.getElementById("cloudStatus").innerHTML = "🔴 خطأ في الاتصال بقاعدة البيانات.";
+      document.getElementById("cloudStatus").innerHTML = "🔴 خطأ في المزامنة السحابية. يعمل النظام محلياً حالياً.";
+      document.getElementById("cloudStatus").style.backgroundColor = "#fed7d7"; document.getElementById("cloudStatus").style.color = "#9b2c2c";
     }
   }
 
   function getSuppliersList() { return Object.keys(dbData.suppliers).map(k => ({id: k, ...dbData.suppliers[k]})); }
-  function getCustomersList() { return Object.keys(dbData.customers).map(k => ({id: k, ...dbData.customers[k]})); }
   function getStockList() { return Object.keys(dbData.stock).map(k => ({id: k, ...dbData.stock[k]})); }
-  function getInvoicesList() { return Object.keys(dbData.invoices).map(k => ({id: k, ...dbData.invoices[k]})); }
 
   function renderStats() {
     let sTotal = 0; getSuppliersList().forEach(x => sTotal += parseFloat(x.openingBalance || 0));
-    let cTotal = 0; getCustomersList().forEach(x => cTotal += parseFloat(x.openingBalance || 0));
     let stTotal = 0; getStockList().forEach(x => stTotal += (parseFloat(x.qty || 0) * parseFloat(x.buyPrice || 0)));
     document.getElementById("statTotalSupplierDebts").textContent = sTotal.toLocaleString() + " د.ع";
-    document.getElementById("statTotalCustomerDebts").textContent = cTotal.toLocaleString() + " د.ع";
     document.getElementById("statTotalStockValue").textContent = stTotal.toLocaleString() + " د.ع";
   }
 
@@ -444,210 +304,33 @@
     };
   });
 
-  // ميزة 1: قراءة الباركود والبحث الفوري الفعال والذكي
-  document.getElementById("posSearchInput").oninput = function() {
-    let query = sanitizeInput(this.value.trim().toLowerCase());
-    let resultsDiv = document.getElementById("posSearchResults");
-    if(!query) { resultsDiv.style.display = "none"; return; }
-    
-    // فحص الباركود الصريح المباشر لإضافته فوراً للسلة
-    let exactBarcodeMatch = getStockList().find(x => x.barcode && x.barcode.toLowerCase() === query);
-    if (exactBarcodeMatch) {
-      addProductToCart(exactBarcodeMatch);
-      this.value = ""; 
-      resultsDiv.style.display = "none";
-      return;
-    }
-
-    let matches = getStockList().filter(x => 
-      x.name.toLowerCase().includes(query) || 
-      (x.barcode && x.barcode.toLowerCase().includes(query))
-    );
-    
-    if(matches.length === 0) { resultsDiv.innerHTML = "<div class='pos-search-item'>لا توجد مواد مطابقة</div>"; resultsDiv.style.display = "block"; return; }
-    
-    resultsDiv.innerHTML = "";
-    matches.forEach(item => {
-      let div = document.createElement("div");
-      div.className = "pos-search-item";
-      div.innerHTML = `<span><strong>${sanitizeInput(item.name)}</strong> (الباركود: ${sanitizeInput(item.barcode || '-')}) - متوفر: [${item.qty}]</span> <span style="color:var(--stock-color); font-weight:bold;">${parseFloat(item.sellPrice).toLocaleString()} د.ع</span>`;
-      div.onclick = () => { addProductToCart(item); resultsDiv.style.display = "none"; document.getElementById("posSearchInput").value = ""; };
-      resultsDiv.appendChild(div);
-    });
-    resultsDiv.style.display = "block";
-  };
-
-  function addProductToCart(item) {
-    let existing = posCart.find(x => x.id === item.id);
-    if(existing) { existing.cartQty++; } 
-    else { posCart.push({ id: item.id, name: item.name, sellPrice: item.sellPrice, cartQty: 1 }); }
-    renderPosCart();
-  }
-
-  function renderPosCart() {
-    let tbody = document.querySelector("#posCartTable tbody"); tbody.innerHTML = "";
-    if(posCart.length === 0) { tbody.innerHTML = "<tr><td colspan='5' style='color:#718096;'>السلة فارغة، مرر الباركود أو ابحث لإضافة مواد</td></tr>"; calculateCartTotals(); return; }
-    posCart.forEach(x => {
-      let total = x.cartQty * x.sellPrice;
-      let tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td><strong>${sanitizeInput(x.name)}</strong></td>
-        <td>${parseFloat(x.sellPrice).toLocaleString()}</td>
-        <td><input type="number" value="${x.cartQty}" min="1" style="width:70px; margin:0; text-align:center;" onchange="updateCartQty('${x.id}', this.value)"/></td>
-        <td>${total.toLocaleString()} د.ع</td>
-        <td><button type="button" class="btn-danger" style="padding:2px 6px; font-size:12px;" onclick="removeCartItem('${x.id}')">❌</button></td>
-      `;
-      tbody.appendChild(tr);
-    });
-    calculateCartTotals();
-  }
-
-  function updateCartQty(id, newQty) {
-    let item = posCart.find(x => x.id === id); if(!item) return;
-    if(parseInt(newQty) <= 0) { removeCartItem(id); return; }
-    item.cartQty = parseInt(newQty); renderPosCart();
-  }
-
-  function removeCartItem(id) { posCart = posCart.filter(x => x.id !== id); renderPosCart(); }
-
-  function calculateCartTotals() {
-    let subtotal = 0; posCart.forEach(x => subtotal += (x.cartQty * x.sellPrice));
-    let discount = parseFloat(document.getElementById("posDiscount").value) || 0;
-    let finalTotal = Math.max(0, subtotal - discount);
-    document.getElementById("posSubtotal").textContent = subtotal.toLocaleString();
-    document.getElementById("posFinalTotal").textContent = finalTotal.toLocaleString();
-  }
-
-  function toggleCustomerSelect() {
-    const type = document.getElementById("posPaymentType").value;
-    document.getElementById("posCustomerSelectContainer").style.display = type === "credit" ? "block" : "none";
-  }
-
-  function updatePosCustomerSelect() {
-    let select = document.getElementById("posCustomerSelect"); select.innerHTML = '<option value="">-- اختر الزبون --</option>';
-    getCustomersList().forEach(c => { select.innerHTML += `<option value="${c.id}">${sanitizeInput(c.name)}</option>`; });
-  }
-
-  // ميزة 3: تلوين تنبيهات النواقص تلقائياً باللون الأحمر (أقل من 5 قطع)
   function renderStockTable() {
     let tbody = document.querySelector("#stockTable tbody"); tbody.innerHTML = "";
     let query = sanitizeInput(document.getElementById("searchStock").value.trim().toLowerCase());
     let filtered = getStockList().filter(x => x.name.toLowerCase().includes(query) || (x.barcode && x.barcode.toLowerCase().includes(query)));
 
+    if(filtered.length === 0) {
+      tbody.innerHTML = "<tr><td colspan='7' style='color:#718096;'>لا توجد مواد مسجلة حالياً تلبي البحث</td></tr>";
+      return;
+    }
+
     filtered.forEach((x, i) => {
       let tr = document.createElement("tr");
-      if(parseInt(x.qty) <= 5) { tr.className = "low-stock"; } // تلوين النواقص تلقائياً
-      tr.innerHTML = `<td>${i+1}</td><td>${sanitizeInput(x.barcode || '-')}</td><td>${sanitizeInput(x.name)} ${parseInt(x.qty) <= 5 ? '⚠️ (وشك على النفاذ)' : ''}</td><td>${x.qty}</td><td>${parseFloat(x.buyPrice).toLocaleString()}</td><td>${parseFloat(x.sellPrice).toLocaleString()}</td><td>${(x.qty * x.buyPrice).toLocaleString()}</td>`;
+      tr.innerHTML = `<td>${i+1}</td><td>${sanitizeInput(x.barcode || '-')}</td><td><strong>${sanitizeInput(x.name)}</strong></td><td>${x.qty}</td><td>${parseFloat(x.buyPrice).toLocaleString()}</td><td>${parseFloat(x.sellPrice).toLocaleString()}</td><td>${(x.qty * x.buyPrice).toLocaleString()} د.ع</td>`;
       tbody.appendChild(tr);
     });
   }
 
   function renderTables() {
-    let t1 = document.querySelector("#customersTable tbody"); t1.innerHTML = "";
-    getCustomersList().forEach((x, i) => { t1.innerHTML += `<tr><td>${i+1}</td><td>${sanitizeInput(x.name)}</td><td>${sanitizeInput(x.phone || '-')}</td><td>${parseFloat(x.openingBalance).toLocaleString()} د.ع</td></tr>`; });
-    
     let t2 = document.querySelector("#suppliersTable tbody"); t2.innerHTML = "";
-    getSuppliersList().forEach((x, i) => { t2.innerHTML += `<tr><td>${i+1}</td><td>${sanitizeInput(x.name)}</td><td>${sanitizeInput(x.phone || '-')}</td><td>${parseFloat(x.openingBalance).toLocaleString()} د.ع</td></tr>`; });
-  }
-
-  // ميزة 2: حفظ الفواتير وخصم الكميات تلقائياً من المخزن
-  document.getElementById("posCheckoutForm").onsubmit = (e) => {
-    e.preventDefault();
-    if(posCart.length === 0) { alert("السلة فارغة! يرجى إضافة مواد أولاً."); return; }
-    
-    const pType = document.getElementById("posPaymentType").value;
-    const cId = document.getElementById("posCustomerSelect").value;
-    const cName = pType === "credit" && dbData.customers[cId] ? dbData.customers[cId].name : "زبون نقدي";
-    
-    if (pType === "credit" && !cId) { alert("يرجى اختيار اسم الزبون لربط حساب الدين."); return; }
-
-    let subtotal = 0; posCart.forEach(x => subtotal += (x.cartQty * x.sellPrice));
-    let discount = parseFloat(document.getElementById("posDiscount").value) || 0;
-    let finalTotal = Math.max(0, subtotal - discount);
-    
-    const invoiceId = "INV-" + Date.now();
-    const timestamp = new Date().toLocaleString("ar-IQ");
-
-    // 1. خصم الكميات المبيعة من جدول المخزن
-    posCart.forEach(cartItem => {
-      if(dbData.stock[cartItem.id]) {
-        let currentQty = parseInt(dbData.stock[cartItem.id].qty || 0);
-        let newQty = Math.max(0, currentQty - cartItem.cartQty);
-        dbRef.child("stock").child(cartItem.id).update({ qty: newQty });
-      }
-    });
-
-    // 2. إذا كانت الفاتورة دين (آجل)، قم بإضافتها لرصيد الزبون
-    if (pType === "credit" && cId) {
-      let currentDebt = parseFloat(dbData.customers[cId].openingBalance || 0);
-      dbRef.child("customers").child(cId).update({ openingBalance: currentDebt + finalTotal });
+    let suppliers = getSuppliersList();
+    if(suppliers.length === 0) {
+      t2.innerHTML = "<tr><td colspan='4' style='color:#718096;'>لا يوجد مجهزون مسجلون حالياً</td></tr>";
+      return;
     }
-
-    // 3. حفظ الفاتورة بالكامل في السجل السحابي
-    const invoiceData = {
-      id: invoiceId, date: timestamp, type: pType, customerName: cName,
-      items: posCart, subtotal: subtotal, discount: discount, finalTotal: finalTotal,
-      note: sanitizeInput(document.getElementById("posInvoiceNote").value.trim())
-    };
-
-    dbRef.child("invoices").child(invoiceId).set(invoiceData, (err) => {
-      if(!err) {
-        printInvoiceHTML(invoiceData); // استدعاء الطباعة الفورية
-        posCart = []; renderPosCart(); document.getElementById("posCheckoutForm").reset(); toggleCustomerSelect();
-      }
-    });
-  };
-
-  // ميزة 2 إضافية: استعراض الفواتير في جدول مخصص وإعادة طباعتها
-  function renderInvoicesTable() {
-    let tbody = document.querySelector("#invoicesTable tbody"); tbody.innerHTML = "";
-    let list = getInvoicesList().reverse(); // عرض الأحدث أولاً
-    if(list.length === 0) { tbody.innerHTML = "<tr><td colspan='6' style='color:#718096;'>لا توجد فواتير مسجلة حالياً</td></tr>"; return; }
-    
-    list.forEach(inv => {
-      let tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td><strong>${inv.id}</strong></td><td>${inv.date}</td>
-        <td>${inv.type === 'cash' ? '💵 كاش' : '💳 آجل'}</td><td>${sanitizeInput(inv.customerName)}</td>
-        <td style="color:var(--danger-color); font-weight:bold;">${parseFloat(inv.finalTotal).toLocaleString()} د.ع</td>
-        <td><button type="button" class="btn-sales" style="padding:4px 8px; font-size:12px;" onclick='reprintInvoice(${JSON.stringify(inv)})'>🖨️ طباعة</button></td>
-      `;
-      tbody.appendChild(tr);
-    });
+    suppliers.forEach((x, i) => { t2.innerHTML += `<tr><td>${i+1}</td><td><strong>${sanitizeInput(x.name)}</strong></td><td>${sanitizeInput(x.phone || '-')}</td><td style='color:var(--supplier-color); font-weight:bold;'>${parseFloat(x.openingBalance).toLocaleString()} د.ع</td></tr>`; });
   }
 
-  function reprintInvoice(inv) { printInvoiceHTML(inv); }
-
-  function printInvoiceHTML(inv) {
-    let pArea = document.getElementById("printArea");
-    let itemsHtml = "";
-    inv.items.forEach(x => {
-      itemsHtml += `<tr><td style="text-align:right;">${x.name}</td><td>${x.cartQty}</td><td>${parseFloat(x.sellPrice).toLocaleString()}</td></tr>`;
-    });
-    
-    pArea.innerHTML = `
-      <div style="text-align:center; font-size:16px;">
-        <h3>محل الدباغ للمواد الغذائية</h3>
-        <p>فاتورة مبيعات فوري رقم: ${inv.id}</p>
-        <p>التاريخ: ${inv.date}</p>
-      </div>
-      <hr style="border-top: 1px dashed black;">
-      <table style="width:100%; font-size:13px; border-collapse:collapse;">
-        <thead><tr style="border-bottom:1px solid black;"><th style="text-align:right;">المادة</th><th>الكمية</th><th>السعر</th></tr></thead>
-        <tbody>${itemsHtml}</tbody>
-      </table>
-      <hr style="border-top: 1px dashed black;">
-      <div style="font-size:14px; font-weight:bold; text-align:left;">
-        <p>المجموع: ${parseFloat(inv.subtotal).toLocaleString()} د.ع</p>
-        <p>الخصم: ${parseFloat(inv.discount).toLocaleString()} د.ع</p>
-        <p style="font-size:16px;">الصافي: ${parseFloat(inv.finalTotal).toLocaleString()} د.ع</p>
-      </div>
-      <div style="text-align:center; margin-top:15px; font-size:12px;">شكرًا لزيارتكم! نظام الدباغ السحابي الذكي</div>
-    `;
-    window.print();
-  }
-
-  // نماذج الإدخال العادية (المخزن، الزبائن، المجهّجين)
   document.getElementById("stockForm").onsubmit = (e) => {
     e.preventDefault();
     dbRef.child("stock").push().set({
@@ -658,16 +341,6 @@
       sellPrice: parseFloat(document.getElementById("itemSellPrice").value)
     });
     document.getElementById("stockForm").reset();
-  };
-
-  document.getElementById("customerForm").onsubmit = (e) => {
-    e.preventDefault();
-    dbRef.child("customers").push().set({
-      name: sanitizeInput(document.getElementById("customerName").value.trim()),
-      phone: sanitizeInput(document.getElementById("customerPhone").value.trim()),
-      openingBalance: parseFloat(document.getElementById("customerOpeningBalance").value) || 0
-    });
-    document.getElementById("customerForm").reset();
   };
 
   document.getElementById("supplierForm").onsubmit = (e) => {
@@ -683,7 +356,7 @@
   function exportData() {
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dbData));
     const downloadAnchor = document.createElement('a');
-    downloadAnchor.setAttribute("href", dataStr); downloadAnchor.setAttribute("download", "aldabbagh_store_professional_backup.json");
+    downloadAnchor.setAttribute("href", dataStr); downloadAnchor.setAttribute("download", "aldabbagh_store_simple_backup.json");
     document.body.appendChild(downloadAnchor); downloadAnchor.click(); downloadAnchor.remove();
   }
 </script>
