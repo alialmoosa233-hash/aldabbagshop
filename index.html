@@ -38,7 +38,7 @@
       box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
 
-    .container { max-width: 1200px; margin: 20px auto; padding: 0 15px; }
+    .container { max-width: 1250px; margin: 20px auto; padding: 0 15px; }
 
     #cloudStatus {
       padding: 12px;
@@ -62,6 +62,7 @@
     .tab-content.active { display: block; }
 
     .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
+    .grid-form { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
     .card {
       background: var(--card);
@@ -73,6 +74,7 @@
     }
 
     h2 { margin-top: 0; font-size: 18px; border-bottom: 2px solid var(--border); padding-bottom: 8px; }
+    h3 { font-size: 14px; margin: 10px 0 5px 0; color: #4a5568; }
 
     input, select {
       width: 100%; padding: 10px; margin-bottom: 12px;
@@ -84,13 +86,13 @@
       width: 100%; padding: 10px; border: none; border-radius: 6px;
       color: white; font-weight: bold; cursor: pointer; font-size: 15px;
     }
-    .btn-price { background: var(--price); }
+    .btn-price { background: var(--price); grid-column: span 2; }
     .btn-debt { background: var(--debt); }
     .btn-success { background: var(--success); }
 
     .table-wrapper { overflow-x: auto; margin-top: 10px; }
-    table { width: 100%; border-collapse: collapse; font-size: 14px; }
-    th, td { border: 1px solid var(--border); padding: 10px; text-align: center; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { border: 1px solid var(--border); padding: 8px 10px; text-align: center; }
     th { background: #edf2f7; }
 
     .backup-section {
@@ -123,22 +125,43 @@
     <div class="grid">
       <div class="card">
         <h2 style="color: var(--price);">➕ إضافة مادة للأسعار</h2>
-        <form id="priceForm">
-          <input type="text" id="pName" placeholder="اسم المادة" required />
-          <input type="text" id="pCode" placeholder="الباركود / الكود (اختياري)" />
-          <input type="number" id="pCostPrice" placeholder="سعر الكلفة (دينار)" required />
-          <input type="number" id="pSellPrice" placeholder="سعر البيع (دينار)" required />
+        <form id="priceForm" class="grid-form">
+          <input type="text" id="pName" placeholder="اسم المادة" style="grid-column: span 2;" required />
+          <input type="text" id="pCode" placeholder="الباركود / الكود (اختياري)" style="grid-column: span 2;" />
+          
+          <div style="grid-column: span 2; font-weight:bold; color:var(--price); margin-top:5px;">📦 أسعار الباكيت:</div>
+          <input type="number" id="pPacketCost" placeholder="كلفة الباكيت" />
+          <input type="number" id="pPacketSell" placeholder="بيع الباكيت" />
+
+          <div style="grid-column: span 2; font-weight:bold; color:var(--price); margin-top:5px;">📦 أسعار الكارتون الكامل:</div>
+          <input type="number" id="pCartonCost" placeholder="كلفة الكارتون" />
+          <input type="number" id="pCartonSell" placeholder="بيع الكارتون" />
+
           <button type="submit" class="btn-price">حفظ المادة في الدليل</button>
         </form>
       </div>
 
       <div class="card">
-        <h2 style="color: var(--price);">🔍 قائمة عرض الأسعار</h2>
+        <h2 style="color: var(--price);">🔍 قائمة عرض الأسعار التفصيلية</h2>
         <input type="text" id="searchPrice" placeholder="ابحث باسم المادة أو الكود..." oninput="renderPrices()" />
         <div class="table-wrapper">
           <table>
-            <thead><tr><th>#</th><th>اسم المادة</th><th>الكود</th><th>الكلفة</th><th>البيع</th><th>الربح</th></tr></thead>
-            <tbody id="pricesTable"><tr><td colspan="6">جاري التحميل...</td></tr></tbody>
+            <thead>
+              <tr>
+                <th rowspan="2">#</th>
+                <th rowspan="2">اسم المادة</th>
+                <th rowspan="2">الكود</th>
+                <th colspan="2" style="background:#e2e8f0;">📦 الباكيت</th>
+                <th colspan="2" style="background:#feebc8;">📦 الكارتون الكامل</th>
+              </tr>
+              <tr>
+                <th style="background:#edf2f7;">الكلفة</th>
+                <th style="background:#edf2f7;">البيع</th>
+                <th style="background:#feebc8;">الكلفة</th>
+                <th style="background:#feebc8;">البيع</th>
+              </tr>
+            </thead>
+            <tbody id="pricesTable"><tr><td colspan="7">جاري التحميل...</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -267,16 +290,20 @@
     };
   });
 
-  // إضافة مادة للأسعار
+  // إضافة مادة مع أسعار الباكيت والكارتون
   document.getElementById("priceForm").onsubmit = (e) => {
     e.preventDefault();
     if(!db) return alert("غير متصل بالسيرفر!");
+    
     db.child("prices").push().set({
       name: document.getElementById("pName").value.trim(),
       code: document.getElementById("pCode").value.trim(),
-      costPrice: parseFloat(document.getElementById("pCostPrice").value) || 0,
-      sellPrice: parseFloat(document.getElementById("pSellPrice").value) || 0
+      packetCost: parseFloat(document.getElementById("pPacketCost").value) || 0,
+      packetSell: parseFloat(document.getElementById("pPacketSell").value) || 0,
+      cartonCost: parseFloat(document.getElementById("pCartonCost").value) || 0,
+      cartonSell: parseFloat(document.getElementById("pCartonSell").value) || 0
     });
+    
     document.getElementById("priceForm").reset();
   };
 
@@ -335,7 +362,7 @@
     });
   }
 
-  // عرض جدول الأسعار
+  // عرض جدول الأسعار الشامل (باكيت وكارتون)
   function renderPrices() {
     const tbody = document.getElementById("pricesTable"); tbody.innerHTML = "";
     const query = document.getElementById("searchPrice").value.trim().toLowerCase();
@@ -347,23 +374,26 @@
     });
 
     if(filtered.length === 0) {
-      tbody.innerHTML = "<tr><td colspan='6' style='color:#718096;'>لا توجد أسعار مسجلة</td></tr>";
+      tbody.innerHTML = "<tr><td colspan='7' style='color:#718096;'>لا توجد أسعار مسجلة</td></tr>";
       return;
     }
 
     filtered.forEach((k, i) => {
       const item = currentData.prices[k];
-      const cost = item.costPrice || 0;
-      const sell = item.sellPrice || item.price || 0;
-      const profit = sell - cost;
+      
+      const pCost = item.packetCost || item.costPrice || 0;
+      const pSell = item.packetSell || item.sellPrice || item.price || 0;
+      const cCost = item.cartonCost || 0;
+      const cSell = item.cartonSell || 0;
 
       tbody.innerHTML += `<tr>
         <td>${i+1}</td>
         <td><strong>${item.name}</strong></td>
         <td>${item.code || '-'}</td>
-        <td style='color:#718096;'>${cost.toLocaleString()} د.ع</td>
-        <td style='color:var(--price); font-weight:bold;'>${sell.toLocaleString()} د.ع</td>
-        <td style='color:${profit >= 0 ? "#2f855a" : "#c53030"}; font-weight:bold;'>${profit.toLocaleString()} د.ع</td>
+        <td style='color:#718096;'>${pCost ? pCost.toLocaleString() + ' د.ع' : '-'}</td>
+        <td style='color:var(--price); font-weight:bold;'>${pSell ? pSell.toLocaleString() + ' د.ع' : '-'}</td>
+        <td style='color:#718096;'>${cCost ? cCost.toLocaleString() + ' د.ع' : '-'}</td>
+        <td style='color:#b7791f; font-weight:bold;'>${cSell ? cSell.toLocaleString() + ' د.ع' : '-'}</td>
       </tr>`;
     });
   }
@@ -439,16 +469,13 @@
     reader.readAsText(file);
   }
 
-  // تصفير النظام بالكامل (مع كلمة مرور ونُسخة احتياطية آمنة)
+  // تصفير النظام بالكامل
   function resetSystem() {
     const password = prompt("⚠️ تحذير: هذا الخيار سيمسح جميع الأسعار والديون والحركات!\n\nأدخل رمز الأمان (1234) للتأكيد:");
     
     if(password === "1234") {
       if(confirm("هل أنت متأكد 100% من مسح كافة البيانات؟ سيتم أخذ نسخة احتياطية تلقائياً قبل المسح.")) {
-        // تنزيل نسخة احتياطية أولاً للأمان
         exportBackup();
-        
-        // مسح قاعدة البيانات من السيرفر
         db.remove()
           .then(() => alert("🧹 تم تصفير النظام بنجاح وإعادة ضبط البيانات!"))
           .catch(err => alert("❌ حدث خطأ أثناء التصفير: " + err.message));
