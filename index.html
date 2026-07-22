@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>نظام عرض الأسعار والديون - الدباغ</title>
+  <title>نظام الأسعار والديون والحركات - الدباغ</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <!-- مكتبات Firebase السحابية -->
@@ -13,6 +13,7 @@
     :root {
       --primary: #2b6cb0;
       --debt: #c53030;
+      --success: #2f855a;
       --price: #2b6cb0;
       --bg: #f7fafc;
       --card: #ffffff;
@@ -68,11 +69,12 @@
       border-radius: 8px;
       padding: 20px;
       box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      margin-bottom: 20px;
     }
 
     h2 { margin-top: 0; font-size: 18px; border-bottom: 2px solid var(--border); padding-bottom: 8px; }
 
-    input {
+    input, select {
       width: 100%; padding: 10px; margin-bottom: 12px;
       border: 1px solid var(--border); border-radius: 6px;
       box-sizing: border-box; font-size: 14px;
@@ -84,6 +86,7 @@
     }
     .btn-price { background: var(--price); }
     .btn-debt { background: var(--debt); }
+    .btn-success { background: var(--success); }
 
     .table-wrapper { overflow-x: auto; margin-top: 10px; }
     table { width: 100%; border-collapse: collapse; font-size: 14px; }
@@ -96,11 +99,14 @@
       text-align: center; display: flex; justify-content: center; gap: 15px; flex-wrap: wrap;
     }
     .btn-backup { background: #4a5568; width: auto; padding: 8px 16px; }
+
+    .badge-pay { background: #c6f6d5; color: #22543d; padding: 3px 8px; border-radius: 4px; font-weight: bold; }
+    .badge-bill { background: #fed7d7; color: #9b2c2c; padding: 3px 8px; border-radius: 4px; font-weight: bold; }
   </style>
 </head>
 <body>
 
-<header>📋 نظام عرض الأسعار والديون - محل الدباغ</header>
+<header>📋 نظام الأسعار والديون والحركات - محل الدباغ</header>
 
 <div class="container">
   <div id="cloudStatus">🔄 جاري الاتصال بالسحابة...</div>
@@ -108,7 +114,7 @@
   <!-- أزرار التنقل السريعة -->
   <div class="tabs">
     <button class="tab-btn active" data-tab="prices">🏷️ دليل وعرض الأسعار</button>
-    <button class="tab-btn" data-tab="debts">📒 سجل الديون والمطلوبات</button>
+    <button class="tab-btn" data-tab="debts">📒 حسابات وحركات الشركات/الديون</button>
   </div>
 
   <!-- 1. قسم عرض الأسعار -->
@@ -138,27 +144,61 @@
     </div>
   </div>
 
-  <!-- 2. قسم الديون -->
+  <!-- 2. قسم الديون والحركات -->
   <div id="debtsSection" class="tab-content">
     <div class="grid">
-      <div class="card">
-        <h2 style="color: var(--debt);">➕ تسجيل دين جديد</h2>
-        <form id="debtForm">
-          <input type="text" id="dName" placeholder="اسم الشخص / الشركة" required />
-          <input type="text" id="dPhone" placeholder="رقم الهاتف (اختياري)" />
-          <input type="number" id="dAmount" placeholder="مبلغ الدين (دينار)" required />
-          <button type="submit" class="btn-debt">حفظ الدين</button>
-        </form>
+      <div>
+        <!-- إضافة شركة جديدة -->
+        <div class="card">
+          <h2 style="color: var(--debt);">➕ إضافة مجهز / شركة جديدة</h2>
+          <form id="companyForm">
+            <input type="text" id="cName" placeholder="اسم الشركة أو المجهز" required />
+            <input type="text" id="cPhone" placeholder="رقم الهاتف (اختياري)" />
+            <input type="number" id="cInitialDebt" placeholder="الرصيد الأولي / الدين الحالي (دينار)" value="0" />
+            <button type="submit" class="btn-debt">حفظ الشركة</button>
+          </form>
+        </div>
+
+        <!-- إضافة حركة (تسديد / قائمة جديدة) -->
+        <div class="card">
+          <h2 style="color: var(--success);">💸 تسجيل حركة (تسديد / قائمة جديدة)</h2>
+          <form id="transForm">
+            <select id="tCompany" required>
+              <option value="">-- اختر الشركة --</option>
+            </select>
+            <select id="tType" required>
+              <option value="pay">تسديد (تنزيل من الدين المطلوب)</option>
+              <option value="bill">قائمة جديدة (زيادة الدين)</option>
+            </select>
+            <input type="number" id="tAmount" placeholder="المبلغ (دينار)" required />
+            <input type="text" id="tNote" placeholder="ملاحظات / رقم القائمة (اختياري)" />
+            <button type="submit" class="btn-success">حفظ الحركة وتحديث الحساب</button>
+          </form>
+        </div>
       </div>
 
-      <div class="card">
-        <h2 style="color: var(--debt);">📒 سجل الديون الحالي</h2>
-        <input type="text" id="searchDebt" placeholder="ابحث باسم الحساب..." oninput="renderDebts()" />
-        <div class="table-wrapper">
-          <table>
-            <thead><tr><th>#</th><th>الاسم</th><th>الهاتف</th><th>المبلغ المطلوب</th></tr></thead>
-            <tbody id="debtsTable"><tr><td colspan="4">جاري التحميل...</td></tr></tbody>
-          </table>
+      <div>
+        <!-- جدول الديون الحالية -->
+        <div class="card">
+          <h2 style="color: var(--debt);">📒 أرصدة شركات والمجهّزين الحالية</h2>
+          <input type="text" id="searchDebt" placeholder="ابحث باسم الشركة..." oninput="renderDebts()" />
+          <div class="table-wrapper">
+            <table>
+              <thead><tr><th>#</th><th>الاسم</th><th>الهاتف</th><th>المبلغ المطلوب منك</th></tr></thead>
+              <tbody id="debtsTable"><tr><td colspan="4">جاري التحميل...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- سجل الحركات السابقة -->
+        <div class="card">
+          <h2>📜 سجل الحركات المباشرة (التسديدات والقوائم)</h2>
+          <div class="table-wrapper">
+            <table>
+              <thead><tr><th>التاريخ</th><th>الشركة</th><th>نوع الحركة</th><th>المبلغ</th><th>ملاحظات</th></tr></thead>
+              <tbody id="transTable"><tr><td colspan="5">لا توجد حركات مسجلة</td></tr></tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
@@ -185,12 +225,12 @@
   };
 
   let db;
-  let currentData = { prices: {}, debts: {} };
+  let currentData = { prices: {}, debts: {}, transactions: {} };
 
   // تهيئة الاتصال
   try {
     firebase.initializeApp(firebaseConfig);
-    db = firebase.database().ref("simple_price_debts");
+    db = firebase.database().ref("simple_price_debts_v2");
 
     db.on("value", (snapshot) => {
       const status = document.getElementById("cloudStatus");
@@ -200,9 +240,12 @@
       const val = snapshot.val() || {};
       currentData.prices = val.prices || {};
       currentData.debts = val.debts || {};
+      currentData.transactions = val.transactions || {};
 
       renderPrices();
       renderDebts();
+      renderCompanySelect();
+      renderTransactions();
     }, (err) => {
       const status = document.getElementById("cloudStatus");
       status.innerHTML = "🔴 خطأ في اتصال السيرفر: " + err.message;
@@ -222,7 +265,7 @@
     };
   });
 
-  // إضافة مادة للأسعار الكلفة والبيع
+  // إضافة مادة للأسعار
   document.getElementById("priceForm").onsubmit = (e) => {
     e.preventDefault();
     if(!db) return alert("غير متصل بالسيرفر!");
@@ -235,19 +278,63 @@
     document.getElementById("priceForm").reset();
   };
 
-  // إضافة دين
-  document.getElementById("debtForm").onsubmit = (e) => {
+  // إضافة شركة جديدة
+  document.getElementById("companyForm").onsubmit = (e) => {
     e.preventDefault();
     if(!db) return alert("غير متصل بالسيرفر!");
     db.child("debts").push().set({
-      name: document.getElementById("dName").value.trim(),
-      phone: document.getElementById("dPhone").value.trim(),
-      amount: parseFloat(document.getElementById("dAmount").value)
+      name: document.getElementById("cName").value.trim(),
+      phone: document.getElementById("cPhone").value.trim(),
+      amount: parseFloat(document.getElementById("cInitialDebt").value) || 0
     });
-    document.getElementById("debtForm").reset();
+    document.getElementById("companyForm").reset();
   };
 
-  // عرض جدول الأسعار مع الكلفة والربح
+  // حفظ حركة (تسديد أو قائمة)
+  document.getElementById("transForm").onsubmit = (e) => {
+    e.preventDefault();
+    if(!db) return alert("غير متصل بالسيرفر!");
+
+    const compId = document.getElementById("tCompany").value;
+    const type = document.getElementById("tType").value;
+    const amount = parseFloat(document.getElementById("tAmount").value) || 0;
+    const note = document.getElementById("tNote").value.trim();
+
+    if(!compId || amount <= 0) return alert("يرجى اختيار الشركة وإدخال مبلغ صحيح!");
+
+    const currentCompany = currentData.debts[compId];
+    let newAmount = currentCompany.amount || 0;
+
+    if(type === 'pay') {
+      newAmount -= amount; // تسديد ينزل من الدين
+    } else {
+      newAmount += amount; // قائمة جديدة تزيد الدين
+    }
+
+    // تحديث رصيد الشركة + تسجيل الحركة
+    db.child("debts/" + compId + "/amount").set(newAmount);
+    db.child("transactions").push().set({
+      companyName: currentCompany.name,
+      type: type,
+      amount: amount,
+      note: note,
+      date: new Date().toLocaleDateString('ar-IQ') + " " + new Date().toLocaleTimeString('ar-IQ', {hour: '2-digit', minute:'2-digit'})
+    });
+
+    document.getElementById("transForm").reset();
+    alert("🟢 تم تسجيل الحركة وتحديث الدين الحالي بنجاح!");
+  };
+
+  // قائمة خيارات الشركات في نموذج الحركة
+  function renderCompanySelect() {
+    const select = document.getElementById("tCompany");
+    select.innerHTML = '<option value="">-- اختر الشركة --</option>';
+    Object.keys(currentData.debts).forEach(k => {
+      select.innerHTML += `<option value="${k}">${currentData.debts[k].name}</option>`;
+    });
+  }
+
+  // عرض جدول الأسعار
   function renderPrices() {
     const tbody = document.getElementById("pricesTable"); tbody.innerHTML = "";
     const query = document.getElementById("searchPrice").value.trim().toLowerCase();
@@ -266,7 +353,7 @@
     filtered.forEach((k, i) => {
       const item = currentData.prices[k];
       const cost = item.costPrice || 0;
-      const sell = item.sellPrice || item.price || 0; // متوافق مع البيانات القديمة أيضاً
+      const sell = item.sellPrice || item.price || 0;
       const profit = sell - cost;
 
       tbody.innerHTML += `<tr>
@@ -280,7 +367,7 @@
     });
   }
 
-  // عرض جدول الديون
+  // عرض جدول الأرصدة والديون
   function renderDebts() {
     const tbody = document.getElementById("debtsTable"); tbody.innerHTML = "";
     const query = document.getElementById("searchDebt").value.trim().toLowerCase();
@@ -289,13 +376,36 @@
     const filtered = keys.filter(k => currentData.debts[k].name.toLowerCase().includes(query));
 
     if(filtered.length === 0) {
-      tbody.innerHTML = "<tr><td colspan='4' style='color:#718096;'>لا توجد ديون مسجلة</td></tr>";
+      tbody.innerHTML = "<tr><td colspan='4' style='color:#718096;'>لا توجد ديون/شركات مسجلة</td></tr>";
       return;
     }
 
     filtered.forEach((k, i) => {
       const item = currentData.debts[k];
-      tbody.innerHTML += `<tr><td>${i+1}</td><td><strong>${item.name}</strong></td><td>${item.phone || '-'}</td><td style='color:var(--debt); font-weight:bold;'>${item.amount.toLocaleString()} د.ع</td></tr>`;
+      tbody.innerHTML += `<tr><td>${i+1}</td><td><strong>${item.name}</strong></td><td>${item.phone || '-'}</td><td style='color:var(--debt); font-weight:bold;'>${(item.amount || 0).toLocaleString()} د.ع</td></tr>`;
+    });
+  }
+
+  // عرض جدول الحركات المباشرة
+  function renderTransactions() {
+    const tbody = document.getElementById("transTable"); tbody.innerHTML = "";
+    const keys = Object.keys(currentData.transactions).reverse(); // إظهار الأحدث في الأعلى
+
+    if(keys.length === 0) {
+      tbody.innerHTML = "<tr><td colspan='5' style='color:#718096;'>لا توجد حركات مسجلة</td></tr>";
+      return;
+    }
+
+    keys.forEach(k => {
+      const t = currentData.transactions[k];
+      const isPay = t.type === 'pay';
+      tbody.innerHTML += `<tr>
+        <td style="font-size:12px; color:#718096;">${t.date}</td>
+        <td><strong>${t.companyName}</strong></td>
+        <td><span class="${isPay ? 'badge-pay' : 'badge-bill'}">${isPay ? 'تسديد (تنزيل)' : 'قائمة (زيادة)'}</span></td>
+        <td style="font-weight:bold;">${t.amount.toLocaleString()} د.ع</td>
+        <td>${t.note || '-'}</td>
+      </tr>`;
     });
   }
 
@@ -304,7 +414,7 @@
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(currentData));
     const a = document.createElement('a');
     a.setAttribute("href", dataStr);
-    a.setAttribute("download", "price_and_debts_backup.json");
+    a.setAttribute("download", "price_debts_and_transactions_backup.json");
     document.body.appendChild(a); a.click(); a.remove();
   }
 
