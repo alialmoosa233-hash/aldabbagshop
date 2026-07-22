@@ -119,7 +119,8 @@
         <form id="priceForm">
           <input type="text" id="pName" placeholder="اسم المادة" required />
           <input type="text" id="pCode" placeholder="الباركود / الكود (اختياري)" />
-          <input type="number" id="pPrice" placeholder="سعر البيع (دينار)" required />
+          <input type="number" id="pCostPrice" placeholder="سعر الكلفة (دينار)" required />
+          <input type="number" id="pSellPrice" placeholder="سعر البيع (دينار)" required />
           <button type="submit" class="btn-price">حفظ المادة في الدليل</button>
         </form>
       </div>
@@ -129,8 +130,8 @@
         <input type="text" id="searchPrice" placeholder="ابحث باسم المادة أو الكود..." oninput="renderPrices()" />
         <div class="table-wrapper">
           <table>
-            <thead><tr><th>#</th><th>اسم المادة</th><th>الكود</th><th>السعر (دينار)</th></tr></thead>
-            <tbody id="pricesTable"><tr><td colspan="4">جاري التحميل...</td></tr></tbody>
+            <thead><tr><th>#</th><th>اسم المادة</th><th>الكود</th><th>الكلفة</th><th>البيع</th><th>الربح</th></tr></thead>
+            <tbody id="pricesTable"><tr><td colspan="6">جاري التحميل...</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -221,14 +222,15 @@
     };
   });
 
-  // إضافة مادة للأسعار
+  // إضافة مادة للأسعار الكلفة والبيع
   document.getElementById("priceForm").onsubmit = (e) => {
     e.preventDefault();
     if(!db) return alert("غير متصل بالسيرفر!");
     db.child("prices").push().set({
       name: document.getElementById("pName").value.trim(),
       code: document.getElementById("pCode").value.trim(),
-      price: parseFloat(document.getElementById("pPrice").value)
+      costPrice: parseFloat(document.getElementById("pCostPrice").value) || 0,
+      sellPrice: parseFloat(document.getElementById("pSellPrice").value) || 0
     });
     document.getElementById("priceForm").reset();
   };
@@ -245,7 +247,7 @@
     document.getElementById("debtForm").reset();
   };
 
-  // عرض جدول الأسعار
+  // عرض جدول الأسعار مع الكلفة والربح
   function renderPrices() {
     const tbody = document.getElementById("pricesTable"); tbody.innerHTML = "";
     const query = document.getElementById("searchPrice").value.trim().toLowerCase();
@@ -257,13 +259,24 @@
     });
 
     if(filtered.length === 0) {
-      tbody.innerHTML = "<tr><td colspan='4' style='color:#718096;'>لا توجد أسعار مسجلة</td></tr>";
+      tbody.innerHTML = "<tr><td colspan='6' style='color:#718096;'>لا توجد أسعار مسجلة</td></tr>";
       return;
     }
 
     filtered.forEach((k, i) => {
       const item = currentData.prices[k];
-      tbody.innerHTML += `<tr><td>${i+1}</td><td><strong>${item.name}</strong></td><td>${item.code || '-'}</td><td style='color:var(--price); font-weight:bold;'>${item.price.toLocaleString()} د.ع</td></tr>`;
+      const cost = item.costPrice || 0;
+      const sell = item.sellPrice || item.price || 0; // متوافق مع البيانات القديمة أيضاً
+      const profit = sell - cost;
+
+      tbody.innerHTML += `<tr>
+        <td>${i+1}</td>
+        <td><strong>${item.name}</strong></td>
+        <td>${item.code || '-'}</td>
+        <td style='color:#718096;'>${cost.toLocaleString()} د.ع</td>
+        <td style='color:var(--price); font-weight:bold;'>${sell.toLocaleString()} د.ع</td>
+        <td style='color:${profit >= 0 ? "#2f855a" : "#c53030"}; font-weight:bold;'>${profit.toLocaleString()} د.ع</td>
+      </tr>`;
     });
   }
 
