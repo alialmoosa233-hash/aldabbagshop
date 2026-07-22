@@ -2,219 +2,177 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>نظام الدباغ للمخازن والديون السحابي</title>
+  <title>نظام عرض الأسعار والديون - الدباغ</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+  <!-- مكتبات Firebase السحابية -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
   <style>
     :root {
-      --primary-color: #2b6cb0;
-      --supplier-color: #2f855a;
-      --stock-color: #dd6b20;
-      --danger-color: #e53e3e;
-      --bg-color: #f7fafc;
-      --card-bg: #ffffff;
-      --border-color: #e2e8f0;
-      --text-color: #2d3748;
+      --primary: #2b6cb0;
+      --debt: #c53030;
+      --price: #2b6cb0;
+      --bg: #f7fafc;
+      --card: #ffffff;
+      --border: #e2e8f0;
     }
 
     body {
       font-family: system-ui, -apple-system, sans-serif;
-      background: var(--bg-color);
-      color: var(--text-color);
+      background-color: var(--bg);
+      color: #2d3748;
       margin: 0; padding: 0;
       direction: rtl;
     }
 
-    #loginScreen {
-      display: flex; justify-content: center; align-items: center;
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: linear-gradient(135deg, #2b6cb0, #2f855a);
-      z-index: 9999;
-    }
-    .login-box {
-      background: white; padding: 30px; border-radius: 12px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.2); width: 100%; max-width: 400px; text-align: center;
-    }
-
-    #mainApp { display: none; }
-
     header {
-      background: linear-gradient(135deg, var(--primary-color), var(--supplier-color));
-      color: white; padding: 15px 20px; text-align: center; font-size: 22px; font-weight: bold;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1); position: relative;
-    }
-    .logout-btn {
-      position: absolute; left: 20px; top: 15px;
-      background: var(--danger-color); color: white; padding: 6px 12px;
-      font-size: 13px; border-radius: 6px; border: none; cursor: pointer;
+      background: linear-gradient(135deg, #2b6cb0, #2c5282);
+      color: white;
+      padding: 15px;
+      text-align: center;
+      font-size: 20px;
+      font-weight: bold;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
 
-    .container { max-width: 1400px; margin: 20px auto; padding: 0 15px; }
+    .container { max-width: 1200px; margin: 20px auto; padding: 0 15px; }
+
+    #cloudStatus {
+      padding: 12px;
+      text-align: center;
+      font-weight: bold;
+      border-radius: 6px;
+      margin-bottom: 20px;
+      background: #e2e8f0;
+    }
 
     .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
     .tab-btn {
       flex: 1; padding: 12px; font-size: 16px; font-weight: bold;
-      background: #e2e8f0; color: #4a5568; border: none; border-radius: 8px;
+      background: #cbd5e0; color: #4a5568; border: none; border-radius: 8px;
       cursor: pointer; transition: all 0.3s;
     }
-    .tab-btn.active[data-tab="stock"] { background: var(--stock-color); color: white; }
-    .tab-btn.active[data-tab="suppliers"] { background: var(--supplier-color); color: white; }
+    .tab-btn.active[data-tab="prices"] { background: var(--price); color: white; }
+    .tab-btn.active[data-tab="debts"] { background: var(--debt); color: white; }
 
     .tab-content { display: none; }
     .tab-content.active { display: block; }
 
-    .stats-bar {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 15px; margin-bottom: 20px;
-    }
-    .stat-card {
-      background: var(--card-bg); padding: 15px; border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.04); border-right: 5px solid #cbd5e0;
-    }
-    .stat-card.suppliers-debt { border-right-color: var(--supplier-color); }
-    .stat-card.stock-val { border-right-color: var(--stock-color); }
-    .stat-card h3 { margin: 0 0 5px 0; font-size: 14px; color: #718096; }
-    .stat-card .value { font-size: 20px; font-weight: bold; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
 
     .card {
-      background: var(--card-bg); border-radius: 8px; padding: 20px;
-      margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border: 1px solid var(--border-color);
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
 
-    h2 { margin-top: 0; margin-bottom: 15px; font-size: 18px; border-bottom: 2px solid var(--border-color); padding-bottom: 8px; }
+    h2 { margin-top: 0; font-size: 18px; border-bottom: 2px solid var(--border); padding-bottom: 8px; }
 
-    input, select {
-      width: 100%; padding: 10px 12px; margin-bottom: 12px; box-sizing: border-box;
-      border-radius: 6px; border: 1px solid var(--border-color); background-color: #fbfbfb; font-family: inherit;
+    input {
+      width: 100%; padding: 10px; margin-bottom: 12px;
+      border: 1px solid var(--border); border-radius: 6px;
+      box-sizing: border-box; font-size: 14px;
     }
 
-    button { padding: 10px 16px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; font-family: inherit; }
-    .btn-supplier { background: var(--supplier-color); color: white; }
-    .btn-stock { background: var(--stock-color); color: white; }
-    .btn-full { width: 100%; margin-top: 5px; margin-bottom: 5px; }
+    button {
+      width: 100%; padding: 10px; border: none; border-radius: 6px;
+      color: white; font-weight: bold; cursor: pointer; font-size: 15px;
+    }
+    .btn-price { background: var(--price); }
+    .btn-debt { background: var(--debt); }
 
-    .table-wrapper { width: 100%; overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; min-width: 600px; }
-    th, td { border: 1px solid var(--border-color); padding: 10px 12px; text-align: center; }
-    th { background: #edf2f7; color: #4a5568; }
-    tr:hover { background: #f7fafc; }
+    .table-wrapper { overflow-x: auto; margin-top: 10px; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { border: 1px solid var(--border); padding: 10px; text-align: center; }
+    th { background: #edf2f7; }
 
-    .flex-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px; }
-    
-    #cloudStatus { background: #e2e8f0; padding: 12px; text-align: center; font-size: 14px; font-weight: bold; border-radius: 6px; margin-bottom: 15px; }
-    .backup-section { background: #edf2f7; padding: 15px; border-radius: 8px; margin-top: 25px; display: flex; gap: 15px; align-items: center; justify-content: center; border: 1px solid #cbd5e0; }
+    .backup-section {
+      background: #edf2f7; border: 1px solid #cbd5e0;
+      padding: 15px; border-radius: 8px; margin-top: 25px;
+      text-align: center; display: flex; justify-content: center; gap: 15px; flex-wrap: wrap;
+    }
+    .btn-backup { background: #4a5568; width: auto; padding: 8px 16px; }
   </style>
 </head>
 <body>
 
-<div id="loginScreen">
-  <div class="login-box">
-    <h2>🔐 تسجيل دخول النظام</h2>
-    <form id="loginForm">
-      <input type="text" id="loginUser" placeholder="اسم المستخدم (ali)" value="ali" required autocomplete="off"/>
-      <input type="password" id="loginPass" placeholder="كلمة المرور (1234)" value="1234" required autocomplete="off"/>
-      <button type="submit" class="btn-supplier btn-full" style="background: var(--primary-color);">دخول للنظام</button>
-      <div id="loginError" style="color: red; margin-top: 10px; font-size: 14px; font-weight: bold;"></div>
-    </form>
+<header>📋 نظام عرض الأسعار والديون - محل الدباغ</header>
+
+<div class="container">
+  <div id="cloudStatus">🔄 جاري الاتصال بالسحابة...</div>
+
+  <!-- أزرار التنقل السريعة -->
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="prices">🏷️ دليل وعرض الأسعار</button>
+    <button class="tab-btn" data-tab="debts">📒 سجل الديون والمطلوبات</button>
   </div>
-</div>
 
-<div id="mainApp">
-  <header>
-    نظام الحسابات والمخازن - محل الدباغ
-    <button class="logout-btn" onclick="logout()">🚪 خروج</button>
-  </header>
-
-  <div class="container">
-    <div id="cloudStatus">🔄 جاري فحص ومزامنة السحابة...</div>
-
-    <div class="stats-bar">
-      <div class="stat-card suppliers-debt">
-        <h3>إجمالي ديون المجهّزين (عليك للشركات)</h3>
-        <div class="value" id="statTotalSupplierDebts" style="color: var(--supplier-color);">0 د.ع</div>
+  <!-- 1. قسم عرض الأسعار -->
+  <div id="pricesSection" class="tab-content active">
+    <div class="grid">
+      <div class="card">
+        <h2 style="color: var(--price);">➕ إضافة مادة للأسعار</h2>
+        <form id="priceForm">
+          <input type="text" id="pName" placeholder="اسم المادة" required />
+          <input type="text" id="pCode" placeholder="الباركود / الكود (اختياري)" />
+          <input type="number" id="pPrice" placeholder="سعر البيع (دينار)" required />
+          <button type="submit" class="btn-price">حفظ المادة في الدليل</button>
+        </form>
       </div>
-      <div class="stat-card stock-val">
-        <h3>إجمالي القيمة المالية للمخزن (بالكلفة)</h3>
-        <div class="value" id="statTotalStockValue" style="color: var(--stock-color);">0 د.ع</div>
-      </div>
-    </div>
 
-    <div class="tabs">
-      <button class="tab-btn active" data-tab="stock">🏪 جرد المخزن والمواد</button>
-      <button class="tab-btn" data-tab="suppliers">📦 ديون وحسابات المجهّجين</button>
-    </div>
-
-    <div id="stockSection" class="tab-content active">
-      <div class="flex-grid">
-        <div>
-          <div class="card">
-            <h2 style="color: var(--stock-color);">إضافة مادة جديدة للمخزن</h2>
-            <form id="stockForm">
-              <input type="text" id="itemName" placeholder="اسم المادة" required />
-              <input type="text" id="itemBarcode" placeholder="الباركود (اختياري)" />
-              <input type="number" id="itemQty" placeholder="الكمية المتوفرة" required min="0" />
-              <input type="number" id="itemBuyPrice" placeholder="سعر الكلفة / الشراء (دينار)" required min="0" />
-              <input type="number" id="itemSellPrice" placeholder="سعر البيع المقترح (دينار)" required min="0" />
-              <button type="submit" class="btn-stock btn-full">إضافة المادة للمخزن</button>
-            </form>
-          </div>
-        </div>
-        <div>
-          <div class="card">
-            <h2 style="color: var(--stock-color);">جرد المواد وحالة المخزون الحالي</h2>
-            <input type="text" id="searchStock" placeholder="🔍 ابحث عن مادة باسمها أو الباركود..." oninput="renderStockTable()"/>
-            <div class="table-wrapper">
-              <table id="stockTable">
-                <thead><tr><th>#</th><th>الباركود</th><th>اسم المادة</th><th>الكمية</th><th>الكلفة</th><th>البيع</th><th>إجمالي الكلفة</th></tr></thead>
-                <tbody></tbody>
-              </table>
-            </div>
-          </div>
+      <div class="card">
+        <h2 style="color: var(--price);">🔍 قائمة عرض الأسعار</h2>
+        <input type="text" id="searchPrice" placeholder="ابحث باسم المادة أو الكود..." oninput="renderPrices()" />
+        <div class="table-wrapper">
+          <table>
+            <thead><tr><th>#</th><th>اسم المادة</th><th>الكود</th><th>السعر (دينار)</th></tr></thead>
+            <tbody id="pricesTable"><tr><td colspan="4">جاري التحميل...</td></tr></tbody>
+          </table>
         </div>
       </div>
     </div>
+  </div>
 
-    <div id="suppliersSection" class="tab-content">
-      <div class="flex-grid">
-        <div>
-          <div class="card">
-            <h2 style="color: var(--supplier-color);">إضافة مجهّز / شركة جديدة</h2>
-            <form id="supplierForm">
-              <input type="text" id="supplierName" placeholder="اسم الشركة أو المجهز" required />
-              <input type="text" id="supplierPhone" placeholder="رقم الهاتف (اختياري)" />
-              <input type="number" id="supplierOpeningBalance" placeholder="الحساب الحالي المطلوب منك له (دينار)" value="0" />
-              <button type="submit" class="btn-supplier btn-full">حفظ المجهّز</button>
-            </form>
-          </div>
-        </div>
-        <div>
-          <div class="card">
-            <h2 style="color: var(--supplier-color);">قائمة المجهّجين والديون المطلوبة منك</h2>
-            <div class="table-wrapper">
-              <table id="suppliersTable">
-                <thead><tr><th>#</th><th>اسم المجهّز</th><th>الهاتف</th><th>الحساب المترتب عليك</th></tr></thead>
-                <tbody></tbody>
-              </table>
-            </div>
-          </div>
+  <!-- 2. قسم الديون -->
+  <div id="debtsSection" class="tab-content">
+    <div class="grid">
+      <div class="card">
+        <h2 style="color: var(--debt);">➕ تسجيل دين جديد</h2>
+        <form id="debtForm">
+          <input type="text" id="dName" placeholder="اسم الشخص / الشركة" required />
+          <input type="text" id="dPhone" placeholder="رقم الهاتف (اختياري)" />
+          <input type="number" id="dAmount" placeholder="مبلغ الدين (دينار)" required />
+          <button type="submit" class="btn-debt">حفظ الدين</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2 style="color: var(--debt);">📒 سجل الديون الحالي</h2>
+        <input type="text" id="searchDebt" placeholder="ابحث باسم الحساب..." oninput="renderDebts()" />
+        <div class="table-wrapper">
+          <table>
+            <thead><tr><th>#</th><th>الاسم</th><th>الهاتف</th><th>المبلغ المطلوب</th></tr></thead>
+            <tbody id="debtsTable"><tr><td colspan="4">جاري التحميل...</td></tr></tbody>
+          </table>
         </div>
       </div>
     </div>
+  </div>
 
-    <div class="backup-section">
-      <strong>💾 إدارة النظام والنسخ الاحتياطي السحابي:</strong>
-      <button type="button" class="btn-supplier" style="background: #4a5568; margin-left: 10px;" onclick="exportData()">📥 تصدير نسخة (JSON)</button>
-      <button type="button" class="btn-supplier" style="background: #2b6cb0;" onclick="triggerImport()">📤 استيراد النسخة الاحتياطية القديمة</button>
-      <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importData(event)" />
-    </div>
+  <!-- قسم النسخ الاحتياطي والإستيراد -->
+  <div class="backup-section">
+    <button type="button" class="btn-backup" onclick="exportBackup()">📥 تصدير نسخة احتياطية (JSON)</button>
+    <button type="button" class="btn-backup" style="background: #2b6cb0;" onclick="triggerImport()">📤 استيراد نسخة احتياطية</button>
+    <input type="file" id="importFileInput" accept=".json" style="display:none;" onchange="importBackup(event)" />
   </div>
 </div>
 
 <script>
-  // الإعدادات الرسمية لقاعدة البيانات
+  // إعدادات Firebase الخاصة بك
   const firebaseConfig = {
     apiKey: "AIzaSyC-QqnQTbbyVFS8QFkf4CYZTcURcr9nBW0",
     authDomain: "gimi-fd7fe.firebaseapp.com",
@@ -225,84 +183,35 @@
     appId: "1:642364940251:web:6dd47f47d500ae9ed791fe"
   };
 
-  let dbRef;
-  let dbData = { suppliers: {}, stock: {} };
+  let db;
+  let currentData = { prices: {}, debts: {} };
 
-  function sanitizeInput(text) {
-    if (typeof text !== 'string') return text;
-    return text.replace(/[&<>"']/g, function(m) {
-      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
+  // تهيئة الاتصال
+  try {
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.database().ref("simple_price_debts");
+
+    db.on("value", (snapshot) => {
+      const status = document.getElementById("cloudStatus");
+      status.innerHTML = "🟢 النظام متصل بالسحابة ومتزامن بنجاح 100%";
+      status.style.background = "#c6f6d5"; status.style.color = "#22543d";
+
+      const val = snapshot.val() || {};
+      currentData.prices = val.prices || {};
+      currentData.debts = val.debts || {};
+
+      renderPrices();
+      renderDebts();
+    }, (err) => {
+      const status = document.getElementById("cloudStatus");
+      status.innerHTML = "🔴 خطأ في اتصال السيرفر: " + err.message;
+      status.style.background = "#fed7d7"; status.style.color = "#9b2c2c";
     });
+  } catch(e) {
+    document.getElementById("cloudStatus").innerHTML = "🔴 فشل تحميل البرمجية: " + e.message;
   }
 
-  window.onload = function() {
-    if (sessionStorage.getItem("isLoggedIn") === "true") { showApp(); }
-  };
-
-  document.getElementById("loginForm").onsubmit = (e) => {
-    e.preventDefault();
-    const u = document.getElementById("loginUser").value.trim().toLowerCase();
-    const p = document.getElementById("loginPass").value.trim();
-    if (u === "ali" && p === "1234") {
-      sessionStorage.setItem("isLoggedIn", "true");
-      showApp();
-    } else {
-      document.getElementById("loginError").textContent = `❌ اسم المستخدم أو كلمة المرور غير صحيحة!`;
-    }
-  };
-
-  function showApp() {
-    document.getElementById("loginScreen").style.display = "none";
-    document.getElementById("mainApp").style.display = "block";
-    initFirebase();
-  }
-
-  function logout() { sessionStorage.clear(); window.location.reload(); }
-
-  function initFirebase() {
-    if (dbRef) return;
-    try {
-      // التحقق من تحميل المكتبات الرسمية بنجاح
-      if (typeof firebase === 'undefined') {
-        throw new Error("لم يقم المتصفح بتحميل ملفات الفايربيس السحابية. يرجى التحقق من جودة الإنترنت وتحديث الصفحة.");
-      }
-      if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
-      
-      // نستخدم فرع قاعدة بيانات نظيف مخصص للبداية الجديدة
-      dbRef = firebase.database().ref("aldabbagh_store_final");
-      
-      dbRef.on("value", (snapshot) => {
-        document.getElementById("cloudStatus").innerHTML = "🟢 متصل بنجاح بالسحابة ومزامن بالكامل مع خادم Firebase!";
-        document.getElementById("cloudStatus").style.backgroundColor = "#c6f6d5"; document.getElementById("cloudStatus").style.color = "#22543d";
-
-        const val = snapshot.val();
-        if (val) {
-          dbData.suppliers = val.suppliers || {};
-          dbData.stock = val.stock || {};
-        } else {
-          dbData.suppliers = {}; dbData.stock = {};
-        }
-        renderStats(); renderTables(); renderStockTable();
-      }, (error) => {
-        document.getElementById("cloudStatus").innerHTML = `🔴 خطأ في صلاحيات القواعد (Rules): ${error.message}`;
-        document.getElementById("cloudStatus").style.backgroundColor = "#fed7d7"; document.getElementById("cloudStatus").style.color = "#9b2c2c";
-      });
-    } catch (e) {
-      document.getElementById("cloudStatus").innerHTML = `🔴 خطأ بالاتصال: ${e.message}`;
-      document.getElementById("cloudStatus").style.backgroundColor = "#fed7d7"; document.getElementById("cloudStatus").style.color = "#9b2c2c";
-    }
-  }
-
-  function getSuppliersList() { return Object.keys(dbData.suppliers).map(k => ({id: k, ...dbData.suppliers[k]})); }
-  function getStockList() { return Object.keys(dbData.stock).map(k => ({id: k, ...dbData.stock[k]})); }
-
-  function renderStats() {
-    let sTotal = 0; getSuppliersList().forEach(x => sTotal += parseFloat(x.openingBalance || 0));
-    let stTotal = 0; getStockList().forEach(x => stTotal += (parseFloat(x.qty || 0) * parseFloat(x.buyPrice || 0)));
-    document.getElementById("statTotalSupplierDebts").textContent = sTotal.toLocaleString() + " د.ع";
-    document.getElementById("statTotalStockValue").textContent = stTotal.toLocaleString() + " د.ع";
-  }
-
+  // التبديل بين الأقسام
   document.querySelectorAll(".tab-btn").forEach(btn => {
     btn.onclick = function() {
       document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
@@ -312,79 +221,96 @@
     };
   });
 
-  function renderStockTable() {
-    let tbody = document.querySelector("#stockTable tbody"); tbody.innerHTML = "";
-    let query = sanitizeInput(document.getElementById("searchStock").value.trim().toLowerCase());
-    let filtered = getStockList().filter(x => x.name.toLowerCase().includes(query) || (x.barcode && x.barcode.toLowerCase().includes(query)));
+  // إضافة مادة للأسعار
+  document.getElementById("priceForm").onsubmit = (e) => {
+    e.preventDefault();
+    if(!db) return alert("غير متصل بالسيرفر!");
+    db.child("prices").push().set({
+      name: document.getElementById("pName").value.trim(),
+      code: document.getElementById("pCode").value.trim(),
+      price: parseFloat(document.getElementById("pPrice").value)
+    });
+    document.getElementById("priceForm").reset();
+  };
+
+  // إضافة دين
+  document.getElementById("debtForm").onsubmit = (e) => {
+    e.preventDefault();
+    if(!db) return alert("غير متصل بالسيرفر!");
+    db.child("debts").push().set({
+      name: document.getElementById("dName").value.trim(),
+      phone: document.getElementById("dPhone").value.trim(),
+      amount: parseFloat(document.getElementById("dAmount").value)
+    });
+    document.getElementById("debtForm").reset();
+  };
+
+  // عرض جدول الأسعار
+  function renderPrices() {
+    const tbody = document.getElementById("pricesTable"); tbody.innerHTML = "";
+    const query = document.getElementById("searchPrice").value.trim().toLowerCase();
+    const keys = Object.keys(currentData.prices);
+
+    const filtered = keys.filter(k => {
+      const item = currentData.prices[k];
+      return item.name.toLowerCase().includes(query) || (item.code && item.code.toLowerCase().includes(query));
+    });
 
     if(filtered.length === 0) {
-      tbody.innerHTML = "<tr><td colspan='7' style='color:#718096;'>لا توجد مواد مسجلة حالياً تلبي البحث</td></tr>";
+      tbody.innerHTML = "<tr><td colspan='4' style='color:#718096;'>لا توجد أسعار مسجلة</td></tr>";
       return;
     }
 
-    filtered.forEach((x, i) => {
-      let tr = document.createElement("tr");
-      tr.innerHTML = `<td>${i+1}</td><td>${sanitizeInput(x.barcode || '-')}</td><td><strong>${sanitizeInput(x.name)}</strong></td><td>${x.qty}</td><td>${parseFloat(x.buyPrice).toLocaleString()}</td><td>${parseFloat(x.sellPrice).toLocaleString()}</td><td>${(x.qty * x.buyPrice).toLocaleString()} د.ع</td>`;
-      tbody.appendChild(tr);
+    filtered.forEach((k, i) => {
+      const item = currentData.prices[k];
+      tbody.innerHTML += `<tr><td>${i+1}</td><td><strong>${item.name}</strong></td><td>${item.code || '-'}</td><td style='color:var(--price); font-weight:bold;'>${item.price.toLocaleString()} د.ع</td></tr>`;
     });
   }
 
-  function renderTables() {
-    let t2 = document.querySelector("#suppliersTable tbody"); t2.innerHTML = "";
-    let suppliers = getSuppliersList();
-    if(suppliers.length === 0) {
-      t2.innerHTML = "<tr><td colspan='4' style='color:#718096;'>لا يوجد مجهزون مسجلون حالياً</td></tr>";
+  // عرض جدول الديون
+  function renderDebts() {
+    const tbody = document.getElementById("debtsTable"); tbody.innerHTML = "";
+    const query = document.getElementById("searchDebt").value.trim().toLowerCase();
+    const keys = Object.keys(currentData.debts);
+
+    const filtered = keys.filter(k => currentData.debts[k].name.toLowerCase().includes(query));
+
+    if(filtered.length === 0) {
+      tbody.innerHTML = "<tr><td colspan='4' style='color:#718096;'>لا توجد ديون مسجلة</td></tr>";
       return;
     }
-    suppliers.forEach((x, i) => { t2.innerHTML += `<tr><td>${i+1}</td><td><strong>${sanitizeInput(x.name)}</strong></td><td>${sanitizeInput(x.phone || '-')}</td><td style='color:var(--supplier-color); font-weight:bold;'>${parseFloat(x.openingBalance).toLocaleString()} د.ع</td></tr>`; });
+
+    filtered.forEach((k, i) => {
+      const item = currentData.debts[k];
+      tbody.innerHTML += `<tr><td>${i+1}</td><td><strong>${item.name}</strong></td><td>${item.phone || '-'}</td><td style='color:var(--debt); font-weight:bold;'>${item.amount.toLocaleString()} د.ع</td></tr>`;
+    });
   }
 
-  document.getElementById("stockForm").onsubmit = (e) => {
-    e.preventDefault();
-    if(!dbRef) return alert("السيرفر غير متصل!");
-    dbRef.child("stock").push().set({
-      name: sanitizeInput(document.getElementById("itemName").value.trim()),
-      barcode: sanitizeInput(document.getElementById("itemBarcode").value.trim()),
-      qty: parseInt(document.getElementById("itemQty").value),
-      buyPrice: parseFloat(document.getElementById("itemBuyPrice").value),
-      sellPrice: parseFloat(document.getElementById("itemSellPrice").value)
-    });
-    document.getElementById("stockForm").reset();
-  };
-
-  document.getElementById("supplierForm").onsubmit = (e) => {
-    e.preventDefault();
-    if(!dbRef) return alert("السيرفر غير متصل!");
-    dbRef.child("suppliers").push().set({
-      name: sanitizeInput(document.getElementById("supplierName").value.trim()),
-      phone: sanitizeInput(document.getElementById("supplierPhone").value.trim()),
-      openingBalance: parseFloat(document.getElementById("supplierOpeningBalance").value) || 0
-    });
-    document.getElementById("supplierForm").reset();
-  };
-
-  function exportData() {
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dbData));
-    const downloadAnchor = document.createElement('a');
-    downloadAnchor.setAttribute("href", dataStr); downloadAnchor.setAttribute("download", "aldabbagh_store_backup.json");
-    document.body.appendChild(downloadAnchor); downloadAnchor.click(); downloadAnchor.remove();
+  // تصدير النسخة الاحتياطية
+  function exportBackup() {
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(currentData));
+    const a = document.createElement('a');
+    a.setAttribute("href", dataStr);
+    a.setAttribute("download", "price_and_debts_backup.json");
+    document.body.appendChild(a); a.click(); a.remove();
   }
 
-  function triggerImport() { document.getElementById("importFile").click(); }
+  // استيراد النسخة الاحتياطية
+  function triggerImport() { document.getElementById("importFileInput").click(); }
 
-  function importData(event) {
-    const file = event.target.files[0];
-    if (!file) return;
+  function importBackup(e) {
+    const file = e.target.files[0];
+    if(!file) return;
     const reader = new FileReader();
-    reader.onload = function(e) {
+    reader.onload = function(evt) {
       try {
-        const json = JSON.parse(e.target.result);
-        if (json && (json.stock || json.suppliers)) {
-          if(confirm("هل تود استيراد هذه النسخة ورفعها على السحابة فوراً؟")) {
-            dbRef.set(json).then(() => alert("🟢 تم رفع واستيراد النسخة الاحتياطية بنجاح وتزامنها مع السيرفر!"));
-          }
-        } else { alert("الملف لا يحتوي على صيغة متوافقة."); }
-      } catch(err) { alert("خطأ في قراءة ملف JSON."); }
+        const json = JSON.parse(evt.target.result);
+        if(confirm("هل تريد رفع واستيراد هذه البيانات إلى السحابة فوراً؟")) {
+          db.set(json).then(() => alert("🟢 تم استيراد البيانات بنجاح!"));
+        }
+      } catch(err) {
+        alert("❌ خطأ في قراءة ملف الـ JSON.");
+      }
     };
     reader.readAsText(file);
   }
