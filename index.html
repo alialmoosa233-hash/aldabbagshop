@@ -74,7 +74,6 @@
     }
 
     h2 { margin-top: 0; font-size: 18px; border-bottom: 2px solid var(--border); padding-bottom: 8px; }
-    h3 { font-size: 14px; margin: 10px 0 5px 0; color: #4a5568; }
 
     input, select {
       width: 100%; padding: 10px; margin-bottom: 12px;
@@ -105,19 +104,31 @@
 
     .badge-pay { background: #c6f6d5; color: #22543d; padding: 3px 8px; border-radius: 4px; font-weight: bold; }
     .badge-bill { background: #fed7d7; color: #9b2c2c; padding: 3px 8px; border-radius: 4px; font-weight: bold; }
+
+    .statement-summary {
+      display: flex; justify-content: space-between; background: #edf2f7;
+      padding: 12px; border-radius: 6px; margin: 10px 0; font-weight: bold; font-size: 14px;
+    }
+
+    @media print {
+      body * { visibility: hidden; }
+      #printableArea, #printableArea * { visibility: visible; }
+      #printableArea { position: absolute; left: 0; top: 0; width: 100%; }
+      .no-print { display: none !important; }
+    }
   </style>
 </head>
 <body>
 
-<header>📋 نظام الأسعار والديون والحركات - محل الدباغ</header>
+<header class="no-print">📋 نظام الأسعار والديون والحركات - محل الدباغ</header>
 
 <div class="container">
-  <div id="cloudStatus">🔄 جاري الاتصال بالسحابة...</div>
+  <div id="cloudStatus" class="no-print">🔄 جاري الاتصال بالسحابة...</div>
 
   <!-- أزرار التنقل السريعة -->
-  <div class="tabs">
+  <div class="tabs no-print">
     <button class="tab-btn active" data-tab="prices">🏷️ دليل وعرض الأسعار</button>
-    <button class="tab-btn" data-tab="debts">📒 حسابات وحركات الشركات/الديون</button>
+    <button class="tab-btn" data-tab="debts">📒 حسابات وحركات الشركات والديون</button>
   </div>
 
   <!-- 1. قسم عرض الأسعار -->
@@ -168,7 +179,7 @@
     </div>
   </div>
 
-  <!-- 2. قسم الديون والحركات -->
+  <!-- 2. قسم الديون والحركات وكشف الحساب -->
   <div id="debtsSection" class="tab-content">
     <div class="grid">
       <div>
@@ -199,10 +210,8 @@
             <button type="submit" class="btn-success">حفظ الحركة وتحديث الحساب</button>
           </form>
         </div>
-      </div>
 
-      <div>
-        <!-- جدول الديون الحالية -->
+        <!-- جدول أرصدة الشركات -->
         <div class="card">
           <h2 style="color: var(--debt);">📒 أرصدة الشركات والمجهّزين الحالية</h2>
           <input type="text" id="searchDebt" placeholder="ابحث باسم الشركة..." oninput="renderDebts()" />
@@ -213,10 +222,26 @@
             </table>
           </div>
         </div>
+      </div>
 
-        <!-- سجل الحركات السابقة -->
-        <div class="card">
-          <h2>📜 سجل الحركات المباشرة (التسديدات والقوائم)</h2>
+      <div>
+        <!-- قسم كشف الحساب التفصيلي -->
+        <div class="card" id="printableArea">
+          <h2 style="color: #2c5282;">📑 كشف حساب مجهّز تفصيلي</h2>
+          <div class="no-print">
+            <select id="statementSelect" onchange="generateStatement()">
+              <option value="">-- اختر الشركة لطباعة كشف الحساب --</option>
+            </select>
+          </div>
+
+          <div id="statementContent">
+            <p style="text-align:center; color:#718096; margin: 20px 0;">اختر شركة من القائمة أعلاه لمشاهدة كشف الحساب الكامل.</p>
+          </div>
+        </div>
+
+        <!-- سجل الحركات العامة -->
+        <div class="card no-print">
+          <h2>📜 سجل آخر الحركات المباشرة العامة</h2>
           <div class="table-wrapper">
             <table>
               <thead><tr><th>التاريخ</th><th>الشركة</th><th>نوع الحركة</th><th>المبلغ</th><th>ملاحظات</th></tr></thead>
@@ -229,7 +254,7 @@
   </div>
 
   <!-- قسم التحكم بالبيانات وتصفير النظام -->
-  <div class="backup-section">
+  <div class="backup-section no-print">
     <button type="button" class="btn-backup" onclick="exportBackup()">📥 تصدير نسخة احتياطية (JSON)</button>
     <button type="button" class="btn-backup" style="background: #2b6cb0;" onclick="triggerImport()">📤 استيراد نسخة احتياطية</button>
     <button type="button" class="btn-reset" onclick="resetSystem()">⚠️ تصفير النظام بالكامل</button>
@@ -271,6 +296,7 @@
       renderDebts();
       renderCompanySelect();
       renderTransactions();
+      generateStatement();
     }, (err) => {
       const status = document.getElementById("cloudStatus");
       status.innerHTML = "🔴 خطأ في اتصال السيرفر: " + err.message;
@@ -290,7 +316,7 @@
     };
   });
 
-  // إضافة مادة مع أسعار الباكيت والكارتون
+  // إضافة مادة
   document.getElementById("priceForm").onsubmit = (e) => {
     e.preventDefault();
     if(!db) return alert("غير متصل بالسيرفر!");
@@ -314,7 +340,8 @@
     db.child("debts").push().set({
       name: document.getElementById("cName").value.trim(),
       phone: document.getElementById("cPhone").value.trim(),
-      amount: parseFloat(document.getElementById("cInitialDebt").value) || 0
+      amount: parseFloat(document.getElementById("cInitialDebt").value) || 0,
+      initialAmount: parseFloat(document.getElementById("cInitialDebt").value) || 0
     });
     document.getElementById("companyForm").reset();
   };
@@ -342,6 +369,7 @@
 
     db.child("debts/" + compId + "/amount").set(newAmount);
     db.child("transactions").push().set({
+      companyId: compId,
       companyName: currentCompany.name,
       type: type,
       amount: amount,
@@ -353,16 +381,103 @@
     alert("🟢 تم تسجيل الحركة وتحديث الدين الحالي بنجاح!");
   };
 
-  // قائمة خيارات الشركات
+  // تعبئة المنسدلات الخاص بالشركات
   function renderCompanySelect() {
-    const select = document.getElementById("tCompany");
-    select.innerHTML = '<option value="">-- اختر الشركة --</option>';
+    const select1 = document.getElementById("tCompany");
+    const select2 = document.getElementById("statementSelect");
+    
+    const curVal1 = select1.value;
+    const curVal2 = select2.value;
+
+    select1.innerHTML = '<option value="">-- اختر الشركة --</option>';
+    select2.innerHTML = '<option value="">-- اختر الشركة لطباعة كشف الحساب --</option>';
+
     Object.keys(currentData.debts).forEach(k => {
-      select.innerHTML += `<option value="${k}">${currentData.debts[k].name}</option>`;
+      const name = currentData.debts[k].name;
+      select1.innerHTML += `<option value="${k}">${name}</option>`;
+      select2.innerHTML += `<option value="${k}">${name}</option>`;
     });
+
+    select1.value = curVal1;
+    select2.value = curVal2;
   }
 
-  // عرض جدول الأسعار الشامل (باكيت وكارتون)
+  // إنشاء وتحديث كشف الحساب
+  function generateStatement() {
+    const compId = document.getElementById("statementSelect").value;
+    const container = document.getElementById("statementContent");
+
+    if(!compId || !currentData.debts[compId]) {
+      container.innerHTML = `<p style="text-align:center; color:#718096; margin: 20px 0;">اختر شركة من القائمة أعلاه لمشاهدة كشف الحساب الكامل.</p>`;
+      return;
+    }
+
+    const company = currentData.debts[compId];
+    const compTrans = Object.keys(currentData.transactions)
+      .map(k => currentData.transactions[k])
+      .filter(t => t.companyId === compId || t.companyName === company.name);
+
+    let totalBills = company.initialAmount || 0;
+    let totalPays = 0;
+
+    let rowsHtml = "";
+    if(company.initialAmount > 0) {
+      rowsHtml += `<tr>
+        <td>-</td>
+        <td><span class="badge-bill">رصيد أولي</span></td>
+        <td style="font-weight:bold;">${company.initialAmount.toLocaleString()} د.ع</td>
+        <td>الرصيد المفتوح سابقاً</td>
+      </tr>`;
+    }
+
+    compTrans.forEach(t => {
+      const isPay = t.type === 'pay';
+      if(isPay) totalPays += t.amount;
+      else totalBills += t.amount;
+
+      rowsHtml += `<tr>
+        <td style="font-size:12px; color:#718096;">${t.date}</td>
+        <td><span class="${isPay ? 'badge-pay' : 'badge-bill'}">${isPay ? 'تسديد (واصل)' : 'قائمة (مطلوب)'}</span></td>
+        <td style="font-weight:bold;">${t.amount.toLocaleString()} د.ع</td>
+        <td>${t.note || '-'}</td>
+      </tr>`;
+    });
+
+    const netDebt = company.amount !== undefined ? company.amount : (totalBills - totalPays);
+
+    container.innerHTML = `
+      <div style="border-bottom: 2px dashed #cbd5e0; padding-bottom: 10px; margin-bottom: 15px;">
+        <h3 style="margin:0; font-size:16px;">محل الدباغ - كشف حساب: <span style="color:var(--price);">${company.name}</span></h3>
+        <p style="margin:5px 0 0 0; font-size:12px; color:#718096;">الهاتف: ${company.phone || 'غير مسجل'}</p>
+      </div>
+
+      <div class="statement-summary">
+        <div>إجمالي القوائم: <span style="color:var(--debt);">${totalBills.toLocaleString()} د.ع</span></div>
+        <div>إجمالي التسديدات: <span style="color:var(--success);">${totalPays.toLocaleString()} د.ع</span></div>
+        <div>الصافي المطلوب: <span style="color:var(--debt); border-bottom: 2px solid;">${netDebt.toLocaleString()} د.ع</span></div>
+      </div>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>التاريخ</th>
+              <th>نوع الحركة</th>
+              <th>المبلغ</th>
+              <th>الملاحظات / رقم القائمة</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rowsHtml || "<tr><td colspan='4'>لا توجد حركات مسجلة بعد</td></tr>"}
+          </tbody>
+        </table>
+      </div>
+
+      <button class="no-print" onclick="window.print()" style="margin-top:15px; background:#4a5568;">🖨️ طباعة كشف الحساب</button>
+    `;
+  }
+
+  // عرض جدول الأسعار
   function renderPrices() {
     const tbody = document.getElementById("pricesTable"); tbody.innerHTML = "";
     const query = document.getElementById("searchPrice").value.trim().toLowerCase();
@@ -380,7 +495,6 @@
 
     filtered.forEach((k, i) => {
       const item = currentData.prices[k];
-      
       const pCost = item.packetCost || item.costPrice || 0;
       const pSell = item.packetSell || item.sellPrice || item.price || 0;
       const cCost = item.cartonCost || 0;
@@ -398,7 +512,7 @@
     });
   }
 
-  // عرض جدول الأرصدة والديون
+  // عرض جدول الديون
   function renderDebts() {
     const tbody = document.getElementById("debtsTable"); tbody.innerHTML = "";
     const query = document.getElementById("searchDebt").value.trim().toLowerCase();
@@ -417,7 +531,7 @@
     });
   }
 
-  // عرض جدول الحركات
+  // عرض جدول الحركات العامة
   function renderTransactions() {
     const tbody = document.getElementById("transTable"); tbody.innerHTML = "";
     const keys = Object.keys(currentData.transactions).reverse();
@@ -469,7 +583,7 @@
     reader.readAsText(file);
   }
 
-  // تصفير النظام بالكامل
+  // تصفير النظام
   function resetSystem() {
     const password = prompt("⚠️ تحذير: هذا الخيار سيمسح جميع الأسعار والديون والحركات!\n\nأدخل رمز الأمان (1234) للتأكيد:");
     
