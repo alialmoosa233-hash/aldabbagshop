@@ -113,7 +113,7 @@
       padding: 12px; border-radius: 6px; margin: 10px 0; font-weight: bold; font-size: 14px;
     }
 
-    /* نافذة التعديل المنبثقة Modal */
+    /* نوافذ التعديل المنبثقة Modal */
     .modal {
       display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%;
       background-color: rgba(0,0,0,0.5); justify-content: center; align-items: center;
@@ -231,8 +231,16 @@
           <input type="text" id="searchDebt" placeholder="ابحث باسم الشركة..." oninput="renderDebts()" />
           <div class="table-wrapper">
             <table>
-              <thead><tr><th>#</th><th>الاسم</th><th>الهاتف</th><th>المبلغ المطلوب منك</th></tr></thead>
-              <tbody id="debtsTable"><tr><td colspan="4">جاري التحميل...</td></tr></tbody>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>الاسم</th>
+                  <th>الهاتف</th>
+                  <th>المبلغ المطلوب</th>
+                  <th class="no-print">إجراءات</th>
+                </tr>
+              </thead>
+              <tbody id="debtsTable"><tr><td colspan="5">جاري التحميل...</td></tr></tbody>
             </table>
           </div>
         </div>
@@ -276,7 +284,7 @@
   </div>
 </div>
 
-<!-- Modal تعديل المادة والأسعار -->
+<!-- 1. Modal تعديل المادة والأسعار -->
 <div id="editModal" class="modal">
   <div class="modal-content">
     <h3 style="margin-top:0; color:var(--price);">✏️ تعديل بيانات المادة والأسعار</h3>
@@ -308,6 +316,25 @@
     <div style="display:flex; gap:10px; margin-top:10px;">
       <button type="button" onclick="savePriceEdit()" class="btn-price">حفظ التعديلات</button>
       <button type="button" onclick="closeEditModal()" style="background:#718096;">إلغاء</button>
+    </div>
+  </div>
+</div>
+
+<!-- 2. Modal تعديل الشركة والديون -->
+<div id="editCompanyModal" class="modal">
+  <div class="modal-content">
+    <h3 style="margin-top:0; color:var(--debt);">✏️ تعديل حساب / بيانات الشركة</h3>
+    <input type="hidden" id="editCompKey" />
+    <label>اسم الشركة أو المجهز:</label>
+    <input type="text" id="editCompName" required />
+    <label>رقم الهاتف:</label>
+    <input type="text" id="editCompPhone" />
+    <label>الدين الحالي المطلوبة منك (دينار):</label>
+    <input type="number" id="editCompAmount" required />
+
+    <div style="display:flex; gap:10px; margin-top:10px;">
+      <button type="button" onclick="saveCompanyEdit()" class="btn-debt">حفظ التعديلات</button>
+      <button type="button" onclick="closeCompanyEditModal()" style="background:#718096;">إلغاء</button>
     </div>
   </div>
 </div>
@@ -373,13 +400,12 @@
     
     const newName = document.getElementById("pName").value.trim();
 
-    // التحقق مما إذا كانت المادة موجودة مسبقاً
     const isDuplicate = Object.values(currentData.prices).some(item => 
       item.name && item.name.trim().toLowerCase() === newName.toLowerCase()
     );
 
     if(isDuplicate) {
-      alert("⚠️ تكرار مسجل!\nالمادة (" + newName + ") موجودة بالفعل في قائمة الأسعار.\n\nيمكنك البحث عنها وتعديل أسعارها مباشرة بدلاً من إضافتها مرة أخرى.");
+      alert("⚠️ تكرار مسجل!\nالمادة (" + newName + ") موجودة بالفعل في قائمة الأسعار.");
       return;
     }
     
@@ -396,7 +422,7 @@
     alert("🟢 تم إضافة المادة بنجاح إلى الدليل!");
   };
 
-  // فتح نافذة التعديل
+  // فتح وإغلاق نافذة تعديل المادة
   function openEditModal(key) {
     const item = currentData.prices[key];
     if(!item) return;
@@ -412,18 +438,15 @@
     document.getElementById("editModal").style.display = "flex";
   }
 
-  function closeEditModal() {
-    document.getElementById("editModal").style.display = "none";
-  }
+  function closeEditModal() { document.getElementById("editModal").style.display = "none"; }
 
-  // حفظ التعديلات مع فحص التكرار
+  // حفظ تعديل المادة
   function savePriceEdit() {
     const key = document.getElementById("editKey").value;
     if(!key || !db) return;
 
     const newName = document.getElementById("editName").value.trim();
 
-    // التحقق من التكرار مع استثناء المادة الحالية التي يتم تعديلها
     const isDuplicate = Object.keys(currentData.prices).some(k => 
       k !== key && currentData.prices[k].name && currentData.prices[k].name.trim().toLowerCase() === newName.toLowerCase()
     );
@@ -460,7 +483,6 @@
 
     const newCompName = document.getElementById("cName").value.trim();
 
-    // التحقق مما إذا كانت الشركة موجودة مسبقاً
     const isDuplicate = Object.values(currentData.debts).some(item => 
       item.name && item.name.trim().toLowerCase() === newCompName.toLowerCase()
     );
@@ -479,6 +501,54 @@
     document.getElementById("companyForm").reset();
     alert("🟢 تم إضافة الشركة/المجهز بنجاح!");
   };
+
+  // فتح وإغلاق نافذة تعديل الشركة
+  function openCompanyEditModal(key) {
+    const item = currentData.debts[key];
+    if(!item) return;
+
+    document.getElementById("editCompKey").value = key;
+    document.getElementById("editCompName").value = item.name || "";
+    document.getElementById("editCompPhone").value = item.phone || "";
+    document.getElementById("editCompAmount").value = item.amount || 0;
+
+    document.getElementById("editCompanyModal").style.display = "flex";
+  }
+
+  function closeCompanyEditModal() { document.getElementById("editCompanyModal").style.display = "none"; }
+
+  // حفظ تعديل الشركة
+  function saveCompanyEdit() {
+    const key = document.getElementById("editCompKey").value;
+    if(!key || !db) return;
+
+    const newName = document.getElementById("editCompName").value.trim();
+
+    const isDuplicate = Object.keys(currentData.debts).some(k => 
+      k !== key && currentData.debts[k].name && currentData.debts[k].name.trim().toLowerCase() === newName.toLowerCase()
+    );
+
+    if(isDuplicate) {
+      alert("⚠️ تكرار مسجل!\nتوجد شركة أخرى بنفس هذا الاسم (" + newName + ").");
+      return;
+    }
+
+    db.child("debts/" + key).update({
+      name: newName,
+      phone: document.getElementById("editCompPhone").value.trim(),
+      amount: parseFloat(document.getElementById("editCompAmount").value) || 0
+    }).then(() => {
+      closeCompanyEditModal();
+      alert("🟢 تم تعديل بيانات الشركة والحساب بنجاح!");
+    });
+  }
+
+  // حذف شركة
+  function deleteCompany(key) {
+    if(confirm("هل أنت متأكد من حذف هذه الشركة وسجل ديونها بالكامل؟")) {
+      db.child("debts/" + key).remove();
+    }
+  }
 
   // حفظ حركة (تسديد أو قائمة)
   document.getElementById("transForm").onsubmit = (e) => {
@@ -611,7 +681,7 @@
     `;
   }
 
-  // عرض جدول الأسعار مع أزرار التعديل والحذف
+  // عرض جدول الأسعار
   function renderPrices() {
     const tbody = document.getElementById("pricesTable"); tbody.innerHTML = "";
     const query = document.getElementById("searchPrice").value.trim().toLowerCase();
@@ -650,7 +720,7 @@
     });
   }
 
-  // عرض جدول الديون
+  // عرض جدول الديون مع أزرار التعديل والحذف للشركات
   function renderDebts() {
     const tbody = document.getElementById("debtsTable"); tbody.innerHTML = "";
     const query = document.getElementById("searchDebt").value.trim().toLowerCase();
@@ -659,13 +729,22 @@
     const filtered = keys.filter(k => currentData.debts[k].name.toLowerCase().includes(query));
 
     if(filtered.length === 0) {
-      tbody.innerHTML = "<tr><td colspan='4' style='color:#718096;'>لا توجد ديون/شركات مسجلة</td></tr>";
+      tbody.innerHTML = "<tr><td colspan='5' style='color:#718096;'>لا توجد ديون/شركات مسجلة</td></tr>";
       return;
     }
 
     filtered.forEach((k, i) => {
       const item = currentData.debts[k];
-      tbody.innerHTML += `<tr><td>${i+1}</td><td><strong>${item.name}</strong></td><td>${item.phone || '-'}</td><td style='color:var(--debt); font-weight:bold;'>${(item.amount || 0).toLocaleString()} د.ع</td></tr>`;
+      tbody.innerHTML += `<tr>
+        <td>${i+1}</td>
+        <td><strong>${item.name}</strong></td>
+        <td>${item.phone || '-'}</td>
+        <td style='color:var(--debt); font-weight:bold;'>${(item.amount || 0).toLocaleString()} د.ع</td>
+        <td class="no-print">
+          <button class="btn-edit" onclick="openCompanyEditModal('${k}')">✏️ تعديل</button>
+          <button class="btn-delete" onclick="deleteCompany('${k}')">🗑️</button>
+        </td>
+      </tr>`;
     });
   }
 
