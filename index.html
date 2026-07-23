@@ -94,6 +94,9 @@
     th, td { border: 1px solid var(--border); padding: 8px 10px; text-align: center; }
     th { background: #edf2f7; }
 
+    .btn-edit { background: #3182ce; color: white; padding: 4px 8px; border-radius: 4px; border: none; cursor: pointer; font-size: 12px; margin-left: 2px; }
+    .btn-delete { background: #e53e3e; color: white; padding: 4px 8px; border-radius: 4px; border: none; cursor: pointer; font-size: 12px; }
+
     .backup-section {
       background: #edf2f7; border: 1px solid #cbd5e0;
       padding: 15px; border-radius: 8px; margin-top: 25px;
@@ -108,6 +111,16 @@
     .statement-summary {
       display: flex; justify-content: space-between; background: #edf2f7;
       padding: 12px; border-radius: 6px; margin: 10px 0; font-weight: bold; font-size: 14px;
+    }
+
+    /* نافذة التعديل المنبثقة Modal */
+    .modal {
+      display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%;
+      background-color: rgba(0,0,0,0.5); justify-content: center; align-items: center;
+    }
+    .modal-content {
+      background-color: #fff; padding: 20px; border-radius: 8px; width: 90%; max-width: 500px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
     }
 
     @media print {
@@ -164,6 +177,7 @@
                 <th rowspan="2">الكود</th>
                 <th colspan="2" style="background:#e2e8f0;">📦 الباكيت</th>
                 <th colspan="2" style="background:#feebc8;">📦 الكارتون الكامل</th>
+                <th rowspan="2" class="no-print">إجراءات</th>
               </tr>
               <tr>
                 <th style="background:#edf2f7;">الكلفة</th>
@@ -172,7 +186,7 @@
                 <th style="background:#feebc8;">البيع</th>
               </tr>
             </thead>
-            <tbody id="pricesTable"><tr><td colspan="7">جاري التحميل...</td></tr></tbody>
+            <tbody id="pricesTable"><tr><td colspan="8">جاري التحميل...</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -262,6 +276,42 @@
   </div>
 </div>
 
+<!-- Modal تعديل المادة والأسعار -->
+<div id="editModal" class="modal">
+  <div class="modal-content">
+    <h3 style="margin-top:0; color:var(--price);">✏️ تعديل بيانات المادة والأسعار</h3>
+    <input type="hidden" id="editKey" />
+    <label>اسم المادة:</label>
+    <input type="text" id="editName" required />
+    <label>الكود:</label>
+    <input type="text" id="editCode" />
+    
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+      <div>
+        <label>كلفة الباكيت:</label>
+        <input type="number" id="editPacketCost" />
+      </div>
+      <div>
+        <label>بيع الباكيت:</label>
+        <input type="number" id="editPacketSell" />
+      </div>
+      <div>
+        <label>كلفة الكارتون:</label>
+        <input type="number" id="editCartonCost" />
+      </div>
+      <div>
+        <label>بيع الكارتون:</label>
+        <input type="number" id="editCartonSell" />
+      </div>
+    </div>
+
+    <div style="display:flex; gap:10px; margin-top:10px;">
+      <button type="button" onclick="savePriceEdit()" class="btn-price">حفظ التعديلات</button>
+      <button type="button" onclick="closeEditModal()" style="background:#718096;">إلغاء</button>
+    </div>
+  </div>
+</div>
+
 <script>
   // إعدادات Firebase الخاصة بك
   const firebaseConfig = {
@@ -316,13 +366,25 @@
     };
   });
 
-  // إضافة مادة
+  // إضافة مادة مع فحص التكرار
   document.getElementById("priceForm").onsubmit = (e) => {
     e.preventDefault();
     if(!db) return alert("غير متصل بالسيرفر!");
     
+    const newName = document.getElementById("pName").value.trim();
+
+    // التحقق مما إذا كانت المادة موجودة مسبقاً
+    const isDuplicate = Object.values(currentData.prices).some(item => 
+      item.name && item.name.trim().toLowerCase() === newName.toLowerCase()
+    );
+
+    if(isDuplicate) {
+      alert("⚠️ تكرار مسجل!\nالمادة (" + newName + ") موجودة بالفعل في قائمة الأسعار.\n\nيمكنك البحث عنها وتعديل أسعارها مباشرة بدلاً من إضافتها مرة أخرى.");
+      return;
+    }
+    
     db.child("prices").push().set({
-      name: document.getElementById("pName").value.trim(),
+      name: newName,
       code: document.getElementById("pCode").value.trim(),
       packetCost: parseFloat(document.getElementById("pPacketCost").value) || 0,
       packetSell: parseFloat(document.getElementById("pPacketSell").value) || 0,
@@ -331,19 +393,91 @@
     });
     
     document.getElementById("priceForm").reset();
+    alert("🟢 تم إضافة المادة بنجاح إلى الدليل!");
   };
 
-  // إضافة شركة جديدة
+  // فتح نافذة التعديل
+  function openEditModal(key) {
+    const item = currentData.prices[key];
+    if(!item) return;
+
+    document.getElementById("editKey").value = key;
+    document.getElementById("editName").value = item.name || "";
+    document.getElementById("editCode").value = item.code || "";
+    document.getElementById("editPacketCost").value = item.packetCost || item.costPrice || 0;
+    document.getElementById("editPacketSell").value = item.packetSell || item.sellPrice || item.price || 0;
+    document.getElementById("editCartonCost").value = item.cartonCost || 0;
+    document.getElementById("editCartonSell").value = item.cartonSell || 0;
+
+    document.getElementById("editModal").style.display = "flex";
+  }
+
+  function closeEditModal() {
+    document.getElementById("editModal").style.display = "none";
+  }
+
+  // حفظ التعديلات مع فحص التكرار
+  function savePriceEdit() {
+    const key = document.getElementById("editKey").value;
+    if(!key || !db) return;
+
+    const newName = document.getElementById("editName").value.trim();
+
+    // التحقق من التكرار مع استثناء المادة الحالية التي يتم تعديلها
+    const isDuplicate = Object.keys(currentData.prices).some(k => 
+      k !== key && currentData.prices[k].name && currentData.prices[k].name.trim().toLowerCase() === newName.toLowerCase()
+    );
+
+    if(isDuplicate) {
+      alert("⚠️ تكرار مسجل!\nيوجد مادة أخرى تحمل اسم (" + newName + ") بالدليل بالفعل.");
+      return;
+    }
+
+    db.child("prices/" + key).update({
+      name: newName,
+      code: document.getElementById("editCode").value.trim(),
+      packetCost: parseFloat(document.getElementById("editPacketCost").value) || 0,
+      packetSell: parseFloat(document.getElementById("editPacketSell").value) || 0,
+      cartonCost: parseFloat(document.getElementById("editCartonCost").value) || 0,
+      cartonSell: parseFloat(document.getElementById("editCartonSell").value) || 0
+    }).then(() => {
+      closeEditModal();
+      alert("🟢 تم تعديل الأسعار والبيانات بنجاح!");
+    });
+  }
+
+  // حذف مادة
+  function deletePrice(key) {
+    if(confirm("هل أنت متأكد من حذف هذه المادة من الدليل؟")) {
+      db.child("prices/" + key).remove();
+    }
+  }
+
+  // إضافة شركة جديدة مع فحص التكرار
   document.getElementById("companyForm").onsubmit = (e) => {
     e.preventDefault();
     if(!db) return alert("غير متصل بالسيرفر!");
+
+    const newCompName = document.getElementById("cName").value.trim();
+
+    // التحقق مما إذا كانت الشركة موجودة مسبقاً
+    const isDuplicate = Object.values(currentData.debts).some(item => 
+      item.name && item.name.trim().toLowerCase() === newCompName.toLowerCase()
+    );
+
+    if(isDuplicate) {
+      alert("⚠️ تكرار مسجل!\nالشركة أو المجهز (" + newCompName + ") موجود بالفعل في النظام.");
+      return;
+    }
+
     db.child("debts").push().set({
-      name: document.getElementById("cName").value.trim(),
+      name: newCompName,
       phone: document.getElementById("cPhone").value.trim(),
       amount: parseFloat(document.getElementById("cInitialDebt").value) || 0,
       initialAmount: parseFloat(document.getElementById("cInitialDebt").value) || 0
     });
     document.getElementById("companyForm").reset();
+    alert("🟢 تم إضافة الشركة/المجهز بنجاح!");
   };
 
   // حفظ حركة (تسديد أو قائمة)
@@ -381,7 +515,7 @@
     alert("🟢 تم تسجيل الحركة وتحديث الدين الحالي بنجاح!");
   };
 
-  // تعبئة المنسدلات الخاص بالشركات
+  // تعبئة المنسدلات
   function renderCompanySelect() {
     const select1 = document.getElementById("tCompany");
     const select2 = document.getElementById("statementSelect");
@@ -402,7 +536,7 @@
     select2.value = curVal2;
   }
 
-  // إنشاء وتحديث كشف الحساب
+  // كشف الحساب
   function generateStatement() {
     const compId = document.getElementById("statementSelect").value;
     const container = document.getElementById("statementContent");
@@ -477,7 +611,7 @@
     `;
   }
 
-  // عرض جدول الأسعار
+  // عرض جدول الأسعار مع أزرار التعديل والحذف
   function renderPrices() {
     const tbody = document.getElementById("pricesTable"); tbody.innerHTML = "";
     const query = document.getElementById("searchPrice").value.trim().toLowerCase();
@@ -489,7 +623,7 @@
     });
 
     if(filtered.length === 0) {
-      tbody.innerHTML = "<tr><td colspan='7' style='color:#718096;'>لا توجد أسعار مسجلة</td></tr>";
+      tbody.innerHTML = "<tr><td colspan='8' style='color:#718096;'>لا توجد أسعار مسجلة</td></tr>";
       return;
     }
 
@@ -508,6 +642,10 @@
         <td style='color:var(--price); font-weight:bold;'>${pSell ? pSell.toLocaleString() + ' د.ع' : '-'}</td>
         <td style='color:#718096;'>${cCost ? cCost.toLocaleString() + ' د.ع' : '-'}</td>
         <td style='color:#b7791f; font-weight:bold;'>${cSell ? cSell.toLocaleString() + ' د.ع' : '-'}</td>
+        <td class="no-print">
+          <button class="btn-edit" onclick="openEditModal('${k}')">✏️ تعديل</button>
+          <button class="btn-delete" onclick="deletePrice('${k}')">🗑️</button>
+        </td>
       </tr>`;
     });
   }
