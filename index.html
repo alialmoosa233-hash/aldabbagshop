@@ -51,7 +51,6 @@
       font-size: 14px;
     }
 
-    /* لوحة الإحصائيات Dashboard */
     .dashboard-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -149,7 +148,6 @@
       box-shadow: 0 4px 8px rgba(0,0,0,0.2);
     }
 
-    /* طباعة الوصل المنفرد */
     #receiptPrintArea { display: none; }
 
     @media print {
@@ -168,7 +166,7 @@
 <div class="container">
   <div id="cloudStatus" class="no-print">🔄 جاري الاتصال بالسحابة...</div>
 
-  <!-- لوحة الإحصائيات الشاملة Dashboard -->
+  <!-- لوحة الإحصائيات Dashboard -->
   <div class="dashboard-grid no-print">
     <div class="stat-card red">
       <div class="stat-title">إجمالي الديون المطلوبة منك</div>
@@ -188,7 +186,7 @@
     </div>
   </div>
 
-  <!-- أزرار التنقل السريعة -->
+  <!-- أزرار التنقل -->
   <div class="tabs no-print">
     <button class="tab-btn active" data-tab="prices">🏷️ دليل وعرض الأسعار</button>
     <button class="tab-btn" data-tab="debts">📒 حسابات وحركات الشركات والديون</button>
@@ -247,7 +245,6 @@
   <div id="debtsSection" class="tab-content">
     <div class="grid">
       <div>
-        <!-- إضافة شركة جديدة -->
         <div class="card">
           <h2 style="color: var(--debt);">➕ إضافة مجهز / شركة جديدة</h2>
           <form id="companyForm">
@@ -258,7 +255,6 @@
           </form>
         </div>
 
-        <!-- إضافة حركة (تسديد / قائمة جديدة) -->
         <div class="card">
           <h2 style="color: var(--success);">💸 تسجيل حركة (تسديد / قائمة جديدة)</h2>
           <form id="transForm">
@@ -275,7 +271,6 @@
           </form>
         </div>
 
-        <!-- جدول أرصدة الشركات -->
         <div class="card">
           <h2 style="color: var(--debt);">📒 أرصدة الشركات والمجهّزين الحالية</h2>
           <input type="text" id="searchDebt" placeholder="ابحث باسم الشركة..." oninput="renderDebts()" />
@@ -297,7 +292,6 @@
       </div>
 
       <div>
-        <!-- قسم كشف الحساب التفصيلي مع فلترة التاريخ والتصدير -->
         <div class="card" id="printableArea">
           <h2 style="color: #2c5282;">📑 كشف حساب مجهّز تفصيلي</h2>
           <div class="no-print" style="margin-bottom: 15px;">
@@ -305,7 +299,6 @@
               <option value="">-- اختر الشركة لطباعة كشف الحساب --</option>
             </select>
 
-            <!-- تصفية حسب التاريخ -->
             <div style="display:flex; gap:10px; margin-top:10px;">
               <input type="date" id="filterFromDate" onchange="generateStatement()" title="من تاريخ" />
               <input type="date" id="filterToDate" onchange="generateStatement()" title="إلى تاريخ" />
@@ -317,7 +310,6 @@
           </div>
         </div>
 
-        <!-- سجل الحركات العامة -->
         <div class="card no-print">
           <h2>📜 سجل آخر الحركات المباشرة العامة</h2>
           <div class="table-wrapper">
@@ -331,7 +323,6 @@
     </div>
   </div>
 
-  <!-- قسم التحكم بالبيانات وتصفير النظام -->
   <div class="backup-section no-print">
     <button type="button" class="btn-backup" onclick="exportBackup()">📥 تصدير نسخة احتياطية (JSON)</button>
     <button type="button" class="btn-backup" style="background: #2b6cb0;" onclick="triggerImport()">📤 استيراد نسخة احتياطية</button>
@@ -340,7 +331,7 @@
   </div>
 </div>
 
-<!-- 1. Modal تعديل المادة والأسعار -->
+<!-- Modal تعديل المادة والأسعار -->
 <div id="editModal" class="modal">
   <div class="modal-content">
     <h3 style="margin-top:0; color:var(--price);">✏️ تعديل بيانات المادة والأسعار</h3>
@@ -364,7 +355,7 @@
   </div>
 </div>
 
-<!-- 2. Modal تعديل الشركة والديون -->
+<!-- Modal تعديل الشركة والديون -->
 <div id="editCompanyModal" class="modal">
   <div class="modal-content">
     <h3 style="margin-top:0; color:var(--debt);">✏️ تعديل حساب / بيانات الشركة</h3>
@@ -383,11 +374,9 @@
   </div>
 </div>
 
-<!-- منطقة طباعة الوصل المنفرد الخفي -->
 <div id="receiptPrintArea"></div>
 
 <script>
-  // إعدادات Firebase
   const firebaseConfig = {
     apiKey: "AIzaSyC-QqnQTbbyVFS8QFkf4CYZTcURcr9nBW0",
     authDomain: "gimi-fd7fe.firebaseapp.com",
@@ -400,9 +389,13 @@
 
   let db;
   let currentData = { prices: {}, debts: {}, transactions: {} };
-  const SECURITY_PIN = "1234"; // رمز الأمان للحذف والتصفير
+  const SECURITY_PIN = "1234";
 
-  // تهيئة الاتصال
+  // دالة مساعدة لتنظيف النصوص والمقارنة بدون أحرف خاصة أو مسافات زادت
+  function normalizeText(text) {
+    return text ? text.toString().trim().toLowerCase().replace(/\s+/g, ' ') : '';
+  }
+
   try {
     firebase.initializeApp(firebaseConfig);
     db = firebase.database().ref("simple_price_debts_v2");
@@ -432,7 +425,6 @@
     document.getElementById("cloudStatus").innerHTML = "🔴 فشل تحميل البرمجية: " + e.message;
   }
 
-  // تحديث الإحصائيات (Dashboard)
   function updateDashboard() {
     let totalDebt = 0;
     Object.values(currentData.debts).forEach(d => totalDebt += (d.amount || 0));
@@ -448,7 +440,6 @@
     document.getElementById("statTotalPays").innerText = totalPays.toLocaleString() + " د.ع";
   }
 
-  // التبديل بين الأقسام
   document.querySelectorAll(".tab-btn").forEach(btn => {
     btn.onclick = function() {
       document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
@@ -458,25 +449,42 @@
     };
   });
 
-  // إضافة مادة
+  // إضافة مادة مع فلتر منع التكرار (اسم + باركود)
   document.getElementById("priceForm").onsubmit = (e) => {
     e.preventDefault();
     if(!db) return alert("غير متصل بالسيرفر!");
     
-    const newName = document.getElementById("pName").value.trim();
+    const rawName = document.getElementById("pName").value;
+    const rawCode = document.getElementById("pCode").value;
 
-    const isDuplicate = Object.values(currentData.prices).some(item => 
-      item.name && item.name.trim().toLowerCase() === newName.toLowerCase()
+    const normName = normalizeText(rawName);
+    const normCode = normalizeText(rawCode);
+
+    // 1. فحص تكرار الاسم
+    const duplicateByName = Object.values(currentData.prices).find(item => 
+      normalizeText(item.name) === normName
     );
 
-    if(isDuplicate) {
-      alert("⚠️ تكرار مسجل!\nالمادة (" + newName + ") موجودة بالفعل.");
+    if(duplicateByName) {
+      alert("⚠️ تكرار مسجل!\nالمادة (" + rawName.trim() + ") موجودة بالفعل في دليل الأسعار.");
       return;
+    }
+
+    // 2. فحص تكرار الباركود (إذا تم إدخاله)
+    if(normCode !== '') {
+      const duplicateByCode = Object.values(currentData.prices).find(item => 
+        normalizeText(item.code) === normCode
+      );
+
+      if(duplicateByCode) {
+        alert("⚠️ الكود / الباركود مكرر!\nهذا الباركود (" + rawCode.trim() + ") مسجل مسبقاً للمادة: " + duplicateByCode.name);
+        return;
+      }
     }
     
     db.child("prices").push().set({
-      name: newName,
-      code: document.getElementById("pCode").value.trim(),
+      name: rawName.trim(),
+      code: rawCode.trim(),
       packetCost: parseFloat(document.getElementById("pPacketCost").value) || 0,
       packetSell: parseFloat(document.getElementById("pPacketSell").value) || 0,
       cartonCost: parseFloat(document.getElementById("pCartonCost").value) || 0,
@@ -487,7 +495,6 @@
     alert("🟢 تم إضافة المادة بنجاح!");
   };
 
-  // فتح وإغلاق نافذة تعديل المادة
   function openEditModal(key) {
     const item = currentData.prices[key];
     if(!item) return;
@@ -505,25 +512,42 @@
 
   function closeEditModal() { document.getElementById("editModal").style.display = "none"; }
 
-  // حفظ تعديل المادة
+  // حفظ تعديل المادة مع فلتر منع التكرار
   function savePriceEdit() {
     const key = document.getElementById("editKey").value;
     if(!key || !db) return;
 
-    const newName = document.getElementById("editName").value.trim();
+    const rawName = document.getElementById("editName").value;
+    const rawCode = document.getElementById("editCode").value;
 
-    const isDuplicate = Object.keys(currentData.prices).some(k => 
-      k !== key && currentData.prices[k].name && currentData.prices[k].name.trim().toLowerCase() === newName.toLowerCase()
+    const normName = normalizeText(rawName);
+    const normCode = normalizeText(rawCode);
+
+    // فحص تكرار الاسم مع باقي المواد
+    const duplicateByName = Object.keys(currentData.prices).find(k => 
+      k !== key && normalizeText(currentData.prices[k].name) === normName
     );
 
-    if(isDuplicate) {
-      alert("⚠️ تكرار مسجل!\nتوجد مادة أخرى بنفس الاسم.");
+    if(duplicateByName) {
+      alert("⚠️ تكرار مسجل!\nتوجد مادة أخرى تحمل اسم (" + rawName.trim() + ") بالدليل.");
       return;
     }
 
+    // فحص تكرار الباركود مع باقي المواد
+    if(normCode !== '') {
+      const duplicateByCode = Object.keys(currentData.prices).find(k => 
+        k !== key && normalizeText(currentData.prices[k].code) === normCode
+      );
+
+      if(duplicateByCode) {
+        alert("⚠️ الكود / الباركود مكرر!\nهذا الباركود مسجل مسبقاً للمادة: " + currentData.prices[duplicateByCode].name);
+        return;
+      }
+    }
+
     db.child("prices/" + key).update({
-      name: newName,
-      code: document.getElementById("editCode").value.trim(),
+      name: rawName.trim(),
+      code: rawCode.trim(),
       packetCost: parseFloat(document.getElementById("editPacketCost").value) || 0,
       packetSell: parseFloat(document.getElementById("editPacketSell").value) || 0,
       cartonCost: parseFloat(document.getElementById("editCartonCost").value) || 0,
@@ -534,7 +558,6 @@
     });
   }
 
-  // حذف مادة مع حماية الرمز
   function deletePrice(key) {
     const pin = prompt("🔒 إدخال رمز الأمان (1234) لتأكيد حذف المادة:");
     if(pin === SECURITY_PIN) {
@@ -544,24 +567,24 @@
     }
   }
 
-  // إضافة شركة جديدة
   document.getElementById("companyForm").onsubmit = (e) => {
     e.preventDefault();
     if(!db) return alert("غير متصل بالسيرفر!");
 
-    const newCompName = document.getElementById("cName").value.trim();
+    const rawCompName = document.getElementById("cName").value;
+    const normCompName = normalizeText(rawCompName);
 
     const isDuplicate = Object.values(currentData.debts).some(item => 
-      item.name && item.name.trim().toLowerCase() === newCompName.toLowerCase()
+      normalizeText(item.name) === normCompName
     );
 
     if(isDuplicate) {
-      alert("⚠️ تكرار مسجل!\nالشركة (" + newCompName + ") موجودة بالفعل.");
+      alert("⚠️ تكرار مسجل!\nالشركة (" + rawCompName.trim() + ") موجودة بالفعل.");
       return;
     }
 
     db.child("debts").push().set({
-      name: newCompName,
+      name: rawCompName.trim(),
       phone: document.getElementById("cPhone").value.trim(),
       amount: parseFloat(document.getElementById("cInitialDebt").value) || 0,
       initialAmount: parseFloat(document.getElementById("cInitialDebt").value) || 0
@@ -570,7 +593,6 @@
     alert("🟢 تم إضافة الشركة/المجهز بنجاح!");
   };
 
-  // فتح وإغلاق نافذة تعديل الشركة
   function openCompanyEditModal(key) {
     const item = currentData.debts[key];
     if(!item) return;
@@ -585,15 +607,15 @@
 
   function closeCompanyEditModal() { document.getElementById("editCompanyModal").style.display = "none"; }
 
-  // حفظ تعديل الشركة
   function saveCompanyEdit() {
     const key = document.getElementById("editCompKey").value;
     if(!key || !db) return;
 
-    const newName = document.getElementById("editCompName").value.trim();
+    const rawName = document.getElementById("editCompName").value;
+    const normName = normalizeText(rawName);
 
     const isDuplicate = Object.keys(currentData.debts).some(k => 
-      k !== key && currentData.debts[k].name && currentData.debts[k].name.trim().toLowerCase() === newName.toLowerCase()
+      k !== key && normalizeText(currentData.debts[k].name) === normName
     );
 
     if(isDuplicate) {
@@ -602,7 +624,7 @@
     }
 
     db.child("debts/" + key).update({
-      name: newName,
+      name: rawName.trim(),
       phone: document.getElementById("editCompPhone").value.trim(),
       amount: parseFloat(document.getElementById("editCompAmount").value) || 0
     }).then(() => {
@@ -611,7 +633,6 @@
     });
   }
 
-  // حذف شركة مع رمز أمان
   function deleteCompany(key) {
     const pin = prompt("🔒 أدخل رمز الأمان (1234) لتأكيد حذف هذه الشركة وسجلها:");
     if(pin === SECURITY_PIN) {
@@ -621,7 +642,6 @@
     }
   }
 
-  // حفظ حركة (تسديد أو قائمة)
   document.getElementById("transForm").onsubmit = (e) => {
     e.preventDefault();
     if(!db) return alert("غير متصل بالسيرفر!");
@@ -640,7 +660,7 @@
     else newAmount += amount;
 
     const now = new Date();
-    const dateStr = now.toISOString().split('T')[0]; // صيغة YYYY-MM-DD
+    const dateStr = now.toISOString().split('T')[0];
     const timeStr = now.toLocaleTimeString('ar-IQ', {hour: '2-digit', minute:'2-digit'});
 
     db.child("debts/" + compId + "/amount").set(newAmount);
@@ -658,7 +678,6 @@
     alert("🟢 تم تسجيل الحركة وتحديث الدين بنجاح!");
   };
 
-  // تعبئة المنسدلات
   function renderCompanySelect() {
     const select1 = document.getElementById("tCompany");
     const select2 = document.getElementById("statementSelect");
@@ -679,7 +698,6 @@
     select2.value = curVal2;
   }
 
-  // كشف الحساب مع الفلترة حسب التاريخ
   function generateStatement() {
     const compId = document.getElementById("statementSelect").value;
     const container = document.getElementById("statementContent");
@@ -697,13 +715,8 @@
       .map(k => currentData.transactions[k])
       .filter(t => t.companyId === compId || t.companyName === company.name);
 
-    // تصفية التاريخ
-    if(fromDate) {
-      compTrans = compTrans.filter(t => t.date >= fromDate);
-    }
-    if(toDate) {
-      compTrans = compTrans.filter(t => t.date <= toDate);
-    }
+    if(fromDate) compTrans = compTrans.filter(t => t.date >= fromDate);
+    if(toDate) compTrans = compTrans.filter(t => t.date <= toDate);
 
     let totalBills = company.initialAmount || 0;
     let totalPays = 0;
@@ -768,7 +781,6 @@
     `;
   }
 
-  // تصدير كشف الحساب إلى Excel
   function exportStatementCSV(compName) {
     const compId = document.getElementById("statementSelect").value;
     if(!compId) return;
@@ -793,7 +805,6 @@
     a.click();
   }
 
-  // طباعة وصل منفرد للحركة
   function printSingleReceipt(transKey) {
     const t = currentData.transactions[transKey];
     if(!t) return;
@@ -821,15 +832,14 @@
     window.print();
   }
 
-  // عرض جدول الأسعار
   function renderPrices() {
     const tbody = document.getElementById("pricesTable"); tbody.innerHTML = "";
-    const query = document.getElementById("searchPrice").value.trim().toLowerCase();
+    const query = normalizeText(document.getElementById("searchPrice").value);
     const keys = Object.keys(currentData.prices);
 
     const filtered = keys.filter(k => {
       const item = currentData.prices[k];
-      return item.name.toLowerCase().includes(query) || (item.code && item.code.toLowerCase().includes(query));
+      return normalizeText(item.name).includes(query) || normalizeText(item.code).includes(query);
     });
 
     if(filtered.length === 0) {
@@ -860,13 +870,12 @@
     });
   }
 
-  // عرض جدول الديون
   function renderDebts() {
     const tbody = document.getElementById("debtsTable"); tbody.innerHTML = "";
-    const query = document.getElementById("searchDebt").value.trim().toLowerCase();
+    const query = normalizeText(document.getElementById("searchDebt").value);
     const keys = Object.keys(currentData.debts);
 
-    const filtered = keys.filter(k => currentData.debts[k].name.toLowerCase().includes(query));
+    const filtered = keys.filter(k => normalizeText(currentData.debts[k].name).includes(query));
 
     if(filtered.length === 0) {
       tbody.innerHTML = "<tr><td colspan='5' style='color:#718096;'>لا توجد ديون/شركات مسجلة</td></tr>";
@@ -888,7 +897,6 @@
     });
   }
 
-  // عرض جدول الحركات العامة
   function renderTransactions() {
     const tbody = document.getElementById("transTable"); tbody.innerHTML = "";
     const keys = Object.keys(currentData.transactions).reverse();
@@ -912,7 +920,6 @@
     });
   }
 
-  // تصدير النسخة الاحتياطية
   function exportBackup() {
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(currentData));
     const a = document.createElement('a');
@@ -921,7 +928,6 @@
     document.body.appendChild(a); a.click(); a.remove();
   }
 
-  // استيراد النسخة الاحتياطية
   function triggerImport() { document.getElementById("importFileInput").click(); }
 
   function importBackup(e) {
@@ -941,7 +947,6 @@
     reader.readAsText(file);
   }
 
-  // تصفير النظام
   function resetSystem() {
     const password = prompt("⚠️ تحذير: هذا الخيار سيمسح جميع البيانات!\n\nأدخل رمز الأمان (1234) للتأكيد:");
     
