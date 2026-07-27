@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>نظام الأسعار والديون والحركات - الدباغ</title>
+  <title>نظام الأسعار والديون والحركات - محل الدباغ الاحترافي</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <!-- مكتبات Firebase السحابية -->
@@ -15,6 +15,7 @@
       --debt: #c53030;
       --success: #2f855a;
       --price: #2b6cb0;
+      --warning: #d69e2e;
       --bg: #f7fafc;
       --card: #ffffff;
       --border: #e2e8f0;
@@ -29,7 +30,7 @@
     }
 
     header {
-      background: linear-gradient(135deg, #2b6cb0, #2c5282);
+      background: linear-gradient(135deg, #1a365d, #2b6cb0);
       color: white;
       padding: 15px;
       text-align: center;
@@ -38,16 +39,41 @@
       box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
 
-    .container { max-width: 1250px; margin: 20px auto; padding: 0 15px; }
+    .container { max-width: 1300px; margin: 20px auto; padding: 0 15px; }
 
     #cloudStatus {
-      padding: 12px;
+      padding: 10px;
       text-align: center;
       font-weight: bold;
       border-radius: 6px;
-      margin-bottom: 20px;
+      margin-bottom: 15px;
       background: #e2e8f0;
+      font-size: 14px;
     }
+
+    /* لوحة الإحصائيات Dashboard */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 15px;
+      text-align: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+      border-right: 5px solid var(--primary);
+    }
+    .stat-card.red { border-right-color: var(--debt); }
+    .stat-card.green { border-right-color: var(--success); }
+    .stat-card.orange { border-right-color: var(--warning); }
+
+    .stat-title { font-size: 13px; color: #718096; margin-bottom: 5px; font-weight: bold; }
+    .stat-value { font-size: 20px; font-weight: bold; color: #1a202c; }
 
     .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
     .tab-btn {
@@ -96,6 +122,7 @@
 
     .btn-edit { background: #3182ce; color: white; padding: 4px 8px; border-radius: 4px; border: none; cursor: pointer; font-size: 12px; margin-left: 2px; }
     .btn-delete { background: #e53e3e; color: white; padding: 4px 8px; border-radius: 4px; border: none; cursor: pointer; font-size: 12px; }
+    .btn-receipt { background: #d69e2e; color: white; padding: 4px 8px; border-radius: 4px; border: none; cursor: pointer; font-size: 12px; }
 
     .backup-section {
       background: #edf2f7; border: 1px solid #cbd5e0;
@@ -110,10 +137,9 @@
 
     .statement-summary {
       display: flex; justify-content: space-between; background: #edf2f7;
-      padding: 12px; border-radius: 6px; margin: 10px 0; font-weight: bold; font-size: 14px;
+      padding: 12px; border-radius: 6px; margin: 10px 0; font-weight: bold; font-size: 13px; flex-wrap: wrap; gap: 8px;
     }
 
-    /* نوافذ التعديل المنبثقة Modal */
     .modal {
       display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%;
       background-color: rgba(0,0,0,0.5); justify-content: center; align-items: center;
@@ -123,20 +149,44 @@
       box-shadow: 0 4px 8px rgba(0,0,0,0.2);
     }
 
+    /* طباعة الوصل المنفرد */
+    #receiptPrintArea { display: none; }
+
     @media print {
       body * { visibility: hidden; }
-      #printableArea, #printableArea * { visibility: visible; }
+      #printableArea, #printableArea *, #receiptPrintArea, #receiptPrintArea * { visibility: visible; }
       #printableArea { position: absolute; left: 0; top: 0; width: 100%; }
+      #receiptPrintArea { display: block !important; position: absolute; left: 0; top: 0; width: 100%; }
       .no-print { display: none !important; }
     }
   </style>
 </head>
 <body>
 
-<header class="no-print">📋 نظام الأسعار والديون والحركات - محل الدباغ</header>
+<header class="no-print">📋 نظام الأسعار والديون والحركات المطور - محل الدباغ</header>
 
 <div class="container">
   <div id="cloudStatus" class="no-print">🔄 جاري الاتصال بالسحابة...</div>
+
+  <!-- لوحة الإحصائيات الشاملة Dashboard -->
+  <div class="dashboard-grid no-print">
+    <div class="stat-card red">
+      <div class="stat-title">إجمالي الديون المطلوبة منك</div>
+      <div class="stat-value" id="statTotalDebt">0 د.ع</div>
+    </div>
+    <div class="stat-card orange">
+      <div class="stat-title">عدد الشركات والمجهّزين</div>
+      <div class="stat-value" id="statCompaniesCount">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-title">عدد المواد في الدليل</div>
+      <div class="stat-value" id="statPricesCount">0</div>
+    </div>
+    <div class="stat-card green">
+      <div class="stat-title">إجمالي التسديدات المسجلة</div>
+      <div class="stat-value" id="statTotalPays">0 د.ع</div>
+    </div>
+  </div>
 
   <!-- أزرار التنقل السريعة -->
   <div class="tabs no-print">
@@ -247,13 +297,19 @@
       </div>
 
       <div>
-        <!-- قسم كشف الحساب التفصيلي -->
+        <!-- قسم كشف الحساب التفصيلي مع فلترة التاريخ والتصدير -->
         <div class="card" id="printableArea">
           <h2 style="color: #2c5282;">📑 كشف حساب مجهّز تفصيلي</h2>
-          <div class="no-print">
+          <div class="no-print" style="margin-bottom: 15px;">
             <select id="statementSelect" onchange="generateStatement()">
               <option value="">-- اختر الشركة لطباعة كشف الحساب --</option>
             </select>
+
+            <!-- تصفية حسب التاريخ -->
+            <div style="display:flex; gap:10px; margin-top:10px;">
+              <input type="date" id="filterFromDate" onchange="generateStatement()" title="من تاريخ" />
+              <input type="date" id="filterToDate" onchange="generateStatement()" title="إلى تاريخ" />
+            </div>
           </div>
 
           <div id="statementContent">
@@ -266,8 +322,8 @@
           <h2>📜 سجل آخر الحركات المباشرة العامة</h2>
           <div class="table-wrapper">
             <table>
-              <thead><tr><th>التاريخ</th><th>الشركة</th><th>نوع الحركة</th><th>المبلغ</th><th>ملاحظات</th></tr></thead>
-              <tbody id="transTable"><tr><td colspan="5">لا توجد حركات مسجلة</td></tr></tbody>
+              <thead><tr><th>التاريخ</th><th>الشركة</th><th>نوع الحركة</th><th>المبلغ</th><th>ملاحظات</th><th>وصل</th></tr></thead>
+              <tbody id="transTable"><tr><td colspan="6">لا توجد حركات مسجلة</td></tr></tbody>
             </table>
           </div>
         </div>
@@ -295,22 +351,10 @@
     <input type="text" id="editCode" />
     
     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-      <div>
-        <label>كلفة الباكيت:</label>
-        <input type="number" id="editPacketCost" />
-      </div>
-      <div>
-        <label>بيع الباكيت:</label>
-        <input type="number" id="editPacketSell" />
-      </div>
-      <div>
-        <label>كلفة الكارتون:</label>
-        <input type="number" id="editCartonCost" />
-      </div>
-      <div>
-        <label>بيع الكارتون:</label>
-        <input type="number" id="editCartonSell" />
-      </div>
+      <div><label>كلفة الباكيت:</label><input type="number" id="editPacketCost" /></div>
+      <div><label>بيع الباكيت:</label><input type="number" id="editPacketSell" /></div>
+      <div><label>كلفة الكارتون:</label><input type="number" id="editCartonCost" /></div>
+      <div><label>بيع الكارتون:</label><input type="number" id="editCartonSell" /></div>
     </div>
 
     <div style="display:flex; gap:10px; margin-top:10px;">
@@ -339,8 +383,11 @@
   </div>
 </div>
 
+<!-- منطقة طباعة الوصل المنفرد الخفي -->
+<div id="receiptPrintArea"></div>
+
 <script>
-  // إعدادات Firebase الخاصة بك
+  // إعدادات Firebase
   const firebaseConfig = {
     apiKey: "AIzaSyC-QqnQTbbyVFS8QFkf4CYZTcURcr9nBW0",
     authDomain: "gimi-fd7fe.firebaseapp.com",
@@ -353,6 +400,7 @@
 
   let db;
   let currentData = { prices: {}, debts: {}, transactions: {} };
+  const SECURITY_PIN = "1234"; // رمز الأمان للحذف والتصفير
 
   // تهيئة الاتصال
   try {
@@ -374,6 +422,7 @@
       renderCompanySelect();
       renderTransactions();
       generateStatement();
+      updateDashboard();
     }, (err) => {
       const status = document.getElementById("cloudStatus");
       status.innerHTML = "🔴 خطأ في اتصال السيرفر: " + err.message;
@@ -381,6 +430,22 @@
     });
   } catch(e) {
     document.getElementById("cloudStatus").innerHTML = "🔴 فشل تحميل البرمجية: " + e.message;
+  }
+
+  // تحديث الإحصائيات (Dashboard)
+  function updateDashboard() {
+    let totalDebt = 0;
+    Object.values(currentData.debts).forEach(d => totalDebt += (d.amount || 0));
+    
+    let totalPays = 0;
+    Object.values(currentData.transactions).forEach(t => {
+      if(t.type === 'pay') totalPays += (t.amount || 0);
+    });
+
+    document.getElementById("statTotalDebt").innerText = totalDebt.toLocaleString() + " د.ع";
+    document.getElementById("statCompaniesCount").innerText = Object.keys(currentData.debts).length;
+    document.getElementById("statPricesCount").innerText = Object.keys(currentData.prices).length;
+    document.getElementById("statTotalPays").innerText = totalPays.toLocaleString() + " د.ع";
   }
 
   // التبديل بين الأقسام
@@ -393,7 +458,7 @@
     };
   });
 
-  // إضافة مادة مع فحص التكرار
+  // إضافة مادة
   document.getElementById("priceForm").onsubmit = (e) => {
     e.preventDefault();
     if(!db) return alert("غير متصل بالسيرفر!");
@@ -405,7 +470,7 @@
     );
 
     if(isDuplicate) {
-      alert("⚠️ تكرار مسجل!\nالمادة (" + newName + ") موجودة بالفعل في قائمة الأسعار.");
+      alert("⚠️ تكرار مسجل!\nالمادة (" + newName + ") موجودة بالفعل.");
       return;
     }
     
@@ -419,7 +484,7 @@
     });
     
     document.getElementById("priceForm").reset();
-    alert("🟢 تم إضافة المادة بنجاح إلى الدليل!");
+    alert("🟢 تم إضافة المادة بنجاح!");
   };
 
   // فتح وإغلاق نافذة تعديل المادة
@@ -452,7 +517,7 @@
     );
 
     if(isDuplicate) {
-      alert("⚠️ تكرار مسجل!\nيوجد مادة أخرى تحمل اسم (" + newName + ") بالدليل بالفعل.");
+      alert("⚠️ تكرار مسجل!\nتوجد مادة أخرى بنفس الاسم.");
       return;
     }
 
@@ -465,18 +530,21 @@
       cartonSell: parseFloat(document.getElementById("editCartonSell").value) || 0
     }).then(() => {
       closeEditModal();
-      alert("🟢 تم تعديل الأسعار والبيانات بنجاح!");
+      alert("🟢 تم تعديل البيانات بنجاح!");
     });
   }
 
-  // حذف مادة
+  // حذف مادة مع حماية الرمز
   function deletePrice(key) {
-    if(confirm("هل أنت متأكد من حذف هذه المادة من الدليل؟")) {
+    const pin = prompt("🔒 إدخال رمز الأمان (1234) لتأكيد حذف المادة:");
+    if(pin === SECURITY_PIN) {
       db.child("prices/" + key).remove();
+    } else if(pin !== null) {
+      alert("❌ رمز الأمان غير صحيح!");
     }
   }
 
-  // إضافة شركة جديدة مع فحص التكرار
+  // إضافة شركة جديدة
   document.getElementById("companyForm").onsubmit = (e) => {
     e.preventDefault();
     if(!db) return alert("غير متصل بالسيرفر!");
@@ -488,7 +556,7 @@
     );
 
     if(isDuplicate) {
-      alert("⚠️ تكرار مسجل!\nالشركة أو المجهز (" + newCompName + ") موجود بالفعل في النظام.");
+      alert("⚠️ تكرار مسجل!\nالشركة (" + newCompName + ") موجودة بالفعل.");
       return;
     }
 
@@ -529,7 +597,7 @@
     );
 
     if(isDuplicate) {
-      alert("⚠️ تكرار مسجل!\nتوجد شركة أخرى بنفس هذا الاسم (" + newName + ").");
+      alert("⚠️ تكرار مسجل!\nتوجد شركة أخرى بنفس هذا الاسم.");
       return;
     }
 
@@ -539,14 +607,17 @@
       amount: parseFloat(document.getElementById("editCompAmount").value) || 0
     }).then(() => {
       closeCompanyEditModal();
-      alert("🟢 تم تعديل بيانات الشركة والحساب بنجاح!");
+      alert("🟢 تم تعديل الحساب بنجاح!");
     });
   }
 
-  // حذف شركة
+  // حذف شركة مع رمز أمان
   function deleteCompany(key) {
-    if(confirm("هل أنت متأكد من حذف هذه الشركة وسجل ديونها بالكامل؟")) {
+    const pin = prompt("🔒 أدخل رمز الأمان (1234) لتأكيد حذف هذه الشركة وسجلها:");
+    if(pin === SECURITY_PIN) {
       db.child("debts/" + key).remove();
+    } else if(pin !== null) {
+      alert("❌ رمز الأمان غير صحيح!");
     }
   }
 
@@ -565,11 +636,12 @@
     const currentCompany = currentData.debts[compId];
     let newAmount = currentCompany.amount || 0;
 
-    if(type === 'pay') {
-      newAmount -= amount;
-    } else {
-      newAmount += amount;
-    }
+    if(type === 'pay') newAmount -= amount;
+    else newAmount += amount;
+
+    const now = new Date();
+    const dateStr = now.toISOString().split('T')[0]; // صيغة YYYY-MM-DD
+    const timeStr = now.toLocaleTimeString('ar-IQ', {hour: '2-digit', minute:'2-digit'});
 
     db.child("debts/" + compId + "/amount").set(newAmount);
     db.child("transactions").push().set({
@@ -578,11 +650,12 @@
       type: type,
       amount: amount,
       note: note,
-      date: new Date().toLocaleDateString('ar-IQ') + " " + new Date().toLocaleTimeString('ar-IQ', {hour: '2-digit', minute:'2-digit'})
+      date: dateStr,
+      time: timeStr
     });
 
     document.getElementById("transForm").reset();
-    alert("🟢 تم تسجيل الحركة وتحديث الدين الحالي بنجاح!");
+    alert("🟢 تم تسجيل الحركة وتحديث الدين بنجاح!");
   };
 
   // تعبئة المنسدلات
@@ -606,7 +679,7 @@
     select2.value = curVal2;
   }
 
-  // كشف الحساب
+  // كشف الحساب مع الفلترة حسب التاريخ
   function generateStatement() {
     const compId = document.getElementById("statementSelect").value;
     const container = document.getElementById("statementContent");
@@ -616,16 +689,27 @@
       return;
     }
 
+    const fromDate = document.getElementById("filterFromDate").value;
+    const toDate = document.getElementById("filterToDate").value;
+
     const company = currentData.debts[compId];
-    const compTrans = Object.keys(currentData.transactions)
+    let compTrans = Object.keys(currentData.transactions)
       .map(k => currentData.transactions[k])
       .filter(t => t.companyId === compId || t.companyName === company.name);
+
+    // تصفية التاريخ
+    if(fromDate) {
+      compTrans = compTrans.filter(t => t.date >= fromDate);
+    }
+    if(toDate) {
+      compTrans = compTrans.filter(t => t.date <= toDate);
+    }
 
     let totalBills = company.initialAmount || 0;
     let totalPays = 0;
 
     let rowsHtml = "";
-    if(company.initialAmount > 0) {
+    if(!fromDate && company.initialAmount > 0) {
       rowsHtml += `<tr>
         <td>-</td>
         <td><span class="badge-bill">رصيد أولي</span></td>
@@ -640,7 +724,7 @@
       else totalBills += t.amount;
 
       rowsHtml += `<tr>
-        <td style="font-size:12px; color:#718096;">${t.date}</td>
+        <td style="font-size:12px; color:#718096;">${t.date} ${t.time || ''}</td>
         <td><span class="${isPay ? 'badge-pay' : 'badge-bill'}">${isPay ? 'تسديد (واصل)' : 'قائمة (مطلوب)'}</span></td>
         <td style="font-weight:bold;">${t.amount.toLocaleString()} د.ع</td>
         <td>${t.note || '-'}</td>
@@ -672,13 +756,69 @@
             </tr>
           </thead>
           <tbody>
-            ${rowsHtml || "<tr><td colspan='4'>لا توجد حركات مسجلة بعد</td></tr>"}
+            ${rowsHtml || "<tr><td colspan='4'>لا توجد حركات مسجلة خلال الفترة المختارة</td></tr>"}
           </tbody>
         </table>
       </div>
 
-      <button class="no-print" onclick="window.print()" style="margin-top:15px; background:#4a5568;">🖨️ طباعة كشف الحساب</button>
+      <div class="no-print" style="display:flex; gap:10px; margin-top:15px;">
+        <button onclick="window.print()" style="background:#4a5568;">🖨️ طباعة كشف الحساب</button>
+        <button onclick="exportStatementCSV('${company.name}')" style="background:#2b6cb0;">📊 تصدير إلى Excel (.CSV)</button>
+      </div>
     `;
+  }
+
+  // تصدير كشف الحساب إلى Excel
+  function exportStatementCSV(compName) {
+    const compId = document.getElementById("statementSelect").value;
+    if(!compId) return;
+
+    const company = currentData.debts[compId];
+    const compTrans = Object.keys(currentData.transactions)
+      .map(k => currentData.transactions[k])
+      .filter(t => t.companyId === compId || t.companyName === company.name);
+
+    let csvContent = "\uFEFFالتاريخ,نوع الحركة,المبلغ,الملاحظات\n";
+    
+    compTrans.forEach(t => {
+      const typeStr = t.type === 'pay' ? 'تسديد' : 'قائمة';
+      csvContent += `"${t.date} ${t.time||''}","${typeStr}","${t.amount}","${t.note||''}"\n`;
+    });
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `كشف_حساب_${compName}.csv`;
+    a.click();
+  }
+
+  // طباعة وصل منفرد للحركة
+  function printSingleReceipt(transKey) {
+    const t = currentData.transactions[transKey];
+    if(!t) return;
+
+    const receiptDiv = document.getElementById("receiptPrintArea");
+    const isPay = t.type === 'pay';
+
+    receiptDiv.innerHTML = `
+      <div style="border:2px solid #000; padding:20px; width:300px; margin:20px auto; text-align:center; font-family:sans-serif;">
+        <h2 style="margin:0;">محل الدباغ للجملة</h2>
+        <p style="margin:5px 0; font-size:12px;">وصل ${isPay ? 'تسديد ومقبوضات' : 'قائمة ومطلوبات'}</p>
+        <hr/>
+        <div style="text-align:right; font-size:13px; line-height:1.8;">
+          <p><strong>التاريخ:</strong> ${t.date} ${t.time || ''}</p>
+          <p><strong>الشركة / المجهز:</strong> ${t.companyName}</p>
+          <p><strong>نوع الحركة:</strong> ${isPay ? 'تسديد واصل' : 'قائمة جديدة'}</p>
+          <p><strong>المبلغ:</strong> <span style="font-size:16px; font-weight:bold;">${t.amount.toLocaleString()} د.ع</span></p>
+          <p><strong>الملاحظات:</strong> ${t.note || '-'}</p>
+        </div>
+        <hr/>
+        <p style="font-size:11px; margin-top:20px;">توقيع المستلم: .....................</p>
+      </div>
+    `;
+
+    window.print();
   }
 
   // عرض جدول الأسعار
@@ -720,7 +860,7 @@
     });
   }
 
-  // عرض جدول الديون مع أزرار التعديل والحذف للشركات
+  // عرض جدول الديون
   function renderDebts() {
     const tbody = document.getElementById("debtsTable"); tbody.innerHTML = "";
     const query = document.getElementById("searchDebt").value.trim().toLowerCase();
@@ -754,7 +894,7 @@
     const keys = Object.keys(currentData.transactions).reverse();
 
     if(keys.length === 0) {
-      tbody.innerHTML = "<tr><td colspan='5' style='color:#718096;'>لا توجد حركات مسجلة</td></tr>";
+      tbody.innerHTML = "<tr><td colspan='6' style='color:#718096;'>لا توجد حركات مسجلة</td></tr>";
       return;
     }
 
@@ -762,11 +902,12 @@
       const t = currentData.transactions[k];
       const isPay = t.type === 'pay';
       tbody.innerHTML += `<tr>
-        <td style="font-size:12px; color:#718096;">${t.date}</td>
+        <td style="font-size:12px; color:#718096;">${t.date} ${t.time || ''}</td>
         <td><strong>${t.companyName}</strong></td>
         <td><span class="${isPay ? 'badge-pay' : 'badge-bill'}">${isPay ? 'تسديد (تنزيل)' : 'قائمة (زيادة)'}</span></td>
         <td style="font-weight:bold;">${t.amount.toLocaleString()} د.ع</td>
         <td>${t.note || '-'}</td>
+        <td><button class="btn-receipt" onclick="printSingleReceipt('${k}')">🧾 وصل</button></td>
       </tr>`;
     });
   }
@@ -802,17 +943,17 @@
 
   // تصفير النظام
   function resetSystem() {
-    const password = prompt("⚠️ تحذير: هذا الخيار سيمسح جميع الأسعار والديون والحركات!\n\nأدخل رمز الأمان (1234) للتأكيد:");
+    const password = prompt("⚠️ تحذير: هذا الخيار سيمسح جميع البيانات!\n\nأدخل رمز الأمان (1234) للتأكيد:");
     
-    if(password === "1234") {
-      if(confirm("هل أنت متأكد 100% من مسح كافة البيانات؟ سيتم أخذ نسخة احتياطية تلقائياً قبل المسح.")) {
+    if(password === SECURITY_PIN) {
+      if(confirm("هل أنت متأكد 100% من مسح كافة البيانات؟ سيتم أخذ نسخة احتياطية تلقائياً.")) {
         exportBackup();
         db.remove()
-          .then(() => alert("🧹 تم تصفير النظام بنجاح وإعادة ضبط البيانات!"))
-          .catch(err => alert("❌ حدث خطأ أثناء التصفير: " + err.message));
+          .then(() => alert("🧹 تم تصفير النظام بنجاح!"))
+          .catch(err => alert("❌ حدث خطأ: " + err.message));
       }
     } else if(password !== null) {
-      alert("❌ رمز الأمان غير صحيح! تم إلغاء التصفير.");
+      alert("❌ رمز الأمان غير صحيح!");
     }
   }
 </script>
