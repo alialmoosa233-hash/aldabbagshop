@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>نظام الحسابات - كشف حساب احترافي</title>
+  <title>نظام الحسابات وعروض الأسعار الشامل</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <!-- مكتبات Firebase -->
@@ -46,6 +46,35 @@
       font-weight: 800;
     }
 
+    /* شريط التبويبات الرئيسي */
+    .nav-tabs {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      background: #0f172a;
+      padding: 10px;
+      border-top: 1px solid #334155;
+    }
+
+    .tab-btn {
+      background: #1e293b;
+      color: #94a3b8;
+      border: 1px solid #334155;
+      padding: 10px 24px;
+      border-radius: 6px;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 15px;
+      transition: all 0.2s ease;
+      width: auto;
+    }
+
+    .tab-btn.active {
+      background: var(--primary);
+      color: #fff;
+      border-color: #3b82f6;
+    }
+
     .container { max-width: 1400px; margin: 20px auto; padding: 0 15px; }
 
     #cloudStatus {
@@ -58,6 +87,9 @@
       color: var(--text-muted);
       font-size: 13px;
     }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
 
     .grid { display: grid; grid-template-columns: 380px 1fr; gap: 20px; }
 
@@ -74,12 +106,12 @@
       border-bottom: 2px solid var(--border); padding-bottom: 10px; margin-bottom: 14px;
     }
 
-    input, select {
+    input, select, textarea {
       width: 100%; padding: 9px 12px; margin-bottom: 10px;
       border: 1px solid var(--border); border-radius: 6px;
       font-size: 13.5px; font-family: inherit; background: #fff;
     }
-    input:focus, select:focus { outline: none; border-color: var(--primary); }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); }
 
     button {
       width: 100%; padding: 10px; border: none; border-radius: 6px;
@@ -88,13 +120,14 @@
     .btn-debt { background: var(--debt); }
     .btn-primary { background: var(--primary); }
     .btn-action { background: #475569; }
+    .btn-success { background: var(--success); }
 
     table { width: 100%; border-collapse: collapse; font-size: 13px; background: white; }
     th, td { padding: 8px 10px; text-align: center; border: 1px solid var(--border); }
     th { background: #f1f5f9; color: var(--text-main); font-weight: 800; }
 
-    /* 📄 تصميم كشف الحساب احترافي (النمط المحاسبي الرسمي) */
-    .statement-box {
+    /* 📄 تصميم كشف الحساب وعرض الأسعار للطباعة */
+    .printable-box {
       background: #fff;
       border: 2px solid #0f172a;
       border-radius: 4px;
@@ -102,7 +135,7 @@
       color: #000;
     }
 
-    .statement-header-grid {
+    .header-grid {
       display: grid;
       grid-template-columns: 1fr auto 1fr;
       align-items: center;
@@ -169,112 +202,232 @@
     @media print {
       body * { visibility: hidden; }
       .no-print { display: none !important; }
-      #statementPrintArea, #statementPrintArea * { visibility: visible; }
-      #statementPrintArea {
+      .print-area, .print-area * { visibility: visible; }
+      .print-area {
         position: absolute; left: 0; top: 0; width: 100%;
         border: none; padding: 0;
       }
-      .statement-box { border: none; padding: 0; }
+      .printable-box { border: none; padding: 0; }
     }
   </style>
 </head>
 <body>
 
-<header class="no-print">📒 نظام المحاسبة وقوائم المجهّزين</header>
+<header class="no-print">🏢 محل الدباغ للجملة - النظام المحاسبي الشامل</header>
+
+<div class="nav-tabs no-print">
+  <button class="tab-btn active" onclick="switchTab('accountsTab', this)">📖 كشف الحسابات والشركات</button>
+  <button class="tab-btn" onclick="switchTab('quotesTab', this)">🏷️ قائمة وعروض الأسعار</button>
+</div>
 
 <div class="container">
   <div id="cloudStatus" class="no-print">🔄 جاري الاتصال بالسحابة...</div>
 
-  <div class="grid">
-    <!-- الجانب الأيمن: إدخال البيانات والشركات -->
-    <div class="no-print">
-      <!-- إضافة مجهز -->
-      <div class="card">
-        <h2>➕ إضافة مجهز / شركة</h2>
-        <form id="companyForm">
-          <input type="text" id="cName" placeholder="اسم الشركة أو المجهز" required />
-          <input type="text" id="cPhone" placeholder="رقم الهاتف" />
-          <input type="number" id="cInitialDebt" placeholder="الرصيد السابـق / الافتتاحي (د.ع)" value="0" />
-          <button type="submit" class="btn-debt">حفظ المجهز</button>
-        </form>
-      </div>
+  <!-- ==================== التبويب الأول: كشف الحسابات ==================== -->
+  <div id="accountsTab" class="tab-content active">
+    <div class="grid">
+      <!-- الجانب الأيمن: إدخال البيانات -->
+      <div class="no-print">
+        <!-- إضافة مجهز -->
+        <div class="card">
+          <h2>➕ إضافة مجهز / شركة</h2>
+          <form id="companyForm">
+            <input type="text" id="cName" placeholder="اسم الشركة أو المجهز" required />
+            <input type="text" id="cPhone" placeholder="رقم الهاتف" />
+            <input type="number" id="cInitialDebt" placeholder="الرصيد السابـق / الافتتاحي (د.ع)" value="0" />
+            <button type="submit" class="btn-debt">حفظ المجهز</button>
+          </form>
+        </div>
 
-      <!-- تسجيل حركة -->
-      <div class="card">
-        <h2>📄 تسجيل سند / قائمة</h2>
-        <form id="transForm">
-          <select id="tCompany" required>
-            <option value="">-- اختر الشركة --</option>
-          </select>
+        <!-- تسجيل حركة -->
+        <div class="card">
+          <h2>📄 تسجيل سند / قائمة</h2>
+          <form id="transForm">
+            <select id="tCompany" required>
+              <option value="">-- اختر الشركة --</option>
+            </select>
 
-          <select id="tType" onchange="toggleBillFields()" required>
-            <option value="bill">📥 فاتورة مشتريات (مدين - عليك)</option>
-            <option value="pay">💸 سند سداد / واصل (دائن - لك)</option>
-          </select>
+            <select id="tType" onchange="toggleBillFields()" required>
+              <option value="bill">📥 فاتورة مشتريات (مدين - عليك)</option>
+              <option value="pay">💸 سند سداد / واصل (دائن - لك)</option>
+            </select>
 
-          <input type="number" id="tAmount" placeholder="المبلغ الإجمالي (دينار)" required />
+            <input type="number" id="tAmount" placeholder="المبلغ الإجمالي (دينار)" required />
 
-          <div id="billFieldsArea">
-            <input type="text" id="tBillNum" placeholder="رقم القائمة الأصلي" />
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-              <input type="date" id="tBillDate" title="تاريخ القائمة" />
-              <input type="date" id="tDueDate" title="تاريخ الاستحقاق" />
+            <div id="billFieldsArea">
+              <input type="text" id="tBillNum" placeholder="رقم القائمة الأصلي" />
+              <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                <input type="date" id="tBillDate" title="تاريخ القائمة" />
+                <input type="date" id="tDueDate" title="تاريخ الاستحقاق" />
+              </div>
+              <input type="file" id="tImgFile" accept="image/*" onchange="convertImgToBase64()" />
+              <input type="hidden" id="tImgBase64" />
             </div>
-            <input type="file" id="tImgFile" accept="image/*" onchange="convertImgToBase64()" />
-            <input type="hidden" id="tImgBase64" />
+
+            <input type="text" id="tNote" placeholder="البيان / التفاصيل" />
+            <button type="submit" class="btn-primary">حفظ الحركة وتحديث الحساب</button>
+          </form>
+        </div>
+
+        <!-- قائمة المجهّزين -->
+        <div class="card">
+          <h2>📒 قائمة المجهّزين والشركات</h2>
+          <input type="text" id="searchDebt" placeholder="بحث باسم المجهز..." oninput="renderDebts()" />
+          <div style="overflow-x:auto;">
+            <table>
+              <thead>
+                <tr>
+                  <th>المجهز</th>
+                  <th>المبلغ المطلوب</th>
+                  <th>حذف</th>
+                </tr>
+              </thead>
+              <tbody id="debtsTable"><tr><td colspan="3">جاري التحميل...</td></tr></tbody>
+            </table>
           </div>
-
-          <input type="text" id="tNote" placeholder="البيان / التفاصيل" />
-          <button type="submit" class="btn-primary">حفظ الحركة وتحديث الحساب</button>
-        </form>
-      </div>
-
-      <!-- قائمة المجهّزين -->
-      <div class="card">
-        <h2>📒 قائمة المجهّزين والشركات</h2>
-        <input type="text" id="searchDebt" placeholder="بحث باسم المجهز..." oninput="renderDebts()" />
-        <div style="overflow-x:auto;">
-          <table>
-            <thead>
-              <tr>
-                <th>المجهز</th>
-                <th>المبلغ المطلوب</th>
-                <th>حذف</th>
-              </tr>
-            </thead>
-            <tbody id="debtsTable"><tr><td colspan="3">جاري التحميل...</td></tr></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- الجانب الأيسر: كشف الحساب الاحترافي -->
-    <div>
-      <div class="card no-print" style="margin-bottom: 15px;">
-        <h2>⚙️ خيارات عرض كشف الحساب</h2>
-        <select id="statementSelect" onchange="generateStatement()">
-          <option value="">-- اختر المجهز لعرض كشف الحساب --</option>
-        </select>
-
-        <div style="display:flex; gap:10px; margin-top:10px; flex-wrap:wrap;">
-          <input type="date" id="filterFromDate" onchange="generateStatement()" title="من تاريخ" style="flex:1;" />
-          <input type="date" id="filterToDate" onchange="generateStatement()" title="إلى تاريخ" style="flex:1;" />
         </div>
       </div>
 
-      <!-- منطقة كشف الحساب الجاهزة للطباعة والـ PDF -->
-      <div id="statementPrintArea">
-        <div id="statementContent">
-          <div class="statement-box" style="text-align:center; color:var(--text-muted); padding: 50px 20px;">
-            يرجى اختيار مجهز من القائمة أعلاه لعرض كشف الحساب الرسمي.
+      <!-- الجانب الأيسر: عرض كشف الحساب -->
+      <div>
+        <div class="card no-print" style="margin-bottom: 15px;">
+          <h2>⚙️ خيارات عرض كشف الحساب</h2>
+          <select id="statementSelect" onchange="generateStatement()">
+            <option value="">-- اختر المجهز لعرض كشف الحساب --</option>
+          </select>
+
+          <div style="display:flex; gap:10px; margin-top:10px; flex-wrap:wrap;">
+            <input type="date" id="filterFromDate" onchange="generateStatement()" title="من تاريخ" style="flex:1;" />
+            <input type="date" id="filterToDate" onchange="generateStatement()" title="إلى تاريخ" style="flex:1;" />
+          </div>
+        </div>
+
+        <div id="statementPrintArea" class="print-area">
+          <div id="statementContent">
+            <div class="printable-box" style="text-align:center; color:var(--text-muted); padding: 50px 20px;">
+              يرجى اختيار مجهز من القائمة أعلاه لعرض كشف الحساب الرسمي.
+            </div>
           </div>
         </div>
       </div>
     </div>
   </div>
+
+  <!-- ==================== التبويب الثاني: عرض الأسعار وقائمة المواد ==================== -->
+  <div id="quotesTab" class="tab-content">
+    <div class="grid">
+      <!-- الجانب الأيمن: إدخال المواد وبناء عرض السعر -->
+      <div class="no-print">
+        <!-- إضافة مادة جديدة -->
+        <div class="card">
+          <h2>🏷️ إضافة مادة / بضاعة للجدول</h2>
+          <form id="itemForm">
+            <input type="text" id="pName" placeholder="اسم المادة" required />
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
+              <input type="number" id="pPrice" placeholder="السعر (دينار)" required />
+              <input type="text" id="pUnit" placeholder="الوحدة (كرتون/كيس..)" value="قطعة" />
+            </div>
+            <input type="text" id="pNote" placeholder="ملاحظات / المواصفات" />
+            <button type="submit" class="btn-success">إضافة المادة للجدول</button>
+          </form>
+        </div>
+
+        <!-- إنشاء قائمة عرض أسعار -->
+        <div class="card">
+          <h2>📑 تفاصيل عرض السعر للمستفيد</h2>
+          <input type="text" id="quoteCustomer" placeholder="اسم العميل / الجهة المستفيدة" value="المحترم" />
+          <input type="date" id="quoteDate" />
+          <button class="btn-primary" onclick="renderQuoteList()">تحديث عرض الأسعار</button>
+        </div>
+
+        <!-- قائمة المواد المسجلة -->
+        <div class="card">
+          <h2>📦 دليل المواد المسجلة</h2>
+          <input type="text" id="searchItem" placeholder="بحث عن مادة..." oninput="renderItemsTable()" />
+          <div style="overflow-x:auto; max-height: 350px;">
+            <table>
+              <thead>
+                <tr>
+                  <th>المادة</th>
+                  <th>السعر</th>
+                  <th>تحديد</th>
+                </tr>
+              </thead>
+              <tbody id="itemsTable"><tr><td colspan="3">جاري التحميل...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- الجانب الأيسر: معاينة وثيقة عرض الأسعار للطباعة -->
+      <div>
+        <div class="card no-print" style="margin-bottom: 15px;">
+          <h2>🖨️ طباعة وخيارات عرض الأسعار</h2>
+          <p style="font-size:13px; color:var(--text-muted); margin:0 0 10px 0;">يمكنك تحديد المواد المُراد تضمينها في قائمة عرض السعر من القائمة المجاورة ثم الضغط على طباعة.</p>
+          <button onclick="window.print()" class="btn-primary">🖨️ طباعة قائمة عرض الأسعار / حفظ PDF</button>
+        </div>
+
+        <div id="quotePrintArea" class="print-area">
+          <div class="printable-box">
+            <!-- الترويسة المحدثة -->
+            <div class="header-grid">
+              <div>
+                <div class="company-title">محل الدباغ للجملة</div>
+                <div style="font-size:12px; color:var(--text-muted);">الموصل - الزهور | هاتف: 07706149990</div>
+              </div>
+              <div class="doc-title">قائمة عرض أسعار</div>
+              <div style="text-align:left; font-size:12px; color:var(--text-muted);">
+                التاريخ: <span id="qPrintDate">-</span><br/>
+                الرقم المرجعي: #QUO-<span id="qRandomNum">101</span>
+              </div>
+            </div>
+
+            <!-- معلومات المستفيد -->
+            <div class="info-grid">
+              <div class="info-item"><strong>إلى السيد/الجهة:</strong> <span id="qCustomerName">المحترم</span></div>
+              <div class="info-item"><strong>نوع العرض:</strong> <span>أسعار بالجملة (نافذة لمدة 7 أيام)</span></div>
+            </div>
+
+            <!-- جدول عرض الأسعار -->
+            <table class="acc-table">
+              <thead>
+                <tr>
+                  <th style="width:35px;">#</th>
+                  <th>اسم المادة / البضاعة</th>
+                  <th style="width:100px;">الوحدة</th>
+                  <th style="width:140px;">السعر الإفرادي (د.ع)</th>
+                  <th>ملاحظات / المواصفات</th>
+                </tr>
+              </thead>
+              <tbody id="quoteTableBody">
+                <tr><td colspan="5">اختر المواد من القائمة الجانبية لإدراجها في عرض الأسعار.</td></tr>
+              </tbody>
+            </table>
+
+            <!-- التوقيع والاعتماد -->
+            <div class="signatures">
+              <div>
+                إعداد / قسم المبيعات
+                <div class="sig-line"></div>
+              </div>
+              <div>
+                إدارة محل الدباغ
+                <div class="sig-line"></div>
+              </div>
+              <div>
+                ملاحظات المعرض
+                <div style="font-size:11px; margin-top:35px; color:#555;">الأسعار شاملة للتحميل من المخزن</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
 </div>
 
-<!-- Modal استعراض صورة القائمة -->
+<!-- Modal استعراض الصورة -->
 <div id="imgModal" class="modal">
   <div class="modal-content">
     <h3 style="margin-top:0;">🖼️ صورة القائمة المرفقة</h3>
@@ -296,11 +449,21 @@
   };
 
   let db;
-  let currentData = { debts: {}, transactions: {} };
+  let currentData = { debts: {}, transactions: {}, products: {} };
+  let selectedQuoteItems = new Set();
   const SECURITY_PIN = "1234";
 
   function normalizeText(text) {
     return text ? text.toString().trim().toLowerCase().replace(/\s+/g, ' ') : '';
+  }
+
+  // التنقل بين التبويبات
+  function switchTab(tabId, btn) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+
+    document.getElementById(tabId).classList.add('active');
+    btn.classList.add('active');
   }
 
   try {
@@ -315,15 +478,18 @@
       const val = snapshot.val() || {};
       currentData.debts = val.debts || {};
       currentData.transactions = val.transactions || {};
+      currentData.products = val.products || {};
 
       renderDebts();
       renderCompanySelect();
       generateStatement();
+      renderItemsTable();
     });
   } catch(e) {
     document.getElementById("cloudStatus").innerHTML = "🔴 خطأ بالاتصال: " + e.message;
   }
 
+  /* ------------------- إدارة الحسابات ------------------- */
   function toggleBillFields() {
     const type = document.getElementById("tType").value;
     document.getElementById("billFieldsArea").style.display = (type === 'bill') ? 'block' : 'none';
@@ -418,7 +584,7 @@
 
     if(!compId || !currentData.debts[compId]) {
       container.innerHTML = `
-        <div class="statement-box" style="text-align:center; color:var(--text-muted); padding: 50px 20px;">
+        <div class="printable-box" style="text-align:center; color:var(--text-muted); padding: 50px 20px;">
           يرجى اختيار مجهز من القائمة أعلاه لعرض كشف الحساب الرسمي.
         </div>`;
       return;
@@ -437,12 +603,11 @@
     if(toDate) compTrans = compTrans.filter(t => t.date <= toDate);
 
     let runningBalance = company.initialAmount || 0;
-    let totalDebit = company.initialAmount || 0; // مجموع مدين (عليك)
-    let totalCredit = 0; // مجموع دائن (لك)
+    let totalDebit = company.initialAmount || 0;
+    let totalCredit = 0;
 
     let rowsHtml = "";
 
-    // السطر الأول: الرصيد الافتتاحي
     if(company.initialAmount > 0) {
       rowsHtml += `<tr>
         <td>-</td>
@@ -458,7 +623,7 @@
     }
 
     compTrans.forEach((t, idx) => {
-      const isDebit = t.type === 'bill'; // مدين = فاتورة مشتريات
+      const isDebit = t.type === 'bill';
       const debitVal = isDebit ? t.amount : 0;
       const creditVal = !isDebit ? t.amount : 0;
 
@@ -489,9 +654,8 @@
     const printDate = new Date().toLocaleDateString('ar-IQ');
 
     container.innerHTML = `
-      <div class="statement-box">
-        <!-- ترويسة كشف الحساب الرسمية -->
-        <div class="statement-header-grid">
+      <div class="printable-box">
+        <div class="header-grid">
           <div>
             <div class="company-title">محل الدباغ للجملة</div>
             <div style="font-size:12px; color:var(--text-muted);">الموصل - الزهور | هاتف: 07706149990</div>
@@ -503,7 +667,6 @@
           </div>
         </div>
 
-        <!-- معلومات الحساب -->
         <div class="info-grid">
           <div class="info-item"><strong>اسم المجهز:</strong> <span>${company.name}</span></div>
           <div class="info-item"><strong>رقم الهاتف:</strong> <span>${company.phone || 'غير مسجل'}</span></div>
@@ -511,7 +674,6 @@
           <div class="info-item"><strong>عملة الحساب:</strong> <span>دينار عراقي (IQD)</span></div>
         </div>
 
-        <!-- جدول الحركة التفصيلي المزدوج -->
         <table class="acc-table">
           <thead>
             <tr>
@@ -531,7 +693,6 @@
           </tbody>
         </table>
 
-        <!-- ملخص الحساب النهائي -->
         <div class="summary-box">
           <div>مجموع المدين (المشتريات)<span>${totalDebit.toLocaleString()} د.ع</span></div>
           <div>مجموع الدائن (التسديدات)<span>${totalCredit.toLocaleString()} د.ع</span></div>
@@ -539,7 +700,6 @@
           <div>حالة الحساب<span>${runningBalance > 0 ? 'مطلوب للشركة' : 'متوازن / مسدد'}</span></div>
         </div>
 
-        <!-- قسم التواقيع والاعتماد الرسمي -->
         <div class="signatures">
           <div>
             المحاسب المسؤول
@@ -558,41 +718,8 @@
 
       <div class="no-print" style="display:flex; gap:10px; margin-top:15px;">
         <button onclick="window.print()" class="btn-primary" style="flex:1;">🖨️ طباعة كشف الحساب / حفظ PDF</button>
-        <button onclick="exportCSV('${company.name}')" class="btn-action" style="flex:1;">📊 تصدير إلى Excel (.CSV)</button>
       </div>
     `;
-  }
-
-  function viewImg(base64Data) {
-    document.getElementById("modalImg").src = base64Data;
-    document.getElementById("imgModal").style.display = "flex";
-  }
-
-  function closeImgModal() {
-    document.getElementById("imgModal").style.display = "none";
-  }
-
-  function exportCSV(compName) {
-    const compId = document.getElementById("statementSelect").value;
-    if(!compId) return;
-
-    const company = currentData.debts[compId];
-    const compTrans = Object.keys(currentData.transactions)
-      .map(k => currentData.transactions[k])
-      .filter(t => t.companyId === compId || t.companyName === company.name);
-
-    let csv = "\uFEFFالتاريخ,نوع المستند,رقم القائمة,البيان,مدين (عليك),دائن (لك)\n";
-    compTrans.forEach(t => {
-      const isDebit = t.type === 'bill';
-      csv += `"${t.date}","${isDebit ? 'فاتورة مشتريات' : 'سند سداد'}","${t.billNum || ''}","${t.note || ''}","${isDebit ? t.amount : 0}","${!isDebit ? t.amount : 0}"\n`;
-    });
-
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `كشف_حساب_${compName}.csv`;
-    a.click();
   }
 
   function renderDebts() {
@@ -624,6 +751,92 @@
     if(pin === SECURITY_PIN) db.child("debts/" + key).remove();
     else if(pin !== null) alert("❌ رمز الأمان غير صحيح!");
   }
+
+  /* ------------------- إدارة عروض الأسعار ------------------- */
+  document.getElementById("itemForm").onsubmit = (e) => {
+    e.preventDefault();
+    const name = document.getElementById("pName").value.trim();
+    const price = parseFloat(document.getElementById("pPrice").value) || 0;
+    const unit = document.getElementById("pUnit").value.trim() || "قطعة";
+    const note = document.getElementById("pNote").value.trim();
+
+    db.child("products").push().set({ name, price, unit, note });
+    document.getElementById("itemForm").reset();
+  };
+
+  function renderItemsTable() {
+    const tbody = document.getElementById("itemsTable"); tbody.innerHTML = "";
+    const query = normalizeText(document.getElementById("searchItem").value);
+    const keys = Object.keys(currentData.products);
+
+    const filtered = keys.filter(k => normalizeText(currentData.products[k].name).includes(query));
+
+    if(filtered.length === 0) {
+      tbody.innerHTML = "<tr><td colspan='3' style='color:var(--text-muted);'>لا توجد مواد مسجلة</td></tr>";
+      return;
+    }
+
+    filtered.forEach((k) => {
+      const item = currentData.products[k];
+      const isChecked = selectedQuoteItems.has(k) ? 'checked' : '';
+      tbody.innerHTML += `<tr>
+        <td><strong>${item.name}</strong></td>
+        <td style='color:var(--primary); font-weight:700;'>${(item.price || 0).toLocaleString()}</td>
+        <td>
+          <input type="checkbox" style="width: auto; margin:0;" ${isChecked} onchange="toggleQuoteItem('${k}', this.checked)" />
+        </td>
+      </tr>`;
+    });
+  }
+
+  function toggleQuoteItem(key, isChecked) {
+    if(isChecked) selectedQuoteItems.add(key);
+    else selectedQuoteItems.delete(key);
+    renderQuoteList();
+  }
+
+  function renderQuoteList() {
+    const custName = document.getElementById("quoteCustomer").value.trim() || "المحترم";
+    const custDate = document.getElementById("quoteDate").value || new Date().toLocaleDateString('ar-IQ');
+
+    document.getElementById("qCustomerName").innerText = custName;
+    document.getElementById("qPrintDate").innerText = custDate;
+    document.getElementById("qRandomNum").innerText = Math.floor(100 + Math.random() * 900);
+
+    const tbody = document.getElementById("quoteTableBody");
+    tbody.innerHTML = "";
+
+    if(selectedQuoteItems.size === 0) {
+      tbody.innerHTML = "<tr><td colspan='5'>اختر المواد من القائمة الجانبية لإدراجها في عرض الأسعار.</td></tr>";
+      return;
+    }
+
+    let idx = 1;
+    selectedQuoteItems.forEach(key => {
+      const item = currentData.products[key];
+      if(item) {
+        tbody.innerHTML += `<tr>
+          <td>${idx++}</td>
+          <td style="text-align:right;"><strong>${item.name}</strong></td>
+          <td>${item.unit || 'قطعة'}</td>
+          <td style="font-weight:700; color:var(--primary);">${(item.price || 0).toLocaleString()} د.ع</td>
+          <td>${item.note || '-'}</td>
+        </tr>`;
+      }
+    });
+  }
+
+  function viewImg(base64Data) {
+    document.getElementById("modalImg").src = base64Data;
+    document.getElementById("imgModal").style.display = "flex";
+  }
+
+  function closeImgModal() {
+    document.getElementById("imgModal").style.display = "none";
+  }
+
+  // ضبط التاريخ الافتراضي
+  document.getElementById("quoteDate").value = new Date().toISOString().split('T')[0];
 </script>
 </body>
 </html>
