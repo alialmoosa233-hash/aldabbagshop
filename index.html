@@ -2,39 +2,29 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>نظام الحسابات وعروض الأسعار الشامل</title>
+  <title>قائمة عرض الأسعار - محل الدباغ للجملة</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-  <!-- مكتبات Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-
+  
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
 
     :root {
       --primary: #1e3a8a;
-      --primary-hover: #1e40af;
-      --debt: #dc2626;
-      --success: #16a34a;
-      --warning: #d97706;
       --bg: #f8fafc;
       --card: #ffffff;
       --border: #cbd5e1;
       --text-main: #0f172a;
       --text-muted: #475569;
-      --radius: 8px;
     }
 
     * { box-sizing: border-box; }
 
     body {
-      font-family: 'Tajawal', system-ui, sans-serif;
+      font-family: 'Tajawal', sans-serif;
       background-color: var(--bg);
       color: var(--text-main);
       margin: 0; padding: 0;
       direction: rtl;
-      line-height: 1.4;
     }
 
     header {
@@ -46,87 +36,48 @@
       font-weight: 800;
     }
 
-    /* شريط التبويبات الرئيسي */
-    .nav-tabs {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      background: #0f172a;
-      padding: 10px;
-      border-top: 1px solid #334155;
+    .container {
+      max-width: 1200px;
+      margin: 20px auto;
+      padding: 0 15px;
     }
 
-    .tab-btn {
-      background: #1e293b;
-      color: #94a3b8;
-      border: 1px solid #334155;
-      padding: 10px 24px;
-      border-radius: 6px;
-      font-weight: 700;
-      cursor: pointer;
-      font-size: 15px;
-      transition: all 0.2s ease;
-      width: auto;
+    .grid {
+      display: grid;
+      grid-template-columns: 350px 1fr;
+      gap: 20px;
     }
-
-    .tab-btn.active {
-      background: var(--primary);
-      color: #fff;
-      border-color: #3b82f6;
-    }
-
-    .container { max-width: 1400px; margin: 20px auto; padding: 0 15px; }
-
-    #cloudStatus {
-      padding: 10px 15px;
-      text-align: center;
-      font-weight: 700;
-      border-radius: var(--radius);
-      margin-bottom: 15px;
-      background: #e2e8f0;
-      color: var(--text-muted);
-      font-size: 13px;
-    }
-
-    .tab-content { display: none; }
-    .tab-content.active { display: block; }
-
-    .grid { display: grid; grid-template-columns: 380px 1fr; gap: 20px; }
 
     .card {
       background: var(--card);
       border: 1px solid var(--border);
-      border-radius: var(--radius);
+      border-radius: 8px;
       padding: 18px;
-      margin-bottom: 18px;
+      margin-bottom: 15px;
     }
 
     h2 {
       margin-top: 0; font-size: 16px; font-weight: 800;
-      border-bottom: 2px solid var(--border); padding-bottom: 10px; margin-bottom: 14px;
+      border-bottom: 2px solid var(--border); padding-bottom: 8px; margin-bottom: 12px;
     }
 
-    input, select, textarea {
+    input {
       width: 100%; padding: 9px 12px; margin-bottom: 10px;
       border: 1px solid var(--border); border-radius: 6px;
-      font-size: 13.5px; font-family: inherit; background: #fff;
+      font-size: 13.5px; font-family: inherit;
     }
-    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); }
 
     button {
       width: 100%; padding: 10px; border: none; border-radius: 6px;
       color: white; font-weight: 700; cursor: pointer; font-size: 14px; font-family: inherit;
+      background: var(--primary);
     }
-    .btn-debt { background: var(--debt); }
-    .btn-primary { background: var(--primary); }
-    .btn-action { background: #475569; }
-    .btn-success { background: var(--success); }
 
     table { width: 100%; border-collapse: collapse; font-size: 13px; background: white; }
     th, td { padding: 8px 10px; text-align: center; border: 1px solid var(--border); }
-    th { background: #f1f5f9; color: var(--text-main); font-weight: 800; }
+    th { background: #f1f5f9; font-weight: 800; }
 
-    /* 📄 تصميم كشف الحساب وعرض الأسعار للطباعة */
+    /* تصميم ورقة عرض الأسعار للطباعة */
     .printable-box {
       background: #fff;
       border: 2px solid #0f172a;
@@ -158,685 +109,185 @@
       font-size: 13.5px;
     }
 
-    .info-item { display: flex; gap: 8px; }
-    .info-item strong { color: #0f172a; min-width: 90px; }
-
     .acc-table { width: 100%; margin-bottom: 15px; }
     .acc-table th { background: #1e293b !important; color: white !important; font-size: 12.5px; padding: 7px; }
-    .acc-table td { font-size: 12.5px; padding: 7px; }
-
-    .summary-box {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      border: 2px solid #000;
-      text-align: center;
-      background: #f8fafc;
-      font-weight: 700;
-      margin-bottom: 20px;
-    }
-    .summary-box div { padding: 8px; border-left: 1px solid #000; }
-    .summary-box div:last-child { border-left: none; }
-    .summary-box span { display: block; font-size: 15px; margin-top: 4px; }
 
     .signatures {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(2, 1fr);
       text-align: center;
-      margin-top: 30px;
-      padding-top: 10px;
+      margin-top: 40px;
       font-weight: 700;
       font-size: 13px;
     }
-    .sig-line { margin-top: 35px; border-top: 1px dashed #000; width: 70%; margin-left: auto; margin-right: auto; }
-
-    .modal {
-      display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%;
-      background-color: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px);
-      justify-content: center; align-items: center;
-    }
-    .modal-content {
-      background-color: #fff; padding: 20px; border-radius: var(--radius); width: 90%; max-width: 500px;
-      text-align: center;
-    }
+    .sig-line { margin-top: 35px; border-top: 1px dashed #000; width: 60%; margin: 35px auto 0 auto; }
 
     @media print {
-      body * { visibility: hidden; }
       .no-print { display: none !important; }
-      .print-area, .print-area * { visibility: visible; }
-      .print-area {
-        position: absolute; left: 0; top: 0; width: 100%;
-        border: none; padding: 0;
-      }
+      .print-area { position: absolute; left: 0; top: 0; width: 100%; }
       .printable-box { border: none; padding: 0; }
     }
   </style>
 </head>
 <body>
 
-<header class="no-print">🏢 محل الدباغ للجملة - النظام المحاسبي الشامل</header>
-
-<div class="nav-tabs no-print">
-  <button class="tab-btn active" onclick="switchTab('accountsTab', this)">📖 كشف الحسابات والشركات</button>
-  <button class="tab-btn" onclick="switchTab('quotesTab', this)">🏷️ قائمة وعروض الأسعار</button>
-</div>
+<header class="no-print">🏷️ نظام عرض الأسعار المباشر - محل الدباغ للجملة</header>
 
 <div class="container">
-  <div id="cloudStatus" class="no-print">🔄 جاري الاتصال بالسحابة...</div>
-
-  <!-- ==================== التبويب الأول: كشف الحسابات ==================== -->
-  <div id="accountsTab" class="tab-content active">
-    <div class="grid">
-      <!-- الجانب الأيمن: إدخال البيانات -->
-      <div class="no-print">
-        <!-- إضافة مجهز -->
-        <div class="card">
-          <h2>➕ إضافة مجهز / شركة</h2>
-          <form id="companyForm">
-            <input type="text" id="cName" placeholder="اسم الشركة أو المجهز" required />
-            <input type="text" id="cPhone" placeholder="رقم الهاتف" />
-            <input type="number" id="cInitialDebt" placeholder="الرصيد السابـق / الافتتاحي (د.ع)" value="0" />
-            <button type="submit" class="btn-debt">حفظ المجهز</button>
-          </form>
-        </div>
-
-        <!-- تسجيل حركة -->
-        <div class="card">
-          <h2>📄 تسجيل سند / قائمة</h2>
-          <form id="transForm">
-            <select id="tCompany" required>
-              <option value="">-- اختر الشركة --</option>
-            </select>
-
-            <select id="tType" onchange="toggleBillFields()" required>
-              <option value="bill">📥 فاتورة مشتريات (مدين - عليك)</option>
-              <option value="pay">💸 سند سداد / واصل (دائن - لك)</option>
-            </select>
-
-            <input type="number" id="tAmount" placeholder="المبلغ الإجمالي (دينار)" required />
-
-            <div id="billFieldsArea">
-              <input type="text" id="tBillNum" placeholder="رقم القائمة الأصلي" />
-              <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                <input type="date" id="tBillDate" title="تاريخ القائمة" />
-                <input type="date" id="tDueDate" title="تاريخ الاستحقاق" />
-              </div>
-              <input type="file" id="tImgFile" accept="image/*" onchange="convertImgToBase64()" />
-              <input type="hidden" id="tImgBase64" />
-            </div>
-
-            <input type="text" id="tNote" placeholder="البيان / التفاصيل" />
-            <button type="submit" class="btn-primary">حفظ الحركة وتحديث الحساب</button>
-          </form>
-        </div>
-
-        <!-- قائمة المجهّزين -->
-        <div class="card">
-          <h2>📒 قائمة المجهّزين والشركات</h2>
-          <input type="text" id="searchDebt" placeholder="بحث باسم المجهز..." oninput="renderDebts()" />
-          <div style="overflow-x:auto;">
-            <table>
-              <thead>
-                <tr>
-                  <th>المجهز</th>
-                  <th>المبلغ المطلوب</th>
-                  <th>حذف</th>
-                </tr>
-              </thead>
-              <tbody id="debtsTable"><tr><td colspan="3">جاري التحميل...</td></tr></tbody>
-            </table>
-          </div>
-        </div>
+  <div class="grid">
+    
+    <!-- أدوات إدخال البيانات -->
+    <div class="no-print">
+      
+      <div class="card">
+        <h2>📄 معلومات العرض</h2>
+        <input type="text" id="custName" placeholder="اسم العميل / الجهة المستفيدة" value="المحترم" oninput="updateHeader()" />
+        <input type="date" id="quoteDate" onchange="updateHeader()" />
       </div>
 
-      <!-- الجانب الأيسر: عرض كشف الحساب -->
-      <div>
-        <div class="card no-print" style="margin-bottom: 15px;">
-          <h2>⚙️ خيارات عرض كشف الحساب</h2>
-          <select id="statementSelect" onchange="generateStatement()">
-            <option value="">-- اختر المجهز لعرض كشف الحساب --</option>
-          </select>
-
-          <div style="display:flex; gap:10px; margin-top:10px; flex-wrap:wrap;">
-            <input type="date" id="filterFromDate" onchange="generateStatement()" title="من تاريخ" style="flex:1;" />
-            <input type="date" id="filterToDate" onchange="generateStatement()" title="إلى تاريخ" style="flex:1;" />
+      <div class="card">
+        <h2>➕ إضافة مادة للقائمة</h2>
+        <form id="addForm">
+          <input type="text" id="pName" placeholder="اسم المادة / البضاعة" required />
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
+            <input type="number" id="pPrice" placeholder="السعر (د.ع)" required />
+            <input type="text" id="pUnit" placeholder="الوحدة (كرتون/قطعة)" value="قطعة" />
           </div>
-        </div>
+          <input type="text" id="pNote" placeholder="ملاحظات / المواصفات" />
+          <button type="submit">إضافة المادة ➕</button>
+        </form>
+      </div>
 
-        <div id="statementPrintArea" class="print-area">
-          <div id="statementContent">
-            <div class="printable-box" style="text-align:center; color:var(--text-muted); padding: 50px 20px;">
-              يرجى اختيار مجهز من القائمة أعلاه لعرض كشف الحساب الرسمي.
+      <div class="card">
+        <h2>🖨️ الطباعة والتصدير</h2>
+        <button onclick="window.print()" style="background:#16a34a;">🖨️ طباعة القائمة / حفظ PDF</button>
+      </div>
+
+    </div>
+
+    <!-- المعاينة المباشرة للطباعة -->
+    <div>
+      <div id="printArea" class="print-area">
+        <div class="printable-box">
+          
+          <!-- الترويسة -->
+          <div class="header-grid">
+            <div>
+              <div class="company-title">محل الدباغ للجملة</div>
+              <div style="font-size:12px; color:var(--text-muted);">الموصل - الزهور | هاتف: 07706149990</div>
+            </div>
+            <div class="doc-title">قائمة عرض أسعار</div>
+            <div style="text-align:left; font-size:12px; color:var(--text-muted);">
+              التاريخ: <span id="lblDate">-</span><br/>
+              الرقم المرجعي: #QUO-<span id="lblRef">101</span>
             </div>
           </div>
+
+          <!-- تفاصيل العميل -->
+          <div class="info-grid">
+            <div><strong>إلى السيد / الجهة:</strong> <span id="lblCustomer">المحترم</span></div>
+            <div><strong>نوع العرض:</strong> <span>أسعار بالجملة (نافذة لمدة 7 أيام)</span></div>
+          </div>
+
+          <!-- جدول المواد -->
+          <table class="acc-table">
+            <thead>
+              <tr>
+                <th style="width:35px;">#</th>
+                <th>اسم المادة / البضاعة</th>
+                <th style="width:100px;">الوحدة</th>
+                <th style="width:140px;">السعر الإفرادي (د.ع)</th>
+                <th>ملاحظات / المواصفات</th>
+                <th class="no-print" style="width:50px;">حذف</th>
+              </tr>
+            </thead>
+            <tbody id="itemsBody">
+              <tr class="empty-row"><td colspan="6">لم يتم إضافة مواد للقائمة بعد. أضف المواد من القائمة الجانبية.</td></tr>
+            </tbody>
+          </table>
+
+          <!-- التوقيع -->
+          <div class="signatures">
+            <div>
+              إعداد / قسم المبيعات
+              <div class="sig-line"></div>
+            </div>
+            <div>
+              إدارة محل الدباغ
+              <div class="sig-line"></div>
+            </div>
+          </div>
+
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- ==================== التبويب الثاني: عرض الأسعار وقائمة المواد ==================== -->
-  <div id="quotesTab" class="tab-content">
-    <div class="grid">
-      <!-- الجانب الأيمن: إدخال المواد وبناء عرض السعر -->
-      <div class="no-print">
-        <!-- إضافة مادة جديدة -->
-        <div class="card">
-          <h2>🏷️ إضافة مادة / بضاعة للجدول</h2>
-          <form id="itemForm">
-            <input type="text" id="pName" placeholder="اسم المادة" required />
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
-              <input type="number" id="pPrice" placeholder="السعر (دينار)" required />
-              <input type="text" id="pUnit" placeholder="الوحدة (كرتون/كيس..)" value="قطعة" />
-            </div>
-            <input type="text" id="pNote" placeholder="ملاحظات / المواصفات" />
-            <button type="submit" class="btn-success">إضافة المادة للجدول</button>
-          </form>
-        </div>
-
-        <!-- إنشاء قائمة عرض أسعار -->
-        <div class="card">
-          <h2>📑 تفاصيل عرض السعر للمستفيد</h2>
-          <input type="text" id="quoteCustomer" placeholder="اسم العميل / الجهة المستفيدة" value="المحترم" />
-          <input type="date" id="quoteDate" />
-          <button class="btn-primary" onclick="renderQuoteList()">تحديث عرض الأسعار</button>
-        </div>
-
-        <!-- قائمة المواد المسجلة -->
-        <div class="card">
-          <h2>📦 دليل المواد المسجلة</h2>
-          <input type="text" id="searchItem" placeholder="بحث عن مادة..." oninput="renderItemsTable()" />
-          <div style="overflow-x:auto; max-height: 350px;">
-            <table>
-              <thead>
-                <tr>
-                  <th>المادة</th>
-                  <th>السعر</th>
-                  <th>تحديد</th>
-                </tr>
-              </thead>
-              <tbody id="itemsTable"><tr><td colspan="3">جاري التحميل...</td></tr></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <!-- الجانب الأيسر: معاينة وثيقة عرض الأسعار للطباعة -->
-      <div>
-        <div class="card no-print" style="margin-bottom: 15px;">
-          <h2>🖨️ طباعة وخيارات عرض الأسعار</h2>
-          <p style="font-size:13px; color:var(--text-muted); margin:0 0 10px 0;">يمكنك تحديد المواد المُراد تضمينها في قائمة عرض السعر من القائمة المجاورة ثم الضغط على طباعة.</p>
-          <button onclick="window.print()" class="btn-primary">🖨️ طباعة قائمة عرض الأسعار / حفظ PDF</button>
-        </div>
-
-        <div id="quotePrintArea" class="print-area">
-          <div class="printable-box">
-            <!-- الترويسة المحدثة -->
-            <div class="header-grid">
-              <div>
-                <div class="company-title">محل الدباغ للجملة</div>
-                <div style="font-size:12px; color:var(--text-muted);">الموصل - الزهور | هاتف: 07706149990</div>
-              </div>
-              <div class="doc-title">قائمة عرض أسعار</div>
-              <div style="text-align:left; font-size:12px; color:var(--text-muted);">
-                التاريخ: <span id="qPrintDate">-</span><br/>
-                الرقم المرجعي: #QUO-<span id="qRandomNum">101</span>
-              </div>
-            </div>
-
-            <!-- معلومات المستفيد -->
-            <div class="info-grid">
-              <div class="info-item"><strong>إلى السيد/الجهة:</strong> <span id="qCustomerName">المحترم</span></div>
-              <div class="info-item"><strong>نوع العرض:</strong> <span>أسعار بالجملة (نافذة لمدة 7 أيام)</span></div>
-            </div>
-
-            <!-- جدول عرض الأسعار -->
-            <table class="acc-table">
-              <thead>
-                <tr>
-                  <th style="width:35px;">#</th>
-                  <th>اسم المادة / البضاعة</th>
-                  <th style="width:100px;">الوحدة</th>
-                  <th style="width:140px;">السعر الإفرادي (د.ع)</th>
-                  <th>ملاحظات / المواصفات</th>
-                </tr>
-              </thead>
-              <tbody id="quoteTableBody">
-                <tr><td colspan="5">اختر المواد من القائمة الجانبية لإدراجها في عرض الأسعار.</td></tr>
-              </tbody>
-            </table>
-
-            <!-- التوقيع والاعتماد -->
-            <div class="signatures">
-              <div>
-                إعداد / قسم المبيعات
-                <div class="sig-line"></div>
-              </div>
-              <div>
-                إدارة محل الدباغ
-                <div class="sig-line"></div>
-              </div>
-              <div>
-                ملاحظات المعرض
-                <div style="font-size:11px; margin-top:35px; color:#555;">الأسعار شاملة للتحميل من المخزن</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Modal استعراض الصورة -->
-<div id="imgModal" class="modal">
-  <div class="modal-content">
-    <h3 style="margin-top:0;">🖼️ صورة القائمة المرفقة</h3>
-    <img id="modalImg" src="" style="max-width:100%; max-height:70vh; border:1px solid #ccc; border-radius:4px;" />
-    <br/><br/>
-    <button type="button" onclick="closeImgModal()" class="btn-action">إغلاق</button>
   </div>
 </div>
 
 <script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyC-QqnQTbbyVFS8QFkf4CYZTcURcr9nBW0",
-    authDomain: "gimi-fd7fe.firebaseapp.com",
-    databaseURL: "https://gimi-fd7fe-default-rtdb.firebaseio.com",
-    projectId: "gimi-fd7fe",
-    storageBucket: "gimi-fd7fe.firebasestorage.app",
-    messagingSenderId: "642364940251",
-    appId: "1:642364940251:web:6dd47f47d500ae9ed791fe"
-  };
+  let items = [];
 
-  let db;
-  let currentData = { debts: {}, transactions: {}, products: {} };
-  let selectedQuoteItems = new Set();
-  const SECURITY_PIN = "1234";
+  // ضبط التاريخ الحالي تلقائياً
+  document.getElementById("quoteDate").value = new Date().toISOString().split('T')[0];
+  document.getElementById("lblRef").innerText = Math.floor(100 + Math.random() * 900);
+  updateHeader();
 
-  function normalizeText(text) {
-    return text ? text.toString().trim().toLowerCase().replace(/\s+/g, ' ') : '';
+  function updateHeader() {
+    const name = document.getElementById("custName").value.trim() || "المحترم";
+    const date = document.getElementById("quoteDate").value || new Date().toLocaleDateString('ar-IQ');
+    
+    document.getElementById("lblCustomer").innerText = name;
+    document.getElementById("lblDate").innerText = date;
   }
 
-  // التنقل بين التبويبات
-  function switchTab(tabId, btn) {
-    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-
-    document.getElementById(tabId).classList.add('active');
-    btn.classList.add('active');
-  }
-
-  try {
-    firebase.initializeApp(firebaseConfig);
-    db = firebase.database().ref("simple_price_debts_v2");
-
-    db.on("value", (snapshot) => {
-      const status = document.getElementById("cloudStatus");
-      status.innerHTML = "🟢 الاتصال السحابي فعال ومتزامن";
-      status.style.background = "#dcfce7"; status.style.color = "#166534";
-
-      const val = snapshot.val() || {};
-      currentData.debts = val.debts || {};
-      currentData.transactions = val.transactions || {};
-      currentData.products = val.products || {};
-
-      renderDebts();
-      renderCompanySelect();
-      generateStatement();
-      renderItemsTable();
-    });
-  } catch(e) {
-    document.getElementById("cloudStatus").innerHTML = "🔴 خطأ بالاتصال: " + e.message;
-  }
-
-  /* ------------------- إدارة الحسابات ------------------- */
-  function toggleBillFields() {
-    const type = document.getElementById("tType").value;
-    document.getElementById("billFieldsArea").style.display = (type === 'bill') ? 'block' : 'none';
-  }
-
-  function convertImgToBase64() {
-    const file = document.getElementById("tImgFile").files[0];
-    if(!file) return;
-    const reader = new FileReader();
-    reader.onloadend = function() {
-      document.getElementById("tImgBase64").value = reader.result;
-    }
-    reader.readAsDataURL(file);
-  }
-
-  document.getElementById("companyForm").onsubmit = (e) => {
+  document.getElementById("addForm").onsubmit = function(e) {
     e.preventDefault();
-    const rawName = document.getElementById("cName").value;
-    const isDup = Object.values(currentData.debts).some(i => normalizeText(i.name) === normalizeText(rawName));
-    if(isDup) return alert("⚠️ المجهز مسجل مسبقاً!");
-
-    db.child("debts").push().set({
-      name: rawName.trim(),
-      phone: document.getElementById("cPhone").value.trim(),
-      amount: parseFloat(document.getElementById("cInitialDebt").value) || 0,
-      initialAmount: parseFloat(document.getElementById("cInitialDebt").value) || 0
-    });
-    document.getElementById("companyForm").reset();
-  };
-
-  document.getElementById("transForm").onsubmit = (e) => {
-    e.preventDefault();
-    const compId = document.getElementById("tCompany").value;
-    const type = document.getElementById("tType").value;
-    const amount = parseFloat(document.getElementById("tAmount").value) || 0;
-    const note = document.getElementById("tNote").value.trim();
-
-    if(!compId || amount <= 0) return alert("يرجى اختيار الشركة والمبلغ الصحيح!");
-
-    const company = currentData.debts[compId];
-    let newAmount = company.amount || 0;
-    if(type === 'pay') newAmount -= amount;
-    else newAmount += amount;
-
-    const dateStr = document.getElementById("tBillDate").value || new Date().toISOString().split('T')[0];
-
-    const transPayload = {
-      companyId: compId,
-      companyName: company.name,
-      type: type,
-      amount: amount,
-      note: note,
-      date: dateStr
-    };
-
-    if(type === 'bill') {
-      transPayload.billNum = document.getElementById("tBillNum").value.trim();
-      transPayload.dueDate = document.getElementById("tDueDate").value;
-      transPayload.imgData = document.getElementById("tImgBase64").value;
-    }
-
-    db.child("debts/" + compId + "/amount").set(newAmount);
-    db.child("transactions").push().set(transPayload);
-
-    document.getElementById("transForm").reset();
-    document.getElementById("tImgBase64").value = "";
-    alert("🟢 تم الحفظ وتحديث الحساب!");
-  };
-
-  function renderCompanySelect() {
-    const select = document.getElementById("tCompany");
-    const selectStmt = document.getElementById("statementSelect");
-    const curVal1 = select.value;
-    const curVal2 = selectStmt.value;
-
-    select.innerHTML = '<option value="">-- اختر الشركة --</option>';
-    selectStmt.innerHTML = '<option value="">-- اختر المجهز لعرض كشف الحساب --</option>';
-
-    Object.keys(currentData.debts).forEach(k => {
-      const name = currentData.debts[k].name;
-      select.innerHTML += `<option value="${k}">${name}</option>`;
-      selectStmt.innerHTML += `<option value="${k}">${name}</option>`;
-    });
-
-    select.value = curVal1;
-    selectStmt.value = curVal2;
-  }
-
-  function generateStatement() {
-    const compId = document.getElementById("statementSelect").value;
-    const container = document.getElementById("statementContent");
-
-    if(!compId || !currentData.debts[compId]) {
-      container.innerHTML = `
-        <div class="printable-box" style="text-align:center; color:var(--text-muted); padding: 50px 20px;">
-          يرجى اختيار مجهز من القائمة أعلاه لعرض كشف الحساب الرسمي.
-        </div>`;
-      return;
-    }
-
-    const company = currentData.debts[compId];
-    const fromDate = document.getElementById("filterFromDate").value;
-    const toDate = document.getElementById("filterToDate").value;
-
-    let compTrans = Object.keys(currentData.transactions)
-      .map(k => ({ key: k, ...currentData.transactions[k] }))
-      .filter(t => t.companyId === compId || t.companyName === company.name)
-      .sort((a, b) => new Date(a.date) - new Date(b.date));
-
-    if(fromDate) compTrans = compTrans.filter(t => t.date >= fromDate);
-    if(toDate) compTrans = compTrans.filter(t => t.date <= toDate);
-
-    let runningBalance = company.initialAmount || 0;
-    let totalDebit = company.initialAmount || 0;
-    let totalCredit = 0;
-
-    let rowsHtml = "";
-
-    if(company.initialAmount > 0) {
-      rowsHtml += `<tr>
-        <td>-</td>
-        <td>${company.createdDate || '-'}</td>
-        <td><strong>رصيد افتتاحي</strong></td>
-        <td>-</td>
-        <td>الرصيد السابق المسجل</td>
-        <td style="color:var(--debt); font-weight:700;">${company.initialAmount.toLocaleString()}</td>
-        <td>0</td>
-        <td style="font-weight:800; background:#f8fafc;">${runningBalance.toLocaleString()}</td>
-        <td class="no-print">-</td>
-      </tr>`;
-    }
-
-    compTrans.forEach((t, idx) => {
-      const isDebit = t.type === 'bill';
-      const debitVal = isDebit ? t.amount : 0;
-      const creditVal = !isDebit ? t.amount : 0;
-
-      if(isDebit) {
-        runningBalance += t.amount;
-        totalDebit += t.amount;
-      } else {
-        runningBalance -= t.amount;
-        totalCredit += t.amount;
-      }
-
-      const typeLabel = isDebit ? 'فاتورة مشتريات' : 'سند سداد (واصل)';
-      const imgBtn = t.imgData ? `<button class="btn-action" style="padding:2px 6px; font-size:11px;" onclick="viewImg('${t.imgData}')">🖼️</button>` : '-';
-
-      rowsHtml += `<tr>
-        <td>${idx + 1}</td>
-        <td>${t.date}</td>
-        <td><strong>${typeLabel}</strong></td>
-        <td>${t.billNum || '-'}</td>
-        <td>${t.note || '-'}</td>
-        <td style="color:${debitVal ? 'var(--debt)' : '#aaa'}; font-weight:${debitVal ? '700' : 'normal'};">${debitVal ? debitVal.toLocaleString() : '0'}</td>
-        <td style="color:${creditVal ? 'var(--success)' : '#aaa'}; font-weight:${creditVal ? '700' : 'normal'};">${creditVal ? creditVal.toLocaleString() : '0'}</td>
-        <td style="font-weight:800; background:#f8fafc;">${runningBalance.toLocaleString()}</td>
-        <td class="no-print">${imgBtn}</td>
-      </tr>`;
-    });
-
-    const printDate = new Date().toLocaleDateString('ar-IQ');
-
-    container.innerHTML = `
-      <div class="printable-box">
-        <div class="header-grid">
-          <div>
-            <div class="company-title">محل الدباغ للجملة</div>
-            <div style="font-size:12px; color:var(--text-muted);">الموصل - الزهور | هاتف: 07706149990</div>
-          </div>
-          <div class="doc-title">كشف حساب مجهّز</div>
-          <div style="text-align:left; font-size:12px; color:var(--text-muted);">
-            تاريخ الطباعة: ${printDate}<br/>
-            صفحة 1 من 1
-          </div>
-        </div>
-
-        <div class="info-grid">
-          <div class="info-item"><strong>اسم المجهز:</strong> <span>${company.name}</span></div>
-          <div class="info-item"><strong>رقم الهاتف:</strong> <span>${company.phone || 'غير مسجل'}</span></div>
-          <div class="info-item"><strong>فترة الكشف:</strong> <span>${fromDate || 'من البداية'} إلى ${toDate || 'الآن'}</span></div>
-          <div class="info-item"><strong>عملة الحساب:</strong> <span>دينار عراقي (IQD)</span></div>
-        </div>
-
-        <table class="acc-table">
-          <thead>
-            <tr>
-              <th style="width:35px;">#</th>
-              <th style="width:90px;">التاريخ</th>
-              <th style="width:120px;">نوع المستند</th>
-              <th style="width:90px;">رقم القائمة</th>
-              <th>البيان / الشرح</th>
-              <th style="width:110px;">مدين (عليك)</th>
-              <th style="width:110px;">دائن (لك)</th>
-              <th style="width:120px;">الرصيد المتراكم</th>
-              <th class="no-print" style="width:40px;">مرفق</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${rowsHtml || "<tr><td colspan='9'>لا توجد حركات مسجلة لهذا الحساب خلال الفترة المحددة</td></tr>"}
-          </tbody>
-        </table>
-
-        <div class="summary-box">
-          <div>مجموع المدين (المشتريات)<span>${totalDebit.toLocaleString()} د.ع</span></div>
-          <div>مجموع الدائن (التسديدات)<span>${totalCredit.toLocaleString()} د.ع</span></div>
-          <div>صافي الرصيد المتبقي<span style="color:var(--debt);">${runningBalance.toLocaleString()} د.ع</span></div>
-          <div>حالة الحساب<span>${runningBalance > 0 ? 'مطلوب للشركة' : 'متوازن / مسدد'}</span></div>
-        </div>
-
-        <div class="signatures">
-          <div>
-            المحاسب المسؤول
-            <div class="sig-line"></div>
-          </div>
-          <div>
-            صاحب المحل / إدارة المعرض
-            <div class="sig-line"></div>
-          </div>
-          <div>
-            توقيع وختم الشركة / المجهز
-            <div class="sig-line"></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="no-print" style="display:flex; gap:10px; margin-top:15px;">
-        <button onclick="window.print()" class="btn-primary" style="flex:1;">🖨️ طباعة كشف الحساب / حفظ PDF</button>
-      </div>
-    `;
-  }
-
-  function renderDebts() {
-    const tbody = document.getElementById("debtsTable"); tbody.innerHTML = "";
-    const query = normalizeText(document.getElementById("searchDebt").value);
-    const keys = Object.keys(currentData.debts);
-
-    const filtered = keys.filter(k => normalizeText(currentData.debts[k].name).includes(query));
-
-    if(filtered.length === 0) {
-      tbody.innerHTML = "<tr><td colspan='3' style='color:var(--text-muted);'>لا يوجد مجهّز بهذا الاسم</td></tr>";
-      return;
-    }
-
-    filtered.forEach((k) => {
-      const item = currentData.debts[k];
-      tbody.innerHTML += `<tr>
-        <td><strong>${item.name}</strong></td>
-        <td style='color:var(--debt); font-weight:700;'>${(item.amount || 0).toLocaleString()} د.ع</td>
-        <td>
-          <button style="background:#ef4444; padding:3px 8px; font-size:11px;" onclick="deleteCompany('${k}')">🗑️</button>
-        </td>
-      </tr>`;
-    });
-  }
-
-  function deleteCompany(key) {
-    const pin = prompt("🔒 أدخل رمز الأمان (1234) للحذف:");
-    if(pin === SECURITY_PIN) db.child("debts/" + key).remove();
-    else if(pin !== null) alert("❌ رمز الأمان غير صحيح!");
-  }
-
-  /* ------------------- إدارة عروض الأسعار ------------------- */
-  document.getElementById("itemForm").onsubmit = (e) => {
-    e.preventDefault();
+    
     const name = document.getElementById("pName").value.trim();
     const price = parseFloat(document.getElementById("pPrice").value) || 0;
     const unit = document.getElementById("pUnit").value.trim() || "قطعة";
-    const note = document.getElementById("pNote").value.trim();
+    const note = document.getElementById("pNote").value.trim() || "-";
 
-    db.child("products").push().set({ name, price, unit, note });
-    document.getElementById("itemForm").reset();
+    items.push({ name, price, unit, note });
+    renderTable();
+
+    // إعادة تعيين الحقول
+    document.getElementById("pName").value = "";
+    document.getElementById("pPrice").value = "";
+    document.getElementById("pNote").value = "";
+    document.getElementById("pName").focus();
   };
 
-  function renderItemsTable() {
-    const tbody = document.getElementById("itemsTable"); tbody.innerHTML = "";
-    const query = normalizeText(document.getElementById("searchItem").value);
-    const keys = Object.keys(currentData.products);
-
-    const filtered = keys.filter(k => normalizeText(currentData.products[k].name).includes(query));
-
-    if(filtered.length === 0) {
-      tbody.innerHTML = "<tr><td colspan='3' style='color:var(--text-muted);'>لا توجد مواد مسجلة</td></tr>";
-      return;
-    }
-
-    filtered.forEach((k) => {
-      const item = currentData.products[k];
-      const isChecked = selectedQuoteItems.has(k) ? 'checked' : '';
-      tbody.innerHTML += `<tr>
-        <td><strong>${item.name}</strong></td>
-        <td style='color:var(--primary); font-weight:700;'>${(item.price || 0).toLocaleString()}</td>
-        <td>
-          <input type="checkbox" style="width: auto; margin:0;" ${isChecked} onchange="toggleQuoteItem('${k}', this.checked)" />
-        </td>
-      </tr>`;
-    });
+  function removeItem(index) {
+    items.splice(index, 1);
+    renderTable();
   }
 
-  function toggleQuoteItem(key, isChecked) {
-    if(isChecked) selectedQuoteItems.add(key);
-    else selectedQuoteItems.delete(key);
-    renderQuoteList();
-  }
-
-  function renderQuoteList() {
-    const custName = document.getElementById("quoteCustomer").value.trim() || "المحترم";
-    const custDate = document.getElementById("quoteDate").value || new Date().toLocaleDateString('ar-IQ');
-
-    document.getElementById("qCustomerName").innerText = custName;
-    document.getElementById("qPrintDate").innerText = custDate;
-    document.getElementById("qRandomNum").innerText = Math.floor(100 + Math.random() * 900);
-
-    const tbody = document.getElementById("quoteTableBody");
+  function renderTable() {
+    const tbody = document.getElementById("itemsBody");
     tbody.innerHTML = "";
 
-    if(selectedQuoteItems.size === 0) {
-      tbody.innerHTML = "<tr><td colspan='5'>اختر المواد من القائمة الجانبية لإدراجها في عرض الأسعار.</td></tr>";
+    if (items.length === 0) {
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="6">لم يتم إضافة مواد للقائمة بعد. أضف المواد من القائمة الجانبية.</td></tr>';
       return;
     }
 
-    let idx = 1;
-    selectedQuoteItems.forEach(key => {
-      const item = currentData.products[key];
-      if(item) {
-        tbody.innerHTML += `<tr>
-          <td>${idx++}</td>
+    items.forEach((item, index) => {
+      tbody.innerHTML += `
+        <tr>
+          <td>${index + 1}</td>
           <td style="text-align:right;"><strong>${item.name}</strong></td>
-          <td>${item.unit || 'قطعة'}</td>
-          <td style="font-weight:700; color:var(--primary);">${(item.price || 0).toLocaleString()} د.ع</td>
-          <td>${item.note || '-'}</td>
-        </tr>`;
-      }
+          <td>${item.unit}</td>
+          <td style="font-weight:700; color:var(--primary);">${item.price.toLocaleString()} د.ع</td>
+          <td>${item.note}</td>
+          <td class="no-print">
+            <button onclick="removeItem(${index})" style="background:#ef4444; padding:2px 6px; font-size:11px;">🗑️</button>
+          </td>
+        </tr>
+      `;
     });
   }
-
-  function viewImg(base64Data) {
-    document.getElementById("modalImg").src = base64Data;
-    document.getElementById("imgModal").style.display = "flex";
-  }
-
-  function closeImgModal() {
-    document.getElementById("imgModal").style.display = "none";
-  }
-
-  // ضبط التاريخ الافتراضي
-  document.getElementById("quoteDate").value = new Date().toISOString().split('T')[0];
 </script>
 </body>
 </html>
