@@ -2,185 +2,345 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <title>حاسبة ومعارض الأسعار (كلفة وبيع)</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تعريف مواد - عرض الأسعار</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@500;700;800&display=swap');
+    * {
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-size: 12px;
+    }
 
     body {
-      font-family: 'Tajawal', sans-serif;
-      background-color: #f1f5f9;
-      color: #0f172a;
+      background-color: #2b3d4f;
       margin: 0;
       padding: 20px;
-      direction: rtl;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
     }
 
-    .container {
-      max-width: 500px;
-      margin: 0 auto;
-      background: #ffffff;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-      border: 1px solid #cbd5e1;
+    /* النافذة الرئيسية المطابقة للصورة */
+    .window {
+      width: 850px;
+      background-color: #e5edf5;
+      border: 2px solid #a0b0c0;
+      border-radius: 4px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      display: flex;
+      flex-direction: column;
     }
 
-    h2 {
+    /* شريط العنوان */
+    .title-bar {
+      background: linear-gradient(to left, #e0e8f0, #c5d5e5);
+      padding: 4px 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #b0c0d0;
+      font-weight: bold;
+      color: #800000;
+    }
+
+    .title-bar .controls span {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
       text-align: center;
-      margin-top: 0;
-      color: #1e3a8a;
-      font-weight: 800;
-      border-bottom: 2px solid #e2e8f0;
-      padding-bottom: 10px;
+      line-height: 12px;
+      background: #fff;
+      border: 1px solid #888;
+      margin-left: 2px;
+      cursor: pointer;
+      font-size: 10px;
     }
 
-    .form-group {
-      margin-bottom: 15px;
-    }
-
-    label {
-      display: block;
-      font-weight: 700;
-      margin-bottom: 5px;
-      font-size: 14px;
-    }
-
-    input {
-      width: 100%;
+    .window-body {
       padding: 10px;
-      border: 1px solid #94a3b8;
-      border-radius: 6px;
-      font-size: 15px;
-      box-sizing: border-box;
-      font-family: inherit;
     }
 
-    .row {
+    /* منطقة البحث العلوية */
+    .search-panel {
+      border: 1px solid #b8c8d8;
+      background: #f0f4f8;
+      padding: 6px;
+      margin-bottom: 8px;
+      display: flex;
+      gap: 15px;
+      align-items: center;
+    }
+
+    .field-group {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    input[type="text"], input[type="number"], select {
+      border: 1px solid #90a0b0;
+      padding: 3px 5px;
+      border-radius: 2px;
+      background-color: #fff;
+    }
+
+    /* تخطيط المنتصف: جدول + خيارات جانبية */
+    .main-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1fr 180px;
       gap: 10px;
     }
 
-    .box {
-      background: #f8fafc;
-      border: 1px solid #e2e8f0;
-      padding: 12px;
-      border-radius: 8px;
+    /* جدول المواد */
+    .table-container {
+      height: 230px;
+      overflow-y: auto;
+      background: white;
+      border: 1px solid #a0b0c0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th {
+      position: sticky;
+      top: 0;
+      background: #dbe5f0;
+      border-bottom: 1px solid #a0b0c0;
+      border-left: 1px solid #c0d0e0;
+      padding: 4px;
+      font-weight: bold;
+      text-align: center;
+      color: #1a365d;
+    }
+
+    td {
+      border-bottom: 1px solid #e8eef5;
+      border-left: 1px solid #e8eef5;
+      padding: 4px;
+      text-align: center;
+    }
+
+    tr:hover {
+      background-color: #fff8dc;
+      cursor: pointer;
+    }
+
+    tr.selected {
+      background-color: #fef08a !important;
+    }
+
+    /* اللوحة الجانبية الحقول والأزرار */
+    .side-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .side-panel .field-group {
+      justify-content: space-between;
+    }
+
+    .side-panel input, .side-panel select {
+      width: 100px;
+    }
+
+    .btn-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5px;
       margin-top: 10px;
     }
 
-    .box-title {
-      font-size: 13px;
-      font-weight: 800;
-      color: #475569;
-      margin-bottom: 8px;
+    button {
+      background: linear-gradient(to bottom, #f8fafc, #e2e8f0);
+      border: 1px solid #8090a0;
+      padding: 4px 8px;
+      border-radius: 3px;
+      cursor: pointer;
+      font-weight: bold;
     }
 
-    .val {
-      font-size: 18px;
-      font-weight: 800;
-      color: #1e293b;
+    button:hover {
+      background: #dbe5f0;
     }
 
-    .profit {
-      color: #16a34a;
-      font-size: 13px;
-      font-weight: 700;
-      margin-top: 4px;
+    /* الجزء السفلي: وحدات القياس والباركود الفرعية */
+    .bottom-panel {
+      margin-top: 10px;
+      border-top: 1px dotted #a0b0c0;
+      padding-top: 8px;
+    }
+
+    .units-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .unit-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .unit-row input {
+      width: 80px;
+    }
+
+    .stock-box {
+      margin-top: 8px;
+      background: #e2e8f0;
+      padding: 5px;
+      border: 1px solid #cbd5e1;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
   </style>
 </head>
 <body>
 
-<div class="container">
-  <h2>🏷️ سعر الكلفة والبيع (الكارتون والقطعة)</h2>
-
-  <!-- إدخالات الكلفة -->
-  <div class="row">
-    <div class="form-group">
-      <label>كلفة الكارتون (د.ع):</label>
-      <input type="number" id="costBox" placeholder="مثال: 12000" oninput="calculate()">
-    </div>
-    <div class="form-group">
-      <label>عدد القطع بالكارتون:</label>
-      <input type="number" id="boxQty" placeholder="مثال: 24" oninput="calculate()">
+<div class="window">
+  <!-- شريط العنوان -->
+  <div class="title-bar">
+    <div>🔴 تعريف مواد</div>
+    <div class="controls">
+      <span>-</span>
+      <span>□</span>
+      <span>✕</span>
     </div>
   </div>
 
-  <!-- ناتج كلفة القطعة -->
-  <div class="box" style="background: #eff6ff; border-color: #bfdbfe;">
-    <div class="box-title" style="color: #1d4ed8;">📌 كلفة القطعة الواحدة:</div>
-    <div class="val" id="costPieceVal">0 د.ع</div>
-  </div>
+  <div class="window-body">
+    <!-- البحث العلوية -->
+    <div class="search-panel">
+      <div class="field-group">
+        <label>بحث:</label>
+        <input type="text" id="searchInput" placeholder="اسم المادة..." style="width: 120px;">
+      </div>
+      <div class="field-group">
+        <label>اسم المادة:</label>
+        <input type="text" style="width: 150px;">
+      </div>
+      <div class="field-group">
+        <label>اسم الشركة:</label>
+        <input type="text" style="width: 120px;">
+      </div>
+      <div class="field-group">
+        <label>مواد شركة:</label>
+        <input type="checkbox">
+      </div>
+    </div>
 
-  <hr style="margin: 20px 0; border: 0; border-top: 1px solid #e2e8f0;">
+    <!-- الجزء الأوسط: الجدول والخيارات الجانبية -->
+    <div class="main-grid">
+      <!-- جدول المواد -->
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>الباركود</th>
+              <th>اسم المادة</th>
+              <th>سعر الكلفة</th>
+              <th>سعر البيع</th>
+            </tr>
+          </thead>
+          <tbody id="itemsTable">
+            <tr><td>800027</td><td>دهن اصيل 6*2.3</td><td>12083.33</td><td>12500</td></tr>
+            <tr><td>8697449918687</td><td>شربت التونسا 10*48</td><td>3800</td><td>4000</td></tr>
+            <tr class="selected"><td>8697422636881</td><td>ماجي زير لحم عليه 6x</td><td>2941.16</td><td>3500</td></tr>
+            <tr><td>8681282303458</td><td>لانشون بودرن 340 بقر...</td><td>687.5</td><td>1000</td></tr>
+            <tr><td>8690547040052</td><td>باودر كرتون × 12</td><td>2083.33</td><td>2500</td></tr>
+            <tr><td>8690547030039</td><td>فانيلا كابتون كبير 12x</td><td>1622.58</td><td>2000</td></tr>
+            <tr><td>6260002900980</td><td>رز گلبهار 4.5*8كغم</td><td>9906.25</td><td>10500</td></tr>
+            <tr><td>5555</td><td>نشاء الذرة 25كغم</td><td>900</td><td>1500</td></tr>
+            <tr><td>6210291405871</td><td>راهي نورا بلدي ×12</td><td>971.5</td><td>1250</td></tr>
+            <tr><td>800070000005</td><td>صابون ذوف 90*48</td><td>3687.5</td><td>1000</td></tr>
+          </tbody>
+        </table>
+      </div>
 
-  <!-- إدخالات البيع -->
-  <div class="row">
-    <div class="form-group">
-      <label>سعر بيع الكارتون (د.ع):</label>
-      <input type="number" id="sellBox" placeholder="مثال: 15000" oninput="calculate()">
-    </div>
-    <div class="form-group">
-      <label>سعر بيع القطعة (د.ع):</label>
-      <input type="number" id="sellPiece" placeholder="مثال: 750" oninput="calculate()">
-    </div>
-  </div>
+      <!-- القائمة الجانبية -->
+      <div class="side-panel">
+        <div class="field-group"><label>الباركود:</label><input type="text" value="800027"></div>
+        <div class="field-group"><label>المخزن:</label><input type="text"></div>
+        <div class="field-group"><label>اسم المادة:</label><input type="text"></div>
+        <div class="field-group"><label>السعر الموزون:</label><input type="text"></div>
+        <div class="field-group"><label>سعر الكلفة:</label><input type="text"></div>
+        <div class="field-group"><label>نسبة الربح:</label><input type="text"></div>
+        <div class="field-group"><label>سعر البيع:</label><input type="text"></div>
+        <div class="field-group">
+          <label>التصنيف الأول:</label>
+          <select><option></option></select>
+        </div>
+        <div class="field-group">
+          <label>التصنيف الثاني:</label>
+          <select><option></option></select>
+        </div>
 
-  <!-- نتائج أرباح البيع -->
-  <div class="row">
-    <div class="box">
-      <div class="box-title">ربح الكارتون:</div>
-      <div class="val" id="profitBoxVal">0 د.ع</div>
-      <div class="profit" id="marginBoxVal">نسبة الربح: 0%</div>
+        <div class="btn-group">
+          <button>حفظ</button>
+          <button>حذف</button>
+          <button>جديد</button>
+          <button>إغلاق</button>
+        </div>
+      </div>
     </div>
-    <div class="box">
-      <div class="box-title">ربح القطعة:</div>
-      <div class="val" id="profitPieceVal">0 د.ع</div>
-      <div class="profit" id="marginPieceVal">نسبة الربح: 0%</div>
+
+    <!-- الجزء السفلي (الوحدات والباركودات الفرعية) -->
+    <div class="bottom-panel">
+      <div class="units-grid">
+        <div class="unit-row">
+          <button>توليد باركود</button>
+          <label>باركود 1:</label><input type="text">
+          <label>المحتوى:</label><input type="text">
+          <label>وحدة القياس:</label><input type="text">
+          <label>سعر الكلفة:</label><input type="text">
+          <label>سعر البيع:</label><input type="text">
+        </div>
+        <div class="unit-row">
+          <button>توليد باركود</button>
+          <label>باركود 2:</label><input type="text">
+          <label>المحتوى:</label><input type="text">
+          <label>وحدة القياس:</label><input type="text">
+          <label>سعر الكلفة:</label><input type="text">
+          <label>سعر البيع:</label><input type="text">
+        </div>
+      </div>
+
+      <div class="stock-box">
+        <div>الموجود المخزني: <input type="text" style="width: 80px;" readonly></div>
+        <div>
+          <input type="checkbox" id="exp"> <label for="exp">تاريخ الانتهاء (تفصيل)</label>
+          <input type="date" value="2026-07-29">
+        </div>
+      </div>
     </div>
+
   </div>
 </div>
 
 <script>
-  function calculate() {
-    const costBox = parseFloat(document.getElementById('costBox').value) || 0;
-    const boxQty = parseFloat(document.getElementById('boxQty').value) || 0;
-    const sellBox = parseFloat(document.getElementById('sellBox').value) || 0;
-    const sellPiece = parseFloat(document.getElementById('sellPiece').value) || 0;
+  // تحديد الصف بالضغط عليه
+  const rows = document.querySelectorAll('#itemsTable tr');
+  rows.forEach(row => {
+    row.addEventListener('click', () => {
+      rows.forEach(r => r.classList.remove('selected'));
+      row.classList.add('selected');
+    });
+  });
 
-    // احتساب كلفة القطعة
-    let costPiece = 0;
-    if (costBox > 0 && boxQty > 0) {
-      costPiece = costBox / boxQty;
-      document.getElementById('costPieceVal').innerText = costPiece.toLocaleString(undefined, {maximumFractionDigits: 2}) + " د.ع";
-    } else {
-      document.getElementById('costPieceVal').innerText = "0 د.ع";
-    }
-
-    // احتساب أرباح الكارتون
-    if (sellBox > 0 && costBox > 0) {
-      const profitBox = sellBox - costBox;
-      const marginBox = (profitBox / costBox) * 100;
-      document.getElementById('profitBoxVal').innerText = profitBox.toLocaleString() + " د.ع";
-      document.getElementById('marginBoxVal').innerText = "نسبة الربح: " + marginBox.toFixed(1) + "%";
-    } else {
-      document.getElementById('profitBoxVal').innerText = "0 د.ع";
-      document.getElementById('marginBoxVal').innerText = "نسبة الربح: 0%";
-    }
-
-    // احتساب أرباح القطعة
-    if (sellPiece > 0 && costPiece > 0) {
-      const profitPiece = sellPiece - costPiece;
-      const marginPiece = (profitPiece / costPiece) * 100;
-      document.getElementById('profitPieceVal').innerText = profitPiece.toLocaleString(undefined, {maximumFractionDigits: 2}) + " د.ع";
-      document.getElementById('marginPieceVal').innerText = "نسبة الربح: " + marginPiece.toFixed(1) + "%";
-    } else {
-      document.getElementById('profitPieceVal').innerText = "0 د.ع";
-      document.getElementById('marginPieceVal').innerText = "نسبة الربح: 0%";
-    }
-  }
+  // تصفية المواد بالبحث
+  document.getElementById('searchInput').addEventListener('keyup', function() {
+    let filter = this.value.toLowerCase();
+    rows.forEach(row => {
+      let text = row.innerText.toLowerCase();
+      row.style.display = text.includes(filter) ? '' : 'none';
+    });
+  });
 </script>
 
 </body>
