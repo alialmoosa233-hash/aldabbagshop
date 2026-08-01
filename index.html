@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>نظام الأسعار والديون والحركات الاحترافي - محل الدباغ v2.5</title>
+  <title>دليل الأسعار وديون الشركات - محل الدباغ</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <!-- مكتبات Firebase السحابية -->
@@ -14,7 +14,6 @@
 
     :root {
       --primary: #2563eb;
-      --primary-hover: #1d4ed8;
       --debt: #dc2626;
       --debt-hover: #b91c1c;
       --success: #16a34a;
@@ -27,80 +26,47 @@
       --text-muted: #64748b;
       --radius: 12px;
       --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
-      --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -1px rgba(0,0,0,0.04);
+      --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.07);
     }
 
     * { box-sizing: border-box; }
 
     body {
-      font-family: 'Tajawal', system-ui, -apple-system, sans-serif;
+      font-family: 'Tajawal', system-ui, sans-serif;
       background-color: var(--bg);
       color: var(--text-main);
       margin: 0; padding: 0;
       direction: rtl;
-      line-height: 1.5;
     }
 
     header {
       background: linear-gradient(135deg, #0f172a, #1e293b);
       color: white;
-      padding: 18px 20px;
-      text-align: center;
-      font-size: 22px;
+      padding: 15px 20px;
+      font-size: 20px;
       font-weight: 800;
       box-shadow: var(--shadow-md);
       display: flex;
       justify-content: space-between;
       align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
     }
 
-    .container { max-width: 1350px; margin: 25px auto; padding: 0 20px; }
+    .container { max-width: 1350px; margin: 20px auto; padding: 0 15px; }
 
     #cloudStatus {
-      padding: 12px 18px;
+      padding: 10px 15px;
       text-align: center;
       font-weight: 700;
       border-radius: var(--radius);
       margin-bottom: 20px;
       background: #e2e8f0;
       color: var(--text-muted);
-      font-size: 14px;
-      transition: all 0.3s ease;
-      box-shadow: var(--shadow-sm);
+      font-size: 13px;
     }
 
-    /* Dashboard Cards */
-    .dashboard-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 18px;
-      margin-bottom: 25px;
-    }
-
-    .stat-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 18px;
-      text-align: right;
-      box-shadow: var(--shadow-sm);
-      position: relative;
-      overflow: hidden;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-    .stat-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
-    .stat-card::before {
-      content: ''; position: absolute; right: 0; top: 0; bottom: 0; width: 6px;
-      background: var(--primary);
-    }
-    .stat-card.red::before { background: var(--debt); }
-    .stat-card.green::before { background: var(--success); }
-    .stat-card.orange::before { background: var(--warning); }
-
-    .stat-title { font-size: 13px; color: var(--text-muted); margin-bottom: 6px; font-weight: 700; }
-    .stat-value { font-size: 22px; font-weight: 800; color: var(--text-main); }
-
-    /* Currency Exchange Widget Header */
+    /* Currency Widget */
     .rate-box {
       background: rgba(255,255,255,0.1);
       padding: 6px 12px;
@@ -111,109 +77,78 @@
       align-items: center;
     }
     .rate-box input {
-      width: 90px; margin: 0; padding: 4px 8px; font-size: 13px;
+      width: 85px; margin: 0; padding: 4px 8px; font-size: 13px; text-align: center;
     }
 
     /* Tabs Navigation */
-    .tabs { display: flex; gap: 12px; margin-bottom: 25px; }
+    .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
     .tab-btn {
       flex: 1; padding: 14px; font-size: 16px; font-weight: 700;
       background: #e2e8f0; color: var(--text-muted); border: none; border-radius: var(--radius);
-      cursor: pointer; transition: all 0.25s ease; font-family: inherit;
+      cursor: pointer; transition: all 0.2s ease; font-family: inherit;
     }
-    .tab-btn:hover { background: #cbd5e1; }
-    .tab-btn.active[data-tab="prices"] { background: var(--price); color: white; box-shadow: var(--shadow-sm); }
-    .tab-btn.active[data-tab="debts"] { background: var(--debt); color: white; box-shadow: var(--shadow-sm); }
+    .tab-btn.active[data-tab="prices"] { background: var(--price); color: white; }
+    .tab-btn.active[data-tab="debts"] { background: var(--debt); color: white; }
 
     .tab-content { display: none; }
     .tab-content.active { display: block; }
 
-    /* Layout & Cards */
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 22px; }
-    .grid-form { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
+    .grid-form { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
     .card {
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 22px;
+      padding: 18px;
       box-shadow: var(--shadow-sm);
-      margin-bottom: 22px;
+      margin-bottom: 20px;
     }
 
     h2 {
-      margin-top: 0; font-size: 18px; font-weight: 800;
-      border-bottom: 2px solid var(--border); padding-bottom: 12px; margin-bottom: 16px;
-      display: flex; align-items: center; gap: 8px;
+      margin-top: 0; font-size: 17px; font-weight: 800;
+      border-bottom: 2px solid var(--border); padding-bottom: 10px; margin-bottom: 15px;
     }
 
-    /* Forms & Controls */
     input, select {
-      width: 100%; padding: 11px 14px; margin-bottom: 14px;
+      width: 100%; padding: 10px 12px; margin-bottom: 12px;
       border: 1.5px solid var(--border); border-radius: 8px;
-      box-sizing: border-box; font-size: 14px; font-family: inherit;
-      background-color: #f8fafc; color: var(--text-main);
-      transition: border-color 0.2s ease, background-color 0.2s ease;
+      font-size: 14px; font-family: inherit; background-color: #f8fafc;
     }
-    input:focus, select:focus {
-      outline: none; border-color: var(--primary); background-color: #fff;
-    }
+    input:focus, select:focus { outline: none; border-color: var(--primary); background: #fff; }
 
     button {
-      width: 100%; padding: 12px; border: none; border-radius: 8px;
-      color: white; font-weight: 700; cursor: pointer; font-size: 15px; font-family: inherit;
-      transition: background-color 0.2s ease, transform 0.1s ease;
-      box-shadow: var(--shadow-sm);
+      width: 100%; padding: 11px; border: none; border-radius: 8px;
+      color: white; font-weight: 700; cursor: pointer; font-size: 14px; font-family: inherit;
     }
-    button:active { transform: scale(0.99); }
     .btn-price { background: var(--price); grid-column: span 2; }
-    .btn-price:hover { background: #0369a1; }
     .btn-debt { background: var(--debt); }
-    .btn-debt:hover { background: var(--debt-hover); }
     .btn-success { background: var(--success); }
-    .btn-success:hover { background: #15803d; }
 
-    /* Tables UI */
-    .table-wrapper { overflow-x: auto; margin-top: 12px; border-radius: 8px; border: 1px solid var(--border); }
-    table { width: 100%; border-collapse: collapse; font-size: 13.5px; background: white; }
-    th, td { padding: 10px 12px; text-align: center; border-bottom: 1px solid var(--border); }
-    th { background: #f1f5f9; color: var(--text-muted); font-weight: 700; font-size: 13px; }
-    tr:last-child td { border-bottom: none; }
-    tr:hover td { background-color: #f8fafc; }
+    .table-wrapper { overflow-x: auto; margin-top: 10px; border-radius: 8px; border: 1px solid var(--border); }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; background: white; }
+    th, td { padding: 9px 11px; text-align: center; border-bottom: 1px solid var(--border); }
+    th { background: #f1f5f9; color: var(--text-muted); font-weight: 700; }
 
-    .btn-edit { background: #0284c7; color: white; padding: 5px 10px; border-radius: 6px; border: none; cursor: pointer; font-size: 12px; }
-    .btn-delete { background: #ef4444; color: white; padding: 5px 10px; border-radius: 6px; border: none; cursor: pointer; font-size: 12px; }
-    .btn-receipt { background: #d97706; color: white; padding: 5px 10px; border-radius: 6px; border: none; cursor: pointer; font-size: 12px; }
+    .btn-edit { background: #0284c7; color: white; padding: 4px 8px; border-radius: 6px; border: none; cursor: pointer; font-size: 12px; }
+    .btn-delete { background: #ef4444; color: white; padding: 4px 8px; border-radius: 6px; border: none; cursor: pointer; font-size: 12px; }
+    .btn-receipt { background: #d97706; color: white; padding: 4px 8px; border-radius: 6px; border: none; cursor: pointer; font-size: 12px; }
 
-    /* Backup Section */
-    .backup-section {
-      background: white; border: 1px solid var(--border);
-      padding: 18px; border-radius: var(--radius); margin-top: 30px;
-      text-align: center; display: flex; justify-content: center; gap: 15px; flex-wrap: wrap;
-      box-shadow: var(--shadow-sm);
-    }
-    .btn-backup { background: #475569; width: auto; padding: 10px 20px; }
-    .btn-backup:hover { background: #334155; }
-    .btn-reset { background: var(--debt); width: auto; padding: 10px 20px; }
-
-    .badge-pay { background: #dcfce7; color: #166534; padding: 4px 10px; border-radius: 20px; font-weight: 700; font-size: 12px; }
-    .badge-bill { background: #fee2e2; color: #991b1b; padding: 4px 10px; border-radius: 20px; font-weight: 700; font-size: 12px; }
+    .badge-pay { background: #dcfce7; color: #166534; padding: 3px 8px; border-radius: 12px; font-weight: 700; font-size: 11px; }
+    .badge-bill { background: #fee2e2; color: #991b1b; padding: 3px 8px; border-radius: 12px; font-weight: 700; font-size: 11px; }
 
     .statement-summary {
       display: flex; justify-content: space-between; background: #f1f5f9;
-      padding: 14px 18px; border-radius: 8px; margin: 15px 0; font-weight: 700; font-size: 13.5px; flex-wrap: wrap; gap: 10px;
-      border: 1px solid var(--border);
+      padding: 12px; border-radius: 8px; margin: 12px 0; font-weight: 700; font-size: 13px; flex-wrap: wrap; gap: 8px;
     }
 
-    /* Modal Styling */
     .modal {
       display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%;
-      background-color: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px);
+      background-color: rgba(15, 23, 42, 0.6); backdrop-filter: blur(3px);
       justify-content: center; align-items: center;
     }
     .modal-content {
-      background-color: #fff; padding: 25px; border-radius: var(--radius); width: 90%; max-width: 500px;
-      box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); border: 1px solid var(--border);
+      background-color: #fff; padding: 20px; border-radius: var(--radius); width: 90%; max-width: 480px;
     }
 
     #receiptPrintArea { display: none; }
@@ -230,10 +165,10 @@
 <body>
 
 <header class="no-print">
-  <div>📊 نظام الأسعار والديون والحركات - محل الدباغ الاحترافي</div>
+  <div>📦 دليل الأسعار وديون الشركات - محل الدباغ</div>
   <div class="rate-box">
     <span>💵 $100 =</span>
-    <input type="number" id="usdExchangeRate" value="150000" onchange="updateDashboard()" title="سعر صرف الـ 100 دولار بالدينار" />
+    <input type="number" id="usdExchangeRate" value="150000" onchange="renderDebts(); generateStatement();" title="سعر صرف 100 دولار" />
     <span>د.ع</span>
   </div>
 </header>
@@ -241,47 +176,26 @@
 <div class="container">
   <div id="cloudStatus" class="no-print">🔄 جاري الاتصال بالسحابة...</div>
 
-  <!-- لوحة الإحصائيات Dashboard -->
-  <div class="dashboard-grid no-print">
-    <div class="stat-card red">
-      <div class="stat-title">إجمالي الديون المطلوبة منك (دينار)</div>
-      <div class="stat-value" id="statTotalDebt">0 د.ع</div>
-      <div style="font-size:12px; color:var(--text-muted); margin-top:4px;" id="statTotalDebtUsd">≈ $0</div>
-    </div>
-    <div class="stat-card orange">
-      <div class="stat-title">عدد الشركات والمجهّزين</div>
-      <div class="stat-value" id="statCompaniesCount">0</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-title">عدد المواد في الدليل</div>
-      <div class="stat-value" id="statPricesCount">0</div>
-    </div>
-    <div class="stat-card green">
-      <div class="stat-title">إجمالي التسديدات المسجلة</div>
-      <div class="stat-value" id="statTotalPays">0 د.ع</div>
-    </div>
-  </div>
-
-  <!-- أزرار التنقل -->
+  <!-- أزرار التنقل الرئيسية -->
   <div class="tabs no-print">
-    <button class="tab-btn active" data-tab="prices">🏷️ دليل وعرض الأسعار</button>
-    <button class="tab-btn" data-tab="debts">📒 حسابات وحركات الشركات والديون</button>
+    <button class="tab-btn active" data-tab="prices">🔍 دليل واستعلام الأسعار السريع</button>
+    <button class="tab-btn" data-tab="debts">📒 دفتر ديون وحسابات الشركات</button>
   </div>
 
-  <!-- 1. قسم عرض الأسعار -->
+  <!-- 1. قسم استعلام ودليل الأسعار -->
   <div id="pricesSection" class="tab-content active">
     <div class="grid">
       <div class="card">
-        <h2 style="color: var(--price);">➕ إضافة مادة للأسعار</h2>
+        <h2 style="color: var(--price);">➕ إضافة مادة جديدة للدليل</h2>
         <form id="priceForm" class="grid-form">
           <input type="text" id="pName" placeholder="اسم المادة" style="grid-column: span 2;" required />
           <input type="text" id="pCode" placeholder="الباركود / الكود (اختياري)" style="grid-column: span 2;" />
           
-          <div style="grid-column: span 2; font-weight:700; color:var(--price); margin-top:5px; font-size:13px;">📦 أسعار الباكيت:</div>
+          <div style="grid-column: span 2; font-weight:700; color:var(--price); font-size:12px;">📦 أسعار الباكيت:</div>
           <input type="number" id="pPacketCost" placeholder="كلفة الباكيت (د.ع)" />
           <input type="number" id="pPacketSell" placeholder="بيع الباكيت (د.ع)" />
 
-          <div style="grid-column: span 2; font-weight:700; color:var(--price); margin-top:5px; font-size:13px;">📦 أسعار الكارتون الكامل:</div>
+          <div style="grid-column: span 2; font-weight:700; color:var(--price); font-size:12px;">📦 أسعار الكارتون الكامل:</div>
           <input type="number" id="pCartonCost" placeholder="كلفة الكارتون (د.ع)" />
           <input type="number" id="pCartonSell" placeholder="بيع الكارتون (د.ع)" />
 
@@ -290,8 +204,8 @@
       </div>
 
       <div class="card">
-        <h2 style="color: var(--price);">🔍 قائمة عرض الأسعار التفصيلية</h2>
-        <input type="text" id="searchPrice" placeholder="ابحث باسم المادة أو الكود..." oninput="renderPrices()" />
+        <h2 style="color: var(--price);">🔍 الاستعلام السريع عن الأسعار</h2>
+        <input type="text" id="searchPrice" placeholder="🔍 اكتب اسم المادة أو امسح الباركود..." oninput="renderPrices()" autofocus style="font-size:16px; font-weight:700;" />
         <div class="table-wrapper">
           <table>
             <thead>
@@ -299,15 +213,15 @@
                 <th rowspan="2">#</th>
                 <th rowspan="2">اسم المادة</th>
                 <th rowspan="2">الكود</th>
-                <th colspan="2" style="background:#f1f5f9;">📦 الباكيت</th>
-                <th colspan="2" style="background:#fef3c7;">📦 الكارتون الكامل</th>
+                <th colspan="2">📦 الباكيت</th>
+                <th colspan="2">📦 الكارتون</th>
                 <th rowspan="2" class="no-print">إجراءات</th>
               </tr>
               <tr>
-                <th style="background:#f8fafc;">الكلفة</th>
-                <th style="background:#f8fafc;">البيع</th>
-                <th style="background:#fffbeb;">الكلفة</th>
-                <th style="background:#fffbeb;">البيع</th>
+                <th>الكلفة</th>
+                <th>البيع</th>
+                <th>الكلفة</th>
+                <th>البيع</th>
               </tr>
             </thead>
             <tbody id="pricesTable"><tr><td colspan="8">جاري التحميل...</td></tr></tbody>
@@ -317,12 +231,12 @@
     </div>
   </div>
 
-  <!-- 2. قسم الديون والحركات وكشف الحساب -->
+  <!-- 2. قسم ديون وحسابات الشركات -->
   <div id="debtsSection" class="tab-content">
     <div class="grid">
       <div>
         <div class="card">
-          <h2 style="color: var(--debt);">➕ إضافة مجهز / شركة جديدة</h2>
+          <h2 style="color: var(--debt);">➕ إضافة شركة أو مجهز جديد</h2>
           <form id="companyForm">
             <input type="text" id="cName" placeholder="اسم الشركة أو المجهز" required />
             <input type="text" id="cPhone" placeholder="رقم الهاتف (اختياري)" />
@@ -332,33 +246,33 @@
         </div>
 
         <div class="card">
-          <h2 style="color: var(--success);">💸 تسجيل حركة (تسديد / قائمة جديدة)</h2>
+          <h2 style="color: var(--success);">💸 تسجيل حركة (تسديد / فاتورة جديدة)</h2>
           <form id="transForm">
             <select id="tCompany" required>
               <option value="">-- اختر الشركة --</option>
             </select>
             <select id="tType" required>
-              <option value="pay">تسديد (تنزيل من الدين المطلوب)</option>
-              <option value="bill">قائمة جديدة (زيادة الدين)</option>
+              <option value="pay">تسديد (تنقيص من الدين المطلوبه عليك)</option>
+              <option value="bill">قائمة جديدة (زيادة الدين المطلوبه عليك)</option>
             </select>
             <input type="number" id="tAmount" placeholder="المبلغ بالدينار (د.ع)" required />
             <input type="text" id="tNote" placeholder="ملاحظات / رقم القائمة (اختياري)" />
-            <button type="submit" class="btn-success">حفظ الحركة وتحديث الحساب</button>
+            <button type="submit" class="btn-success">حفظ الحركة وتحديث الدين</button>
           </form>
         </div>
 
         <div class="card">
-          <h2 style="color: var(--debt);">📒 أرصدة الشركات والمجهّزين الحالية</h2>
+          <h2 style="color: var(--debt);">📒 ديون الشركات الحالية</h2>
           <input type="text" id="searchDebt" placeholder="ابحث باسم الشركة..." oninput="renderDebts()" />
           <div class="table-wrapper">
             <table>
               <thead>
                 <tr>
                   <th>#</th>
-                  <th>الاسم</th>
+                  <th>الشركة</th>
                   <th>الهاتف</th>
-                  <th>المبلغ المطلوب (د.ع)</th>
-                  <th>المعادل بالدولار</th>
+                  <th>المطلوب (د.ع)</th>
+                  <th>المعادل ($)</th>
                   <th class="no-print">إجراءات</th>
                 </tr>
               </thead>
@@ -370,25 +284,20 @@
 
       <div>
         <div class="card" id="printableArea">
-          <h2 style="color: #1e3a8a;">📑 كشف حساب مجهّز تفصيلي</h2>
-          <div class="no-print" style="margin-bottom: 15px;">
+          <h2 style="color: #1e3a8a;">📑 كشف حساب تفصيلي لشركة</h2>
+          <div class="no-print" style="margin-bottom: 12px;">
             <select id="statementSelect" onchange="generateStatement()">
-              <option value="">-- اختر الشركة لطباعة كشف الحساب --</option>
+              <option value="">-- اختر الشركة لرؤية كشف الحساب --</option>
             </select>
-
-            <div style="display:flex; gap:10px; margin-top:10px;">
-              <input type="date" id="filterFromDate" onchange="generateStatement()" title="من تاريخ" />
-              <input type="date" id="filterToDate" onchange="generateStatement()" title="إلى تاريخ" />
-            </div>
           </div>
 
           <div id="statementContent">
-            <p style="text-align:center; color:var(--text-muted); margin: 20px 0;">اختر شركة من القائمة أعلاه لمشاهدة كشف الحساب الكامل.</p>
+            <p style="text-align:center; color:var(--text-muted); margin: 20px 0;">اختر شركة من القائمة أعلاه لمشاهدة التفاصيل.</p>
           </div>
         </div>
 
         <div class="card no-print">
-          <h2>📜 سجل آخر الحركات المباشرة العامة</h2>
+          <h2>📜 سجل آخر حركات التسديد والقوائم</h2>
           <div class="table-wrapper">
             <table>
               <thead><tr><th>التاريخ</th><th>الشركة</th><th>نوع الحركة</th><th>المبلغ</th><th>ملاحظات</th><th>وصل</th></tr></thead>
@@ -400,52 +309,49 @@
     </div>
   </div>
 
-  <div class="backup-section no-print">
-    <button type="button" class="btn-backup" onclick="exportBackup()">📥 تصدير نسخة احتياطية (JSON)</button>
-    <button type="button" class="btn-backup" style="background: var(--primary);" onclick="triggerImport()">📤 استيراد نسخة احتياطية</button>
-    <button type="button" class="btn-reset" onclick="resetSystem()">⚠️ تصفير النظام بالكامل</button>
-    <input type="file" id="importFileInput" accept=".json" style="display:none;" onchange="importBackup(event)" />
+  <div class="no-print" style="margin-top:20px; text-align:center;">
+    <button type="button" style="background:#475569; width:auto; padding:8px 16px;" onclick="exportBackup()">📥 تصدير نسخة احتياطية (JSON)</button>
   </div>
 </div>
 
-<!-- Modal تعديل المادة والأسعار -->
+<!-- Modal تعديل المادة -->
 <div id="editModal" class="modal">
   <div class="modal-content">
-    <h3 style="margin-top:0; color:var(--price); font-size: 18px;">✏️ تعديل بيانات المادة والأسعار</h3>
+    <h3 style="margin-top:0; color:var(--price);">✏️ تعديل بيانات المادة</h3>
     <input type="hidden" id="editKey" />
-    <label style="font-size: 13px; font-weight:700;">اسم المادة:</label>
+    <label style="font-size: 12px; font-weight:700;">اسم المادة:</label>
     <input type="text" id="editName" required />
-    <label style="font-size: 13px; font-weight:700;">الكود:</label>
+    <label style="font-size: 12px; font-weight:700;">الكود:</label>
     <input type="text" id="editCode" />
     
-    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-      <div><label style="font-size: 12px; font-weight:700;">كلفة الباكيت:</label><input type="number" id="editPacketCost" /></div>
-      <div><label style="font-size: 12px; font-weight:700;">بيع الباكيت:</label><input type="number" id="editPacketSell" /></div>
-      <div><label style="font-size: 12px; font-weight:700;">كلفة الكارتون:</label><input type="number" id="editCartonCost" /></div>
-      <div><label style="font-size: 12px; font-weight:700;">بيع الكارتون:</label><input type="number" id="editCartonSell" /></div>
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
+      <div><label style="font-size: 11px;">كلفة الباكيت:</label><input type="number" id="editPacketCost" /></div>
+      <div><label style="font-size: 11px;">بيع الباكيت:</label><input type="number" id="editPacketSell" /></div>
+      <div><label style="font-size: 11px;">كلفة الكارتون:</label><input type="number" id="editCartonCost" /></div>
+      <div><label style="font-size: 11px;">بيع الكارتون:</label><input type="number" id="editCartonSell" /></div>
     </div>
 
-    <div style="display:flex; gap:10px; margin-top:12px;">
-      <button type="button" onclick="savePriceEdit()" class="btn-price" style="grid-column: span 1;">حفظ التعديلات</button>
+    <div style="display:flex; gap:8px; margin-top:10px;">
+      <button type="button" onclick="savePriceEdit()" class="btn-price">حفظ</button>
       <button type="button" onclick="closeEditModal()" style="background:#64748b;">إلغاء</button>
     </div>
   </div>
 </div>
 
-<!-- Modal تعديل الشركة والديون -->
+<!-- Modal تعديل الشركة -->
 <div id="editCompanyModal" class="modal">
   <div class="modal-content">
-    <h3 style="margin-top:0; color:var(--debt); font-size: 18px;">✏️ تعديل حساب / بيانات الشركة</h3>
+    <h3 style="margin-top:0; color:var(--debt);">✏️ تعديل حساب الشركة</h3>
     <input type="hidden" id="editCompKey" />
-    <label style="font-size: 13px; font-weight:700;">اسم الشركة أو المجهز:</label>
+    <label style="font-size: 12px; font-weight:700;">اسم الشركة:</label>
     <input type="text" id="editCompName" required />
-    <label style="font-size: 13px; font-weight:700;">رقم الهاتف:</label>
+    <label style="font-size: 12px; font-weight:700;">رقم الهاتف:</label>
     <input type="text" id="editCompPhone" />
-    <label style="font-size: 13px; font-weight:700;">الدين الحالي المطلوبة منك (دينار):</label>
+    <label style="font-size: 12px; font-weight:700;">الدين الحالي (دينار):</label>
     <input type="number" id="editCompAmount" required />
 
-    <div style="display:flex; gap:10px; margin-top:12px;">
-      <button type="button" onclick="saveCompanyEdit()" class="btn-debt">حفظ التعديلات</button>
+    <div style="display:flex; gap:8px; margin-top:10px;">
+      <button type="button" onclick="saveCompanyEdit()" class="btn-debt">حفظ</button>
       <button type="button" onclick="closeCompanyEditModal()" style="background:#64748b;">إلغاء</button>
     </div>
   </div>
@@ -484,7 +390,7 @@
 
     db.on("value", (snapshot) => {
       const status = document.getElementById("cloudStatus");
-      status.innerHTML = "🟢 النظام متصل بالسحابة ومتزامن بنجاح 100%";
+      status.innerHTML = "🟢 متصل ومتزامن مع السحابة";
       status.style.background = "#dcfce7"; status.style.color = "#166534";
 
       const val = snapshot.val() || {};
@@ -497,32 +403,9 @@
       renderCompanySelect();
       renderTransactions();
       generateStatement();
-      updateDashboard();
-    }, (err) => {
-      const status = document.getElementById("cloudStatus");
-      status.innerHTML = "🔴 خطأ في اتصال السيرفر: " + err.message;
-      status.style.background = "#fee2e2"; status.style.color = "#991b1b";
     });
   } catch(e) {
-    document.getElementById("cloudStatus").innerHTML = "🔴 فشل تحميل البرمجية: " + e.message;
-  }
-
-  function updateDashboard() {
-    let totalDebt = 0;
-    Object.values(currentData.debts).forEach(d => totalDebt += (d.amount || 0));
-    
-    let totalPays = 0;
-    Object.values(currentData.transactions).forEach(t => {
-      if(t.type === 'pay') totalPays += (t.amount || 0);
-    });
-
-    document.getElementById("statTotalDebt").innerText = totalDebt.toLocaleString() + " د.ع";
-    document.getElementById("statTotalDebtUsd").innerText = "≈ " + formatUSD(totalDebt);
-    document.getElementById("statCompaniesCount").innerText = Object.keys(currentData.debts).length;
-    document.getElementById("statPricesCount").innerText = Object.keys(currentData.prices).length;
-    document.getElementById("statTotalPays").innerText = totalPays.toLocaleString() + " د.ع";
-
-    renderDebts();
+    document.getElementById("cloudStatus").innerHTML = "🔴 فشل الاتصال: " + e.message;
   }
 
   document.querySelectorAll(".tab-btn").forEach(btn => {
@@ -536,37 +419,11 @@
 
   document.getElementById("priceForm").onsubmit = (e) => {
     e.preventDefault();
-    if(!db) return alert("غير متصل بالسيرفر!");
-    
-    const rawName = document.getElementById("pName").value;
-    const rawCode = document.getElementById("pCode").value;
-
-    const normName = normalizeText(rawName);
-    const normCode = normalizeText(rawCode);
-
-    const duplicateByName = Object.values(currentData.prices).find(item => 
-      normalizeText(item.name) === normName
-    );
-
-    if(duplicateByName) {
-      alert("⚠️ تكرار مسجل!\nالمادة (" + rawName.trim() + ") موجودة بالفعل في دليل الأسعار.");
-      return;
-    }
-
-    if(normCode !== '') {
-      const duplicateByCode = Object.values(currentData.prices).find(item => 
-        normalizeText(item.code) === normCode
-      );
-
-      if(duplicateByCode) {
-        alert("⚠️ الكود / الباركود مكرر!\nهذا الباركود (" + rawCode.trim() + ") مسجل مسبقاً للمادة: " + duplicateByCode.name);
-        return;
-      }
-    }
+    if(!db) return;
     
     db.child("prices").push().set({
-      name: rawName.trim(),
-      code: rawCode.trim(),
+      name: document.getElementById("pName").value.trim(),
+      code: document.getElementById("pCode").value.trim(),
       packetCost: parseFloat(document.getElementById("pPacketCost").value) || 0,
       packetSell: parseFloat(document.getElementById("pPacketSell").value) || 0,
       cartonCost: parseFloat(document.getElementById("pCartonCost").value) || 0,
@@ -574,8 +431,41 @@
     });
     
     document.getElementById("priceForm").reset();
-    alert("🟢 تم إضافة المادة بنجاح!");
+    alert("🟢 تم حفظ المادة بنجاح!");
   };
+
+  function renderPrices() {
+    const tbody = document.getElementById("pricesTable"); tbody.innerHTML = "";
+    const query = normalizeText(document.getElementById("searchPrice").value);
+    const keys = Object.keys(currentData.prices);
+
+    const filtered = keys.filter(k => {
+      const item = currentData.prices[k];
+      return normalizeText(item.name).includes(query) || normalizeText(item.code).includes(query);
+    });
+
+    if(filtered.length === 0) {
+      tbody.innerHTML = "<tr><td colspan='8' style='color:var(--text-muted);'>لا توجد مواد مسجلة بهذه التسمية</td></tr>";
+      return;
+    }
+
+    filtered.forEach((k, i) => {
+      const item = currentData.prices[k];
+      tbody.innerHTML += `<tr>
+        <td>${i+1}</td>
+        <td><strong>${item.name}</strong></td>
+        <td>${item.code || '-'}</td>
+        <td>${(item.packetCost || 0).toLocaleString()} د.ع</td>
+        <td style='color:var(--price); font-weight:700;'>${(item.packetSell || 0).toLocaleString()} د.ع</td>
+        <td>${(item.cartonCost || 0).toLocaleString()} د.ع</td>
+        <td style='color:#b45309; font-weight:700;'>${(item.cartonSell || 0).toLocaleString()} د.ع</td>
+        <td class="no-print">
+          <button class="btn-edit" onclick="openEditModal('${k}')">✏️</button>
+          <button class="btn-delete" onclick="deletePrice('${k}')">🗑️</button>
+        </td>
+      </tr>`;
+    });
+  }
 
   function openEditModal(key) {
     const item = currentData.prices[key];
@@ -584,8 +474,8 @@
     document.getElementById("editKey").value = key;
     document.getElementById("editName").value = item.name || "";
     document.getElementById("editCode").value = item.code || "";
-    document.getElementById("editPacketCost").value = item.packetCost || item.costPrice || 0;
-    document.getElementById("editPacketSell").value = item.packetSell || item.sellPrice || item.price || 0;
+    document.getElementById("editPacketCost").value = item.packetCost || 0;
+    document.getElementById("editPacketSell").value = item.packetSell || 0;
     document.getElementById("editCartonCost").value = item.cartonCost || 0;
     document.getElementById("editCartonSell").value = item.cartonSell || 0;
 
@@ -598,79 +488,62 @@
     const key = document.getElementById("editKey").value;
     if(!key || !db) return;
 
-    const rawName = document.getElementById("editName").value;
-    const rawCode = document.getElementById("editCode").value;
-
-    const normName = normalizeText(rawName);
-    const normCode = normalizeText(rawCode);
-
-    const duplicateByName = Object.keys(currentData.prices).find(k => 
-      k !== key && normalizeText(currentData.prices[k].name) === normName
-    );
-
-    if(duplicateByName) {
-      alert("⚠️ تكرار مسجل!\nتوجد مادة أخرى تحمل اسم (" + rawName.trim() + ") بالدليل.");
-      return;
-    }
-
-    if(normCode !== '') {
-      const duplicateByCode = Object.keys(currentData.prices).find(k => 
-        k !== key && normalizeText(currentData.prices[k].code) === normCode
-      );
-
-      if(duplicateByCode) {
-        alert("⚠️ الكود / الباركود مكرر!\nهذا الباركود مسجل مسبقاً للمادة: " + currentData.prices[duplicateByCode].name);
-        return;
-      }
-    }
-
     db.child("prices/" + key).update({
-      name: rawName.trim(),
-      code: rawCode.trim(),
+      name: document.getElementById("editName").value.trim(),
+      code: document.getElementById("editCode").value.trim(),
       packetCost: parseFloat(document.getElementById("editPacketCost").value) || 0,
       packetSell: parseFloat(document.getElementById("editPacketSell").value) || 0,
       cartonCost: parseFloat(document.getElementById("editCartonCost").value) || 0,
       cartonSell: parseFloat(document.getElementById("editCartonSell").value) || 0
-    }).then(() => {
-      closeEditModal();
-      alert("🟢 تم تعديل البيانات بنجاح!");
-    });
+    }).then(() => closeEditModal());
   }
 
   function deletePrice(key) {
-    const pin = prompt("🔒 إدخال رمز الأمان (1234) لتأكيد حذف المادة:");
-    if(pin === SECURITY_PIN) {
-      db.child("prices/" + key).remove();
-    } else if(pin !== null) {
-      alert("❌ رمز الأمان غير صحيح!");
-    }
+    if(confirm("هل أنت متأكد من حذف هذه المادة؟")) db.child("prices/" + key).remove();
   }
 
   document.getElementById("companyForm").onsubmit = (e) => {
     e.preventDefault();
-    if(!db) return alert("غير متصل بالسيرفر!");
-
-    const rawCompName = document.getElementById("cName").value;
-    const normCompName = normalizeText(rawCompName);
-
-    const isDuplicate = Object.values(currentData.debts).some(item => 
-      normalizeText(item.name) === normCompName
-    );
-
-    if(isDuplicate) {
-      alert("⚠️ تكرار مسجل!\nالشركة (" + rawCompName.trim() + ") موجودة بالفعل.");
-      return;
-    }
+    if(!db) return;
 
     db.child("debts").push().set({
-      name: rawCompName.trim(),
+      name: document.getElementById("cName").value.trim(),
       phone: document.getElementById("cPhone").value.trim(),
       amount: parseFloat(document.getElementById("cInitialDebt").value) || 0,
       initialAmount: parseFloat(document.getElementById("cInitialDebt").value) || 0
     });
     document.getElementById("companyForm").reset();
-    alert("🟢 تم إضافة الشركة/المجهز بنجاح!");
+    alert("🟢 تم إضافة الشركة بنجاح!");
   };
+
+  function renderDebts() {
+    const tbody = document.getElementById("debtsTable"); tbody.innerHTML = "";
+    const query = normalizeText(document.getElementById("searchDebt").value);
+    const keys = Object.keys(currentData.debts);
+
+    const filtered = keys.filter(k => normalizeText(currentData.debts[k].name).includes(query));
+
+    if(filtered.length === 0) {
+      tbody.innerHTML = "<tr><td colspan='6' style='color:var(--text-muted);'>لا توجد ديون مسجلة</td></tr>";
+      return;
+    }
+
+    filtered.forEach((k, i) => {
+      const item = currentData.debts[k];
+      const amt = item.amount || 0;
+      tbody.innerHTML += `<tr>
+        <td>${i+1}</td>
+        <td><strong>${item.name}</strong></td>
+        <td>${item.phone || '-'}</td>
+        <td style='color:var(--debt); font-weight:700;'>${amt.toLocaleString()} د.ع</td>
+        <td style='color:var(--text-muted); font-weight:700;'>${formatUSD(amt)}</td>
+        <td class="no-print">
+          <button class="btn-edit" onclick="openCompanyEditModal('${k}')">✏️</button>
+          <button class="btn-delete" onclick="deleteCompany('${k}')">🗑️</button>
+        </td>
+      </tr>`;
+    });
+  }
 
   function openCompanyEditModal(key) {
     const item = currentData.debts[key];
@@ -690,47 +563,27 @@
     const key = document.getElementById("editCompKey").value;
     if(!key || !db) return;
 
-    const rawName = document.getElementById("editCompName").value;
-    const normName = normalizeText(rawName);
-
-    const isDuplicate = Object.keys(currentData.debts).some(k => 
-      k !== key && normalizeText(currentData.debts[k].name) === normName
-    );
-
-    if(isDuplicate) {
-      alert("⚠️ تكرار مسجل!\nتوجد شركة أخرى بنفس هذا الاسم.");
-      return;
-    }
-
     db.child("debts/" + key).update({
-      name: rawName.trim(),
+      name: document.getElementById("editCompName").value.trim(),
       phone: document.getElementById("editCompPhone").value.trim(),
       amount: parseFloat(document.getElementById("editCompAmount").value) || 0
-    }).then(() => {
-      closeCompanyEditModal();
-      alert("🟢 تم تعديل الحساب بنجاح!");
-    });
+    }).then(() => closeCompanyEditModal());
   }
 
   function deleteCompany(key) {
-    const pin = prompt("🔒 أدخل رمز الأمان (1234) لتأكيد حذف هذه الشركة وسجلها:");
-    if(pin === SECURITY_PIN) {
-      db.child("debts/" + key).remove();
-    } else if(pin !== null) {
-      alert("❌ رمز الأمان غير صحيح!");
-    }
+    if(confirm("هل أنت متأكد من حذف سجل هذه الشركة بالكامل؟")) db.child("debts/" + key).remove();
   }
 
   document.getElementById("transForm").onsubmit = (e) => {
     e.preventDefault();
-    if(!db) return alert("غير متصل بالسيرفر!");
+    if(!db) return;
 
     const compId = document.getElementById("tCompany").value;
     const type = document.getElementById("tType").value;
     const amount = parseFloat(document.getElementById("tAmount").value) || 0;
     const note = document.getElementById("tNote").value.trim();
 
-    if(!compId || amount <= 0) return alert("يرجى اختيار الشركة وإدخال مبلغ صحيح!");
+    if(!compId || amount <= 0) return alert("يرجى اختيار الشركة وإدخال المبلغ!");
 
     const currentCompany = currentData.debts[compId];
     let newAmount = currentCompany.amount || 0;
@@ -754,7 +607,7 @@
     });
 
     document.getElementById("transForm").reset();
-    alert("🟢 تم تسجيل الحركة وتحديث الدين بنجاح!");
+    alert("🟢 تم تسجيل الحركة بنجاح!");
   };
 
   function renderCompanySelect() {
@@ -765,7 +618,7 @@
     const curVal2 = select2.value;
 
     select1.innerHTML = '<option value="">-- اختر الشركة --</option>';
-    select2.innerHTML = '<option value="">-- اختر الشركة لطباعة كشف الحساب --</option>';
+    select2.innerHTML = '<option value="">-- اختر الشركة لرؤية كشف الحساب --</option>';
 
     Object.keys(currentData.debts).forEach(k => {
       const name = currentData.debts[k].name;
@@ -782,31 +635,25 @@
     const container = document.getElementById("statementContent");
 
     if(!compId || !currentData.debts[compId]) {
-      container.innerHTML = `<p style="text-align:center; color:var(--text-muted); margin: 20px 0;">اختر شركة من القائمة أعلاه لمشاهدة كشف الحساب الكامل.</p>`;
+      container.innerHTML = `<p style="text-align:center; color:var(--text-muted); margin: 20px 0;">اختر شركة من القائمة أعلاه لمشاهدة التفاصيل.</p>`;
       return;
     }
-
-    const fromDate = document.getElementById("filterFromDate").value;
-    const toDate = document.getElementById("filterToDate").value;
 
     const company = currentData.debts[compId];
     let compTrans = Object.keys(currentData.transactions)
       .map(k => currentData.transactions[k])
       .filter(t => t.companyId === compId || t.companyName === company.name);
 
-    if(fromDate) compTrans = compTrans.filter(t => t.date >= fromDate);
-    if(toDate) compTrans = compTrans.filter(t => t.date <= toDate);
-
     let totalBills = company.initialAmount || 0;
     let totalPays = 0;
-
     let rowsHtml = "";
-    if(!fromDate && company.initialAmount > 0) {
+
+    if(company.initialAmount > 0) {
       rowsHtml += `<tr>
         <td>-</td>
-        <td><span class="badge-bill">رصيد أولي</span></td>
+        <td><span class="badge-bill">رصيد سابق</span></td>
         <td style="font-weight:700;">${company.initialAmount.toLocaleString()} د.ع</td>
-        <td>الرصيد المفتوق سابقاُ</td>
+        <td>الرصيد المفتوح سابقاً</td>
       </tr>`;
     }
 
@@ -817,7 +664,7 @@
 
       rowsHtml += `<tr>
         <td style="font-size:12px; color:var(--text-muted);">${t.date} ${t.time || ''}</td>
-        <td><span class="${isPay ? 'badge-pay' : 'badge-bill'}">${isPay ? 'تسديد (واصل)' : 'قائمة (مطلوب)'}</span></td>
+        <td><span class="${isPay ? 'badge-pay' : 'badge-bill'}">${isPay ? 'تسديد (واصل)' : 'قائمة جديدة'}</span></td>
         <td style="font-weight:700;">${t.amount.toLocaleString()} د.ع</td>
         <td>${t.note || '-'}</td>
       </tr>`;
@@ -826,15 +673,15 @@
     const netDebt = company.amount !== undefined ? company.amount : (totalBills - totalPays);
 
     container.innerHTML = `
-      <div style="border-bottom: 2px dashed var(--border); padding-bottom: 12px; margin-bottom: 15px;">
-        <h3 style="margin:0; font-size:16px;">محل الدباغ - كشف حساب: <span style="color:var(--price);">${company.name}</span></h3>
-        <p style="margin:5px 0 0 0; font-size:12px; color:var(--text-muted);">الهاتف: ${company.phone || 'غير مسجل'}</p>
+      <div style="border-bottom: 2px dashed var(--border); padding-bottom: 10px; margin-bottom: 12px;">
+        <h3 style="margin:0; font-size:15px;">كشف حساب: <span style="color:var(--price);">${company.name}</span></h3>
+        <p style="margin:4px 0 0 0; font-size:12px; color:var(--text-muted);">الهاتف: ${company.phone || 'غير مسجل'}</p>
       </div>
 
       <div class="statement-summary">
         <div>إجمالي القوائم: <span style="color:var(--debt);">${totalBills.toLocaleString()} د.ع</span></div>
         <div>إجمالي التسديدات: <span style="color:var(--success);">${totalPays.toLocaleString()} د.ع</span></div>
-        <div>الصافي المطلوب: <span style="color:var(--debt); border-bottom: 2px solid;">${netDebt.toLocaleString()} د.ع (${formatUSD(netDebt)})</span></div>
+        <div>المتبقي المطلوب منك: <span style="color:var(--debt); border-bottom: 2px solid;">${netDebt.toLocaleString()} د.ع (${formatUSD(netDebt)})</span></div>
       </div>
 
       <div class="table-wrapper">
@@ -844,138 +691,19 @@
               <th>التاريخ</th>
               <th>نوع الحركة</th>
               <th>المبلغ</th>
-              <th>الملاحظات / رقم القائمة</th>
+              <th>ملاحظات / رقم القائمة</th>
             </tr>
           </thead>
           <tbody>
-            ${rowsHtml || "<tr><td colspan='4'>لا توجد حركات مسجلة خلال الفترة المختارة</td></tr>"}
+            ${rowsHtml || "<tr><td colspan='4'>لا توجد حركات مسجلة</td></tr>"}
           </tbody>
         </table>
       </div>
 
-      <div class="no-print" style="display:flex; gap:10px; margin-top:15px;">
+      <div class="no-print" style="margin-top:12px;">
         <button onclick="window.print()" style="background:#475569;">🖨️ طباعة كشف الحساب</button>
-        <button onclick="exportStatementCSV('${company.name}')" style="background:var(--primary);">📊 تصدير إلى Excel (.CSV)</button>
       </div>
     `;
-  }
-
-  function exportStatementCSV(compName) {
-    const compId = document.getElementById("statementSelect").value;
-    if(!compId) return;
-
-    const company = currentData.debts[compId];
-    const compTrans = Object.keys(currentData.transactions)
-      .map(k => currentData.transactions[k])
-      .filter(t => t.companyId === compId || t.companyName === company.name);
-
-    let csvContent = "\uFEFFالتاريخ,نوع الحركة,المبلغ,الملاحظات\n";
-    
-    compTrans.forEach(t => {
-      const typeStr = t.type === 'pay' ? 'تسديد' : 'قائمة';
-      csvContent += `"${t.date} ${t.time||''}","${typeStr}","${t.amount}","${t.note||''}"\n`;
-    });
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `كشف_حساب_${compName}.csv`;
-    a.click();
-  }
-
-  function printSingleReceipt(transKey) {
-    const t = currentData.transactions[transKey];
-    if(!t) return;
-
-    const receiptDiv = document.getElementById("receiptPrintArea");
-    const isPay = t.type === 'pay';
-
-    receiptDiv.innerHTML = `
-      <div style="border:2px solid #000; padding:20px; width:300px; margin:20px auto; text-align:center; font-family:sans-serif;">
-        <h2 style="margin:0;">محل الدباغ للجملة</h2>
-        <p style="margin:5px 0; font-size:12px;">وصل ${isPay ? 'تسديد ومقبوضات' : 'قائمة ومطلوبات'}</p>
-        <hr/>
-        <div style="text-align:right; font-size:13px; line-height:1.8;">
-          <p><strong>التاريخ:</strong> ${t.date} ${t.time || ''}</p>
-          <p><strong>الشركة / المجهز:</strong> ${t.companyName}</p>
-          <p><strong>نوع الحركة:</strong> ${isPay ? 'تسديد واصل' : 'قائمة جديدة'}</p>
-          <p><strong>المبلغ:</strong> <span style="font-size:16px; font-weight:bold;">${t.amount.toLocaleString()} د.ع</span></p>
-          <p><strong>الملاحظات:</strong> ${t.note || '-'}</p>
-        </div>
-        <hr/>
-        <p style="font-size:11px; margin-top:20px;">توقيع المستلم: .....................</p>
-      </div>
-    `;
-
-    window.print();
-  }
-
-  function renderPrices() {
-    const tbody = document.getElementById("pricesTable"); tbody.innerHTML = "";
-    const query = normalizeText(document.getElementById("searchPrice").value);
-    const keys = Object.keys(currentData.prices);
-
-    const filtered = keys.filter(k => {
-      const item = currentData.prices[k];
-      return normalizeText(item.name).includes(query) || normalizeText(item.code).includes(query);
-    });
-
-    if(filtered.length === 0) {
-      tbody.innerHTML = "<tr><td colspan='8' style='color:var(--text-muted);'>لا توجد أسعار مسجلة</td></tr>";
-      return;
-    }
-
-    filtered.forEach((k, i) => {
-      const item = currentData.prices[k];
-      const pCost = item.packetCost || item.costPrice || 0;
-      const pSell = item.packetSell || item.sellPrice || item.price || 0;
-      const cCost = item.cartonCost || 0;
-      const cSell = item.cartonSell || 0;
-
-      tbody.innerHTML += `<tr>
-        <td>${i+1}</td>
-        <td><strong>${item.name}</strong></td>
-        <td>${item.code || '-'}</td>
-        <td style='color:var(--text-muted);'>${pCost ? pCost.toLocaleString() + ' د.ع' : '-'}</td>
-        <td style='color:var(--price); font-weight:700;'>${pSell ? pSell.toLocaleString() + ' د.ع' : '-'}</td>
-        <td style='color:var(--text-muted);'>${cCost ? cCost.toLocaleString() + ' د.ع' : '-'}</td>
-        <td style='color:#b45309; font-weight:700;'>${cSell ? cSell.toLocaleString() + ' د.ع' : '-'}</td>
-        <td class="no-print">
-          <button class="btn-edit" onclick="openEditModal('${k}')">✏️ تعديل</button>
-          <button class="btn-delete" onclick="deletePrice('${k}')">🗑️</button>
-        </td>
-      </tr>`;
-    });
-  }
-
-  function renderDebts() {
-    const tbody = document.getElementById("debtsTable"); tbody.innerHTML = "";
-    const query = normalizeText(document.getElementById("searchDebt").value);
-    const keys = Object.keys(currentData.debts);
-
-    const filtered = keys.filter(k => normalizeText(currentData.debts[k].name).includes(query));
-
-    if(filtered.length === 0) {
-      tbody.innerHTML = "<tr><td colspan='6' style='color:var(--text-muted);'>لا توجد ديون/شركات مسجلة</td></tr>";
-      return;
-    }
-
-    filtered.forEach((k, i) => {
-      const item = currentData.debts[k];
-      const amt = item.amount || 0;
-      tbody.innerHTML += `<tr>
-        <td>${i+1}</td>
-        <td><strong>${item.name}</strong></td>
-        <td>${item.phone || '-'}</td>
-        <td style='color:var(--debt); font-weight:700;'>${amt.toLocaleString()} د.ع</td>
-        <td style='color:var(--text-muted); font-weight:700;'>${formatUSD(amt)}</td>
-        <td class="no-print">
-          <button class="btn-edit" onclick="openCompanyEditModal('${k}')">✏️ تعديل</button>
-          <button class="btn-delete" onclick="deleteCompany('${k}')">🗑️</button>
-        </td>
-      </tr>`;
-    });
   }
 
   function renderTransactions() {
@@ -993,12 +721,38 @@
       tbody.innerHTML += `<tr>
         <td style="font-size:12px; color:var(--text-muted);">${t.date} ${t.time || ''}</td>
         <td><strong>${t.companyName}</strong></td>
-        <td><span class="${isPay ? 'badge-pay' : 'badge-bill'}">${isPay ? 'تسديد (تنزيل)' : 'قائمة (زيادة)'}</span></td>
+        <td><span class="${isPay ? 'badge-pay' : 'badge-bill'}">${isPay ? 'تسديد' : 'قائمة جديدة'}</span></td>
         <td style="font-weight:700;">${t.amount.toLocaleString()} د.ع</td>
         <td>${t.note || '-'}</td>
         <td><button class="btn-receipt" onclick="printSingleReceipt('${k}')">🧾 وصل</button></td>
       </tr>`;
     });
+  }
+
+  function printSingleReceipt(transKey) {
+    const t = currentData.transactions[transKey];
+    if(!t) return;
+
+    const receiptDiv = document.getElementById("receiptPrintArea");
+    const isPay = t.type === 'pay';
+
+    receiptDiv.innerHTML = `
+      <div style="border:2px solid #000; padding:18px; width:280px; margin:20px auto; text-align:center; font-family:sans-serif;">
+        <h3 style="margin:0;">محل الدباغ</h3>
+        <p style="margin:4px 0; font-size:12px;">وصل ${isPay ? 'تسديد واصل' : 'قائمة جديدة'}</p>
+        <hr/>
+        <div style="text-align:right; font-size:12px; line-height:1.8;">
+          <p><strong>التاريخ:</strong> ${t.date} ${t.time || ''}</p>
+          <p><strong>الشركة:</strong> ${t.companyName}</p>
+          <p><strong>المبلغ:</strong> <span style="font-size:15px; font-weight:bold;">${t.amount.toLocaleString()} د.ع</span></p>
+          <p><strong>الملاحظات:</strong> ${t.note || '-'}</p>
+        </div>
+        <hr/>
+        <p style="font-size:10px; margin-top:15px;">التوقيع: .....................</p>
+      </div>
+    `;
+
+    window.print();
   }
 
   function exportBackup() {
@@ -1007,40 +761,6 @@
     a.setAttribute("href", dataStr);
     a.setAttribute("download", "price_debts_backup.json");
     document.body.appendChild(a); a.click(); a.remove();
-  }
-
-  function triggerImport() { document.getElementById("importFileInput").click(); }
-
-  function importBackup(e) {
-    const file = e.target.files[0];
-    if(!file) return;
-    const reader = new FileReader();
-    reader.onload = function(evt) {
-      try {
-        const json = JSON.parse(evt.target.result);
-        if(confirm("هل تريد رفع واستيراد هذه البيانات إلى السحابة فوراً؟")) {
-          db.set(json).then(() => alert("🟢 تم استيراد البيانات بنجاح!"));
-        }
-      } catch(err) {
-        alert("❌ خطأ في قراءة ملف الـ JSON.");
-      }
-    };
-    reader.readAsText(file);
-  }
-
-  function resetSystem() {
-    const password = prompt("⚠️ تحذير: هذا الخيار سيمسح جميع البيانات!\n\nأدخل رمز الأمان (1234) للتأكيد:");
-    
-    if(password === SECURITY_PIN) {
-      if(confirm("هل أنت متأكد 100% من مسح كافة البيانات؟ سيتم أخذ نسخة احتياطية تلقائياً.")) {
-        exportBackup();
-        db.remove()
-          .then(() => alert("🧹 تم تصفير النظام بنجاح!"))
-          .catch(err => alert("❌ حدث خطأ: " + err.message));
-      }
-    } else if(password !== null) {
-      alert("❌ رمز الأمان غير صحيح!");
-    }
   }
 </script>
 </body>
