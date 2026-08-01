@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>نظام الأسعار والديون والحركات - محل الدباغ</title>
+  <title>نظام الأسعار والديون والحركات الاحترافي - محل الدباغ v2.5</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <!-- مكتبات Firebase السحابية -->
@@ -49,7 +49,9 @@
       font-size: 22px;
       font-weight: 800;
       box-shadow: var(--shadow-md);
-      letter-spacing: 0.5px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
 
     .container { max-width: 1350px; margin: 25px auto; padding: 0 20px; }
@@ -97,6 +99,20 @@
 
     .stat-title { font-size: 13px; color: var(--text-muted); margin-bottom: 6px; font-weight: 700; }
     .stat-value { font-size: 22px; font-weight: 800; color: var(--text-main); }
+
+    /* Currency Exchange Widget Header */
+    .rate-box {
+      background: rgba(255,255,255,0.1);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .rate-box input {
+      width: 90px; margin: 0; padding: 4px 8px; font-size: 13px;
+    }
 
     /* Tabs Navigation */
     .tabs { display: flex; gap: 12px; margin-bottom: 25px; }
@@ -213,7 +229,14 @@
 </head>
 <body>
 
-<header class="no-print">📊 نظام الأسعار والديون والحركات - محل الدباغ الاحترافي</header>
+<header class="no-print">
+  <div>📊 نظام الأسعار والديون والحركات - محل الدباغ الاحترافي</div>
+  <div class="rate-box">
+    <span>💵 $100 =</span>
+    <input type="number" id="usdExchangeRate" value="150000" onchange="updateDashboard()" title="سعر صرف الـ 100 دولار بالدينار" />
+    <span>د.ع</span>
+  </div>
+</header>
 
 <div class="container">
   <div id="cloudStatus" class="no-print">🔄 جاري الاتصال بالسحابة...</div>
@@ -221,8 +244,9 @@
   <!-- لوحة الإحصائيات Dashboard -->
   <div class="dashboard-grid no-print">
     <div class="stat-card red">
-      <div class="stat-title">إجمالي الديون المطلوبة منك</div>
+      <div class="stat-title">إجمالي الديون المطلوبة منك (دينار)</div>
       <div class="stat-value" id="statTotalDebt">0 د.ع</div>
+      <div style="font-size:12px; color:var(--text-muted); margin-top:4px;" id="statTotalDebtUsd">≈ $0</div>
     </div>
     <div class="stat-card orange">
       <div class="stat-title">عدد الشركات والمجهّزين</div>
@@ -254,12 +278,12 @@
           <input type="text" id="pCode" placeholder="الباركود / الكود (اختياري)" style="grid-column: span 2;" />
           
           <div style="grid-column: span 2; font-weight:700; color:var(--price); margin-top:5px; font-size:13px;">📦 أسعار الباكيت:</div>
-          <input type="number" id="pPacketCost" placeholder="كلفة الباكيت" />
-          <input type="number" id="pPacketSell" placeholder="بيع الباكيت" />
+          <input type="number" id="pPacketCost" placeholder="كلفة الباكيت (د.ع)" />
+          <input type="number" id="pPacketSell" placeholder="بيع الباكيت (د.ع)" />
 
           <div style="grid-column: span 2; font-weight:700; color:var(--price); margin-top:5px; font-size:13px;">📦 أسعار الكارتون الكامل:</div>
-          <input type="number" id="pCartonCost" placeholder="كلفة الكارتون" />
-          <input type="number" id="pCartonSell" placeholder="بيع الكارتون" />
+          <input type="number" id="pCartonCost" placeholder="كلفة الكارتون (د.ع)" />
+          <input type="number" id="pCartonSell" placeholder="بيع الكارتون (د.ع)" />
 
           <button type="submit" class="btn-price">حفظ المادة في الدليل</button>
         </form>
@@ -317,7 +341,7 @@
               <option value="pay">تسديد (تنزيل من الدين المطلوب)</option>
               <option value="bill">قائمة جديدة (زيادة الدين)</option>
             </select>
-            <input type="number" id="tAmount" placeholder="المبلغ (دينار)" required />
+            <input type="number" id="tAmount" placeholder="المبلغ بالدينار (د.ع)" required />
             <input type="text" id="tNote" placeholder="ملاحظات / رقم القائمة (اختياري)" />
             <button type="submit" class="btn-success">حفظ الحركة وتحديث الحساب</button>
           </form>
@@ -333,11 +357,12 @@
                   <th>#</th>
                   <th>الاسم</th>
                   <th>الهاتف</th>
-                  <th>المبلغ المطلوب</th>
+                  <th>المبلغ المطلوب (د.ع)</th>
+                  <th>المعادل بالدولار</th>
                   <th class="no-print">إجراءات</th>
                 </tr>
               </thead>
-              <tbody id="debtsTable"><tr><td colspan="5">جاري التحميل...</td></tr></tbody>
+              <tbody id="debtsTable"><tr><td colspan="6">جاري التحميل...</td></tr></tbody>
             </table>
           </div>
         </div>
@@ -447,6 +472,12 @@
     return text ? text.toString().trim().toLowerCase().replace(/\s+/g, ' ') : '';
   }
 
+  function formatUSD(iqdAmount) {
+    const rate = parseFloat(document.getElementById("usdExchangeRate").value) || 150000;
+    const usd = (iqdAmount / rate) * 100;
+    return "$ " + usd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
   try {
     firebase.initializeApp(firebaseConfig);
     db = firebase.database().ref("simple_price_debts_v2");
@@ -486,9 +517,12 @@
     });
 
     document.getElementById("statTotalDebt").innerText = totalDebt.toLocaleString() + " د.ع";
+    document.getElementById("statTotalDebtUsd").innerText = "≈ " + formatUSD(totalDebt);
     document.getElementById("statCompaniesCount").innerText = Object.keys(currentData.debts).length;
     document.getElementById("statPricesCount").innerText = Object.keys(currentData.prices).length;
     document.getElementById("statTotalPays").innerText = totalPays.toLocaleString() + " د.ع";
+
+    renderDebts();
   }
 
   document.querySelectorAll(".tab-btn").forEach(btn => {
@@ -772,7 +806,7 @@
         <td>-</td>
         <td><span class="badge-bill">رصيد أولي</span></td>
         <td style="font-weight:700;">${company.initialAmount.toLocaleString()} د.ع</td>
-        <td>الرصيد المفتوح سابقاً</td>
+        <td>الرصيد المفتوق سابقاُ</td>
       </tr>`;
     }
 
@@ -800,7 +834,7 @@
       <div class="statement-summary">
         <div>إجمالي القوائم: <span style="color:var(--debt);">${totalBills.toLocaleString()} د.ع</span></div>
         <div>إجمالي التسديدات: <span style="color:var(--success);">${totalPays.toLocaleString()} د.ع</span></div>
-        <div>الصافي المطلوب: <span style="color:var(--debt); border-bottom: 2px solid;">${netDebt.toLocaleString()} د.ع</span></div>
+        <div>الصافي المطلوب: <span style="color:var(--debt); border-bottom: 2px solid;">${netDebt.toLocaleString()} د.ع (${formatUSD(netDebt)})</span></div>
       </div>
 
       <div class="table-wrapper">
@@ -923,17 +957,19 @@
     const filtered = keys.filter(k => normalizeText(currentData.debts[k].name).includes(query));
 
     if(filtered.length === 0) {
-      tbody.innerHTML = "<tr><td colspan='5' style='color:var(--text-muted);'>لا توجد ديون/شركات مسجلة</td></tr>";
+      tbody.innerHTML = "<tr><td colspan='6' style='color:var(--text-muted);'>لا توجد ديون/شركات مسجلة</td></tr>";
       return;
     }
 
     filtered.forEach((k, i) => {
       const item = currentData.debts[k];
+      const amt = item.amount || 0;
       tbody.innerHTML += `<tr>
         <td>${i+1}</td>
         <td><strong>${item.name}</strong></td>
         <td>${item.phone || '-'}</td>
-        <td style='color:var(--debt); font-weight:700;'>${(item.amount || 0).toLocaleString()} د.ع</td>
+        <td style='color:var(--debt); font-weight:700;'>${amt.toLocaleString()} د.ع</td>
+        <td style='color:var(--text-muted); font-weight:700;'>${formatUSD(amt)}</td>
         <td class="no-print">
           <button class="btn-edit" onclick="openCompanyEditModal('${k}')">✏️ تعديل</button>
           <button class="btn-delete" onclick="deleteCompany('${k}')">🗑️</button>
