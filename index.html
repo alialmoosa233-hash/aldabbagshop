@@ -274,8 +274,8 @@
               <option value="">-- اختر الشركة --</option>
             </select>
             <select id="tType" required>
-              <option value="pay">تسديد (تنقيص من الدين المطلوبه عليك)</option>
-              <option value="bill">قائمة جديدة (زيادة الدين المطلوبه عليك)</option>
+              <option value="pay">تسديد (تنقيص من الدين المطلوب عليك)</option>
+              <option value="bill">قائمة جديدة (زيادة الدين المطلوب عليك)</option>
             </select>
             <input type="number" id="tAmount" placeholder="المبلغ بالدينار (د.ع)" required />
             <input type="text" id="tNote" placeholder="ملاحظات / رقم القائمة (اختياري)" />
@@ -386,7 +386,7 @@
     </div>
   </div>
 
-  <!-- 4. قسم المساعد الذكي (AI) - جديد -->
+  <!-- 4. قسم المساعد الذكي (AI) -->
   <div id="aiSection" class="tab-content">
     <div class="grid">
       <div class="card">
@@ -1013,7 +1013,7 @@
     document.getElementById("repCount").innerText = dayKeys.length;
   }
 
-  /* ---- وظائف الذكاء الاصطناعي (AI Engine) ---- */
+  /* ---- وظائف الذكاء الاصطناعي (AI Engine Muted & Corrected) ---- */
   async function callGemini(promptText) {
     const apiKey = document.getElementById("geminiApiKey").value.trim();
     if (!apiKey) {
@@ -1023,33 +1023,42 @@
 
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
     
-    // إرسال سياق البيانات للذكاء الاصطناعي
-    const systemContext = `أنت مساعد ذكي ونظام محاسبي متقدم لمحل "الدباغ". البيانات الحالية المحفوظة في النظام هي كالتالي:
+    const systemContext = `أنت مساعد ذكي ونظام محاسبي لمحل "الدباغ". البيانات الحالية المحفوظة في النظام:
 - ديون الشركات: ${JSON.stringify(currentData.debts)}
 - سجل الحركات والمشتريات: ${JSON.stringify(currentData.transactions)}
 - قائمة المواد والأسعار: ${JSON.stringify(currentData.prices)}
 
-اجب على سؤال المستخدم بدقة ولغة عربية واضحة ومباشرة وبصيغة سهلة للقراءة.`;
+أجب على سؤال المستخدم بدقة ولغة عربية واضحة ومباشرة.`;
 
     try {
       const response = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          contents: [{
-            parts: [{ text: `${systemContext}\n\nسؤال المستخدم: ${promptText}` }]
-          }]
+          contents: [
+            {
+              role: "user",
+              parts: [{ text: `${systemContext}\n\nسؤال المستخدم: ${promptText}` }]
+            }
+          ]
         })
       });
 
       const data = await response.json();
-      if(data.candidates && data.candidates[0].content.parts[0].text) {
+
+      if (data.error) {
+        console.error("Gemini Error:", data.error);
+        return `⚠️ خطأ من Google: ${data.error.message}`;
+      }
+
+      if (data.candidates && data.candidates[0].content && data.candidates[0].content.parts[0].text) {
         return data.candidates[0].content.parts[0].text;
       } else {
-        return "⚠️ حدث خطأ في الاستجابة من الذكاء الاصطناعي. تأكد من صحة المفتاح.";
+        return "⚠️ لم يتم استلام رد واضح. تحقق من إعدادات المفتاح.";
       }
     } catch(e) {
-      return "🔴 تعذر الاتصال بـ Gemini API: " + e.message;
+      console.error("Fetch Exception:", e);
+      return "🔴 تعذر الاتصال بـ Google API. إذا كنت تستخدم متصفح Brave، يرجى تعطيل درع الحماية (Brave Shields) لهذا الملف.";
     }
   }
 
@@ -1060,12 +1069,10 @@
 
     const chatBox = document.getElementById("aiChatBox");
     
-    // إضافة رسالة المستخدم
     chatBox.innerHTML += `<div class="ai-msg user">${userText}</div>`;
     input.value = "";
     chatBox.scrollTop = chatBox.scrollHeight;
 
-    // رسالة مؤقتة لجاري التفكير
     const loadingId = "loading_" + Date.now();
     chatBox.innerHTML += `<div class="ai-msg bot" id="${loadingId}">⏳ جاري التفكير والتحليل...</div>`;
     chatBox.scrollTop = chatBox.scrollHeight;
@@ -1073,7 +1080,7 @@
     const reply = await callGemini(userText);
     
     document.getElementById(loadingId).remove();
-    chatBox.innerHTML += `<div class="ai-msg bot">${reply.replace(/\n/g, '<br/>')}</div>`;
+    chatBox.innerHTML += `<div class="ai-msg bot">${reply ? reply.replace(/\n/g, '<br/>') : 'تعذر الحصول على إجابة.'}</div>`;
     chatBox.scrollTop = chatBox.scrollHeight;
   }
 
@@ -1089,7 +1096,7 @@
     const reply = await callGemini(prompt);
 
     document.getElementById(loadingId).remove();
-    chatBox.innerHTML += `<div class="ai-msg bot">${reply.replace(/\n/g, '<br/>')}</div>`;
+    chatBox.innerHTML += `<div class="ai-msg bot">${reply ? reply.replace(/\n/g, '<br/>') : 'تعذر الحصول على إجابة.'}</div>`;
     chatBox.scrollTop = chatBox.scrollHeight;
   }
 
