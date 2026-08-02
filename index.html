@@ -18,6 +18,7 @@
       --debt-hover: #b91c1c;
       --success: #16a34a;
       --price: #0284c7;
+      --ai-color: #7c3aed;
       --warning: #d97706;
       --bg: #f8fafc;
       --card: #ffffff;
@@ -66,7 +67,6 @@
       font-size: 13px;
     }
 
-    /* Currency Widget */
     .rate-box {
       background: rgba(255,255,255,0.1);
       padding: 6px 12px;
@@ -80,16 +80,16 @@
       width: 85px; margin: 0; padding: 4px 8px; font-size: 13px; text-align: center;
     }
 
-    /* Tabs Navigation */
     .tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
     .tab-btn {
-      flex: 1; min-width: 200px; padding: 14px; font-size: 15px; font-weight: 700;
+      flex: 1; min-width: 180px; padding: 14px; font-size: 15px; font-weight: 700;
       background: #e2e8f0; color: var(--text-muted); border: none; border-radius: var(--radius);
       cursor: pointer; transition: all 0.2s ease; font-family: inherit;
     }
     .tab-btn.active[data-tab="prices"] { background: var(--price); color: white; }
     .tab-btn.active[data-tab="debts"] { background: var(--debt); color: white; }
     .tab-btn.active[data-tab="reports"] { background: #8b5cf6; color: white; }
+    .tab-btn.active[data-tab="ai"] { background: var(--ai-color); color: white; }
 
     .tab-content { display: none; }
     .tab-content.active { display: block; }
@@ -111,12 +111,12 @@
       border-bottom: 2px solid var(--border); padding-bottom: 10px; margin-bottom: 15px;
     }
 
-    input, select {
+    input, select, textarea {
       width: 100%; padding: 10px 12px; margin-bottom: 12px;
       border: 1.5px solid var(--border); border-radius: 8px;
       font-size: 14px; font-family: inherit; background-color: #f8fafc;
     }
-    input:focus, select:focus { outline: none; border-color: var(--primary); background: #fff; }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); background: #fff; }
 
     button {
       width: 100%; padding: 11px; border: none; border-radius: 8px;
@@ -125,6 +125,7 @@
     .btn-price { background: var(--price); grid-column: span 2; }
     .btn-debt { background: var(--debt); }
     .btn-success { background: var(--success); }
+    .btn-ai { background: var(--ai-color); }
 
     .table-wrapper { overflow-x: auto; margin-top: 10px; border-radius: 8px; border: 1px solid var(--border); }
     table { width: 100%; border-collapse: collapse; font-size: 13px; background: white; }
@@ -143,22 +144,23 @@
       padding: 12px; border-radius: 8px; margin: 12px 0; font-weight: 700; font-size: 13px; flex-wrap: wrap; gap: 8px;
     }
 
-    /* Report Summary Cards */
     .report-cards {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 15px;
-      margin-bottom: 20px;
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;
     }
     .report-card {
-      background: white;
-      border: 1px solid var(--border);
-      padding: 15px;
-      border-radius: var(--radius);
-      text-align: center;
+      background: white; border: 1px solid var(--border); padding: 15px; border-radius: var(--radius); text-align: center;
     }
     .report-card .title { font-size: 12px; color: var(--text-muted); font-weight: 700; margin-bottom: 6px; }
     .report-card .val { font-size: 18px; font-weight: 800; }
+
+    /* AI Chat UI */
+    .ai-chat-box {
+      background: #f8fafc; border: 1px solid var(--border); border-radius: 8px;
+      height: 320px; overflow-y: auto; padding: 15px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 10px;
+    }
+    .ai-msg { max-width: 80%; padding: 10px 14px; border-radius: 12px; font-size: 14px; line-height: 1.5; }
+    .ai-msg.user { background: var(--primary); color: white; align-self: flex-start; border-bottom-right-radius: 2px; }
+    .ai-msg.bot { background: #e9d5ff; color: #4c1d95; align-self: flex-end; border-bottom-left-radius: 2px; }
 
     .modal {
       display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%;
@@ -196,12 +198,13 @@
 
   <!-- أزرار التنقل الرئيسية -->
   <div class="tabs no-print">
-    <button class="tab-btn active" data-tab="prices">🔍 دليل واستعلام الأسعار السريع</button>
-    <button class="tab-btn" data-tab="debts">📒 دفتر ديون وحسابات الشركات</button>
-    <button class="tab-btn" data-tab="reports">📊 تقارير المشتريات اليومية</button>
+    <button class="tab-btn active" data-tab="prices">🔍 دليل الأسعار</button>
+    <button class="tab-btn" data-tab="debts">📒 ديون الشركات</button>
+    <button class="tab-btn" data-tab="reports">📊 تقارير المشتريات</button>
+    <button class="tab-btn" data-tab="ai">🤖 المساعد الذكي (AI)</button>
   </div>
 
-  <!-- 1. قسم استعلام ودليل الأسعار -->
+  <!-- 1. قسم دليل الأسعار -->
   <div id="pricesSection" class="tab-content active">
     <div class="grid">
       <div class="card">
@@ -250,7 +253,7 @@
     </div>
   </div>
 
-  <!-- 2. قسم ديون وحسابات الشركات -->
+  <!-- 2. قسم ديون الشركات -->
   <div id="debtsSection" class="tab-content">
     <div class="grid">
       <div>
@@ -328,19 +331,17 @@
     </div>
   </div>
 
-  <!-- 3. قسم تقارير المشتريات اليومية (جديد) -->
+  <!-- 3. قسم تقارير المشتريات اليومية -->
   <div id="reportsSection" class="tab-content">
     <div class="card" id="dailyReportPrint">
       <h2 style="color: #8b5cf6;">📊 تقرير حركات ومشتريات اليوم</h2>
       
-      <!-- أدوات اختيار التاريخ -->
       <div class="no-print" style="display:flex; gap:10px; align-items:center; margin-bottom:20px; flex-wrap:wrap;">
         <label style="font-weight:700;">حدد التاريخ:</label>
         <input type="date" id="reportDate" onchange="renderDailyReport()" style="width:auto; margin:0;" />
         <button type="button" onclick="setReportDateToday()" style="width:auto; background:#8b5cf6;">📅 اليوم</button>
       </div>
 
-      <!-- ملخص الأرقام اليومية -->
       <div class="report-cards">
         <div class="report-card">
           <div class="title">📦 إجمالي القوائم (المشتريات)</div>
@@ -360,7 +361,6 @@
         </div>
       </div>
 
-      <!-- جدول تفاصيل حركات اليوم -->
       <div class="table-wrapper">
         <table>
           <thead>
@@ -382,6 +382,29 @@
 
       <div class="no-print" style="margin-top:15px; text-align:left;">
         <button type="button" onclick="window.print()" style="width:auto; background:#475569; padding:8px 16px;">🖨️ طباعة التقرير اليومي</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. قسم المساعد الذكي (AI) - جديد -->
+  <div id="aiSection" class="tab-content">
+    <div class="grid">
+      <div class="card">
+        <h2 style="color: var(--ai-color);">🔑 إعدادات الذكاء الاصطناعي (Gemini)</h2>
+        <p style="font-size:12px; color:var(--text-muted);">أدخل مفتاح Gemini API للاتصال بالمساعد الذكي (يتم حفظه في متصفحك بشكل آمن):</p>
+        <input type="password" id="geminiApiKey" placeholder="ضع مفتاح Gemini API هنا..." onchange="saveApiKey()" />
+        <button type="button" class="btn-ai" onclick="runAiAnalysis()">📊 إجراء تحليل ذكي شامل للحسابات والديون</button>
+      </div>
+
+      <div class="card">
+        <h2 style="color: var(--ai-color);">💬 المحادثة مع المساعد الذكي</h2>
+        <div class="ai-chat-box" id="aiChatBox">
+          <div class="ai-msg bot">مرحباً بك! أنا مساعدك الذكي في محل الدباغ. أستطيع الإجابة عن حساباتك، المشتريات، الديون، وأسعار المواد المسجلة. كيف أستطيع مساعدتك اليوم؟</div>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <input type="text" id="aiPrompt" placeholder="اسأل المساعد الذكي (مثلاً: من هي أكثر شركة تطلبني ديون؟)..." onkeydown="if(event.key==='Enter') sendAiMessage()" style="margin:0;" />
+          <button type="button" class="btn-ai" onclick="sendAiMessage()" style="width: auto; padding: 10px 20px;">إرسال</button>
+        </div>
       </div>
     </div>
   </div>
@@ -486,7 +509,6 @@
     return "$ " + usd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
 
-  // تعيين تاريخ اليوم كافتراضي للتقرير
   function setReportDateToday() {
     const today = new Date().toISOString().split('T')[0];
     document.getElementById("reportDate").value = today;
@@ -518,8 +540,14 @@
     document.getElementById("cloudStatus").innerHTML = "🔴 فشل الاتصال: " + e.message;
   }
 
-  // ضبط تاريخ اليوم عند التشغيل لأول مرة
+  // تحميل المفتاح المحفوظ
+  document.getElementById("geminiApiKey").value = localStorage.getItem("gemini_key") || "";
   document.getElementById("reportDate").value = new Date().toISOString().split('T')[0];
+
+  function saveApiKey() {
+    const key = document.getElementById("geminiApiKey").value.trim();
+    localStorage.setItem("gemini_key", key);
+  }
 
   document.querySelectorAll(".tab-btn").forEach(btn => {
     btn.onclick = function() {
@@ -761,19 +789,11 @@
     const company = currentData.debts[compId];
     let currentCompanyDebt = company ? (company.amount || 0) : 0;
 
-    // إلغاء الأثر القديم
-    if (oldType === 'pay') {
-      currentCompanyDebt += oldAmount;
-    } else {
-      currentCompanyDebt -= oldAmount;
-    }
+    if (oldType === 'pay') currentCompanyDebt += oldAmount;
+    else currentCompanyDebt -= oldAmount;
 
-    // إضافة الأثر الجديد
-    if (newType === 'pay') {
-      currentCompanyDebt -= newAmount;
-    } else {
-      currentCompanyDebt += newAmount;
-    }
+    if (newType === 'pay') currentCompanyDebt -= newAmount;
+    else currentCompanyDebt += newAmount;
 
     db.child("debts/" + compId + "/amount").set(currentCompanyDebt);
     db.child("transactions/" + transKey).update({
@@ -799,11 +819,8 @@
 
     if (company) {
       let currentCompanyDebt = company.amount || 0;
-      if (t.type === 'pay') {
-        currentCompanyDebt += t.amount;
-      } else {
-        currentCompanyDebt -= t.amount;
-      }
+      if (t.type === 'pay') currentCompanyDebt += t.amount;
+      else currentCompanyDebt -= t.amount;
       db.child("debts/" + compId + "/amount").set(currentCompanyDebt);
     }
 
@@ -941,7 +958,6 @@
     });
   }
 
-  /* ---- دالة تقرير المشتريات اليومي (الجديدة) ---- */
   function renderDailyReport() {
     const selectedDate = document.getElementById("reportDate").value;
     const tbody = document.getElementById("dailyReportTable");
@@ -995,6 +1011,86 @@
     document.getElementById("repTotalPays").innerText = totalPays.toLocaleString() + " د.ع";
     document.getElementById("repNetTotal").innerText = netTotal.toLocaleString() + " د.ع";
     document.getElementById("repCount").innerText = dayKeys.length;
+  }
+
+  /* ---- وظائف الذكاء الاصطناعي (AI Engine) ---- */
+  async function callGemini(promptText) {
+    const apiKey = document.getElementById("geminiApiKey").value.trim();
+    if (!apiKey) {
+      alert("⚠️ يرجى إدخال مفتاح Gemini API في التبويب أولاً لاستخدام الذكاء الاصطناعي!");
+      return null;
+    }
+
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    
+    // إرسال سياق البيانات للذكاء الاصطناعي
+    const systemContext = `أنت مساعد ذكي ونظام محاسبي متقدم لمحل "الدباغ". البيانات الحالية المحفوظة في النظام هي كالتالي:
+- ديون الشركات: ${JSON.stringify(currentData.debts)}
+- سجل الحركات والمشتريات: ${JSON.stringify(currentData.transactions)}
+- قائمة المواد والأسعار: ${JSON.stringify(currentData.prices)}
+
+اجب على سؤال المستخدم بدقة ولغة عربية واضحة ومباشرة وبصيغة سهلة للقراءة.`;
+
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{ text: `${systemContext}\n\nسؤال المستخدم: ${promptText}` }]
+          }]
+        })
+      });
+
+      const data = await response.json();
+      if(data.candidates && data.candidates[0].content.parts[0].text) {
+        return data.candidates[0].content.parts[0].text;
+      } else {
+        return "⚠️ حدث خطأ في الاستجابة من الذكاء الاصطناعي. تأكد من صحة المفتاح.";
+      }
+    } catch(e) {
+      return "🔴 تعذر الاتصال بـ Gemini API: " + e.message;
+    }
+  }
+
+  async function sendAiMessage() {
+    const input = document.getElementById("aiPrompt");
+    const userText = input.value.trim();
+    if (!userText) return;
+
+    const chatBox = document.getElementById("aiChatBox");
+    
+    // إضافة رسالة المستخدم
+    chatBox.innerHTML += `<div class="ai-msg user">${userText}</div>`;
+    input.value = "";
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    // رسالة مؤقتة لجاري التفكير
+    const loadingId = "loading_" + Date.now();
+    chatBox.innerHTML += `<div class="ai-msg bot" id="${loadingId}">⏳ جاري التفكير والتحليل...</div>`;
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    const reply = await callGemini(userText);
+    
+    document.getElementById(loadingId).remove();
+    chatBox.innerHTML += `<div class="ai-msg bot">${reply.replace(/\n/g, '<br/>')}</div>`;
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }
+
+  async function runAiAnalysis() {
+    const chatBox = document.getElementById("aiChatBox");
+    chatBox.innerHTML += `<div class="ai-msg user">قم بإجراء تحليل ذكي وشامل لجميع حساباتي وديوني الحالية ورخص لي وضع المحل المالي.</div>`;
+    
+    const loadingId = "loading_" + Date.now();
+    chatBox.innerHTML += `<div class="ai-msg bot" id="${loadingId}">⏳ جاري قراءة كافة السجلات وتحليل الديون...</div>`;
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    const prompt = "قدم تحليلاً مالياً كاملاً وملخصاً: كم المجموع الكلي للديون المطلوبة مني للشركات؟ وما هي الشركة الأكبر ديناً؟ وتقديم نصيحة مالية سريعة لإدارة المشتريات بشكل أفضل بناء على الحركات.";
+    const reply = await callGemini(prompt);
+
+    document.getElementById(loadingId).remove();
+    chatBox.innerHTML += `<div class="ai-msg bot">${reply.replace(/\n/g, '<br/>')}</div>`;
+    chatBox.scrollTop = chatBox.scrollHeight;
   }
 
   function printSingleReceipt(transKey) {
