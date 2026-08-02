@@ -391,8 +391,8 @@
     <div class="grid">
       <div class="card">
         <h2 style="color: var(--ai-color);">🔑 إعدادات الذكاء الاصطناعي (Gemini)</h2>
-        <p style="font-size:12px; color:var(--text-muted);">مفتاح API الخاص بك مدمج وجاهز للاستخدام مباشرةً:</p>
-        <input type="password" id="geminiApiKey" value="AQ.Ab8RN6LdB0XBfxwzs5dB7ZtAe60ZE-JwYMI35kw-xtqcCHPV6Q" onchange="saveApiKey()" />
+        <p style="font-size:12px; color:var(--text-muted);">أدخل مفتاح Gemini API الخاص بك لتفعيل المساعد الذكي:</p>
+        <input type="password" id="geminiApiKey" placeholder="أدخل مفتاح API هنا..." onchange="saveApiKey()" />
         <button type="button" class="btn-ai" onclick="runAiAnalysis()">📊 إجراء تحليل ذكي شامل للحسابات والديون</button>
       </div>
 
@@ -496,9 +496,6 @@
     appId: "1:642364940251:web:6dd47f47d500ae9ed791fe"
   };
 
-  // المفتاح المدمج الخاص بك
-  const DEFAULT_GEMINI_KEY = "AQ.Ab8RN6LdB0XBfxwzs5dB7ZtAe60ZE-JwYMI35kw-xtqcCHPV6Q";
-
   let db;
   let currentData = { prices: {}, debts: {}, transactions: {} };
 
@@ -543,9 +540,9 @@
     document.getElementById("cloudStatus").innerHTML = "🔴 فشل الاتصال: " + e.message;
   }
 
-  // تحميل المفتاح المحفوظ أو استخدام المفتاح المدمج افتراضياً
-  const savedKey = localStorage.getItem("gemini_key");
-  document.getElementById("geminiApiKey").value = savedKey ? savedKey : DEFAULT_GEMINI_KEY;
+  // تحميل المفتاح المحفوظ سابقاً
+  const savedKey = localStorage.getItem("gemini_key") || "";
+  document.getElementById("geminiApiKey").value = savedKey;
   document.getElementById("reportDate").value = new Date().toISOString().split('T')[0];
 
   function saveApiKey() {
@@ -1017,11 +1014,15 @@
     document.getElementById("repCount").innerText = dayKeys.length;
   }
 
-  /* ---- وظائف الذكاء الاصطناعي (Gemini) ---- */
+  /* ---- وظائف الذكاء الاصطناعي المعدلة (Gemini) ---- */
   async function callGemini(promptText) {
-    const apiKey = document.getElementById("geminiApiKey").value.trim() || DEFAULT_GEMINI_KEY;
+    const apiKey = document.getElementById("geminiApiKey").value.trim();
 
-    // استخدام النموذج المباشر والمستقر
+    if (!apiKey) {
+      return "⚠️ يرجى إدخال مفتاح Gemini API في تبويب إعدادات الذكاء الاصطناعي أولاً.";
+    }
+
+    // رابط API الصحيح والسليم دون وسائط زائدة
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
     
     const systemContext = `أنت مساعد ذكي ونظام محاسبي لمحل "الدباغ". البيانات الحالية المحفوظة في النظام:
@@ -1059,7 +1060,7 @@
       }
     } catch(e) {
       console.error("Fetch Exception:", e);
-      return "🔴 تعذر الاتصال بـ Google API. إذا كنت تستخدم متصفح Brave، يرجى إيقاف حماية الدرع (Brave Shields) لهذا الملف.";
+      return "🔴 تعذر الاتصال بـ Google API. تحقق من اتصال الإنترنت أو إعدادات المتصفح.";
     }
   }
 
