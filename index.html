@@ -603,7 +603,7 @@
     if(confirm("هل أنت متأكد من حذف سجل هذه الشركة بالكامل؟")) db.child("debts/" + key).remove();
   }
 
-  /* ---- تسجيل وتعديل الحركات ---- */
+  /* ---- تسجيل وتعديل وحذف الحركات ---- */
   document.getElementById("transForm").onsubmit = (e) => {
     e.preventDefault();
     if(!db) return;
@@ -700,6 +700,35 @@
     });
   }
 
+  // ---- دالة حذف الحركة وتصحيح رصيد الدين تلقائياً ----
+  function deleteTransaction(transKey) {
+    const t = currentData.transactions[transKey];
+    if (!t) return;
+
+    if (!confirm(`هل أنت متأكد من حذف هذه الحركة؟\nالمبلغ: ${t.amount.toLocaleString()} د.ع (${t.type === 'pay' ? 'تسديد' : 'قائمة'})`)) {
+      return;
+    }
+
+    const compId = t.companyId;
+    const company = currentData.debts[compId];
+
+    // تعديل دين الشركة بعكس أثر الحركة المحذوفة
+    if (company) {
+      let currentCompanyDebt = company.amount || 0;
+      if (t.type === 'pay') {
+        currentCompanyDebt += t.amount; // نعيد المبلغ المسدد للحساب
+      } else {
+        currentCompanyDebt -= t.amount; // نخصم القائمة من الحساب
+      }
+      db.child("debts/" + compId + "/amount").set(currentCompanyDebt);
+    }
+
+    // حذف الحركة من قاعدة البيانات
+    db.child("transactions/" + transKey).remove().then(() => {
+      alert("🔴 تم حذف الحركة وإعادة تعديل رصيد الدين بنجاح!");
+    });
+  }
+
   function renderCompanySelect() {
     const select1 = document.getElementById("tCompany");
     const select2 = document.getElementById("statementSelect");
@@ -758,8 +787,9 @@
         <td><span class="${isPay ? 'badge-pay' : 'badge-bill'}">${isPay ? 'تسديد (واصل)' : 'قائمة جديدة'}</span></td>
         <td style="font-weight:700;">${t.amount.toLocaleString()} د.ع</td>
         <td>${t.note || '-'}</td>
-        <td class="no-print">
-          <button class="btn-edit" onclick="openTransEditModal('${k}')">✏️ تعديل</button>
+        <td class="no-print" style="display:flex; gap:4px; justify-content:center;">
+          <button class="btn-edit" onclick="openTransEditModal('${k}')">✏️</button>
+          <button class="btn-delete" onclick="deleteTransaction('${k}')">🗑️</button>
         </td>
       </tr>`;
     });
@@ -819,9 +849,10 @@
         <td><span class="${isPay ? 'badge-pay' : 'badge-bill'}">${isPay ? 'تسديد' : 'قائمة جديدة'}</span></td>
         <td style="font-weight:700;">${t.amount.toLocaleString()} د.ع</td>
         <td>${t.note || '-'}</td>
-        <td class="no-print">
-          <button class="btn-receipt" onclick="printSingleReceipt('${k}')">🧾 وصل</button>
-          <button class="btn-edit" onclick="openTransEditModal('${k}')">✏️ تعديل</button>
+        <td class="no-print" style="display:flex; gap:4px; justify-content:center;">
+          <button class="btn-receipt" onclick="printSingleReceipt('${k}')">🧾</button>
+          <button class="btn-edit" onclick="openTransEditModal('${k}')">✏️</button>
+          <button class="btn-delete" onclick="deleteTransaction('${k}')">🗑️</button>
         </td>
       </tr>`;
     });
