@@ -204,15 +204,9 @@
 
     .btn-edit { background: #0284c7; color: white; padding: 4px 8px; border-radius: 6px; border: none; cursor: pointer; font-size: 12px; }
     .btn-delete { background: #ef4444; color: white; padding: 4px 8px; border-radius: 6px; border: none; cursor: pointer; font-size: 12px; }
-    .btn-receipt { background: #d97706; color: white; padding: 4px 8px; border-radius: 6px; border: none; cursor: pointer; font-size: 12px; }
 
     .badge-pay { background: #dcfce7; color: #166534; padding: 4px 8px; border-radius: 12px; font-weight: 800; font-size: 11px; }
     .badge-bill { background: #fee2e2; color: #991b1b; padding: 4px 8px; border-radius: 12px; font-weight: 800; font-size: 11px; }
-
-    .statement-summary {
-      display: flex; justify-content: space-between; background: #f1f5f9;
-      padding: 12px; border-radius: 8px; margin: 12px 0; font-weight: 800; font-size: 13px; flex-wrap: wrap; gap: 8px;
-    }
 
     .report-cards {
       display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;
@@ -594,8 +588,6 @@
   </div>
 </div>
 
-<div id="receiptPrintArea"></div>
-
 <script>
   // ---- نظام القفل بالرمز السري ----
   const DEFAULT_APP_PIN = "1234";
@@ -898,7 +890,6 @@
     const dateStr = now.toISOString().split('T')[0];
     const timeStr = now.toTimeString().split(' ')[0].substring(0, 5);
 
-    // تحديث قاعدة البيانات
     db.child("debts/" + compId + "/amount").set(newAmount);
     db.child("transactions").push().set({
       companyId: compId,
@@ -973,7 +964,7 @@
     if(confirm("هل أنت متأكد من حذف هذه الشركة؟")) db.child("debts/" + key).remove();
   }
 
-  /* ---- كشف الحساب والتقارير ---- */
+  /* ---- كشف الحساب بالتصميم المحاسبي (مدين / دائن / رصيد) ---- */
   function generateStatement() {
     const compId = document.getElementById("statementSelect").value;
     const container = document.getElementById("statementContent");
@@ -984,37 +975,79 @@
     }
 
     const comp = currentData.debts[compId];
+    
+    // جلب وترتيب حركات الشركة زمنياً لحساب الرصيد بشكل صحيح
     const trans = Object.keys(currentData.transactions)
       .map(k => currentData.transactions[k])
-      .filter(t => t.companyId === compId);
+      .filter(t => t.companyId === compId)
+      .sort((a, b) => new Date(a.date + ' ' + (a.time || '00:00')) - new Date(b.date + ' ' + (b.time || '00:00')));
+
+    let runningBalance = 0;
 
     let html = `
-      <div class="statement-summary">
-        <div>اسم الشركة: <strong>${comp.name}</strong></div>
-        <div>الهاتف: <strong>${comp.phone || '-'}</strong></div>
-        <div>الدين المتبقي: <span style="color:var(--debt);">${(comp.amount || 0).toLocaleString()} د.ع</span></div>
+      <div class="statement-summary" style="background:#f8fafc; border:1px solid var(--border); padding:15px; border-radius:8px; margin-bottom:15px;">
+        <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+          <div>🏢 اسم الشركة: <strong>${comp.name}</strong></div>
+          <div>📞 الهاتف: <strong>${comp.phone || '-'}</strong></div>
+          <div>💰 الدين الحالي: <strong style="color:var(--debt); font-size:16px;">${(comp.amount || 0).toLocaleString()} د.ع</strong></div>
+        </div>
       </div>
+      
       <div class="table-wrapper">
-        <table>
-          <thead><tr><th>التاريخ</th><th>النوع</th><th>المبلغ (د.ع)</th><th>ملاحظات</th></tr></thead>
+        <table style="width:100%; text-align:center; border-collapse:collapse;">
+          <thead>
+            <tr style="background-color:#e2e8f0; color:#1e293b;">
+              <th>#</th>
+              <th>التاريخ والوقت</th>
+              <th>الملاحظات / البيان</th>
+              <th style="color:#dc2626;">مدين (قائمة / مطلوب)</th>
+              <th style="color:#16a34a;">دائن (واصل / تسديد)</th>
+              <th style="background-color:#cbd5e1;">الرصيد (د.ع)</th>
+            </tr>
+          </thead>
           <tbody>`;
 
     if(trans.length === 0) {
-      html += `<tr><td colspan="4">لا توجد حركات سابقة لهذه الشركة</td></tr>`;
+      html += `<tr><td colspan="6" style="padding:20px; color:var(--text-muted);">لا توجد حركات مسجلة لهذه الشركة حتى الآن</td></tr>`;
     } else {
-      trans.forEach(t => {
-        html += `<tr>
-          <td>${t.date} ${t.time || ''}</td>
-          <td><span class="${t.type === 'pay' ? 'badge-pay' : 'badge-bill'}">${t.type === 'pay' ? 'تسديد' : 'قائمة'}</span></td>
-          <td>${t.amount.toLocaleString()} د.ع</td>
-          <td>${t.note || '-'}</td>
-        </tr>`;
+      trans.forEach((t, i) => {
+        let debit = 0;  // مدين (زيادة الدين)
+        let credit = 0; // دائن (تخفيض الدين)
+
+        if (t.type === 'bill') {
+          debit = t.amount;
+          runningBalance += t.amount;
+        } else if (t.type === 'pay') {
+          credit = t.amount;
+          runningBalance -= t.amount;
+        }
+
+        html += `
+          <tr style="border-bottom:1px solid #e2e8f0;">
+            <td>${i + 1}</td>
+            <td>${t.date} <small style="color:var(--text-muted);">${t.time || ''}</small></td>
+            <td style="text-align:right; padding-right:15px;">${t.note || (t.type === 'pay' ? 'تسديد نقد' : 'فاتورة مشتريات')}</td>
+            <td style="font-weight:700; color:${debit > 0 ? '#dc2626' : '#94a3b8'};">
+              ${debit > 0 ? debit.toLocaleString() : '-'}
+            </td>
+            <td style="font-weight:700; color:${credit > 0 ? '#16a34a' : '#94a3b8'};">
+              ${credit > 0 ? credit.toLocaleString() : '-'}
+            </td>
+            <td style="font-weight:800; background-color:#f8fafc; color:#0f172a;">
+              ${runningBalance.toLocaleString()}
+            </td>
+          </tr>`;
       });
     }
 
-    html += `</tbody></table></div>
-      <div class="no-print" style="margin-top:10px; text-align:left;">
-        <button onclick="window.print()" class="btn-secondary" style="width:auto; padding:6px 12px; font-size:12px;">🖨️ طباعة كشف الحساب</button>
+    html += `
+          </tbody>
+        </table>
+      </div>
+      
+      <div class="no-print" style="margin-top:15px; display:flex; justify-content:space-between; align-items:center;">
+        <span style="font-size:12px; color:var(--text-muted);">عدد الحركات: ${trans.length}</span>
+        <button onclick="window.print()" class="btn-secondary" style="width:auto; padding:8px 16px; font-size:13px;">🖨️ طباعة كشف الحساب</button>
       </div>`;
 
     container.innerHTML = html;
@@ -1058,7 +1091,7 @@
     document.getElementById("repCount").innerText = count;
   }
 
-  /* ---- التصدير النسخ الاحتياطي ---- */
+  /* ---- التصدير والنسخ الاحتياطي ---- */
   function exportCsv(type) {
     let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
     if(type === 'prices') {
