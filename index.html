@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>دليل الأسعار وديون الشركات - محل الدباغ</title>
+  <title>نظام إدارة الأسعار والديون والمشتريات - محل الدباغ Pro</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <!-- مكتبات Firebase السحابية -->
@@ -10,30 +10,31 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap');
 
     :root {
       --primary: #2563eb;
+      --primary-dark: #1d4ed8;
       --debt: #dc2626;
       --debt-hover: #b91c1c;
       --success: #16a34a;
       --price: #0284c7;
       --ai-color: #7c3aed;
       --warning: #d97706;
-      --bg: #f8fafc;
+      --bg: #f1f5f9;
       --card: #ffffff;
-      --border: #e2e8f0;
+      --border: #cbd5e1;
       --text-main: #0f172a;
       --text-muted: #64748b;
       --radius: 12px;
       --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
-      --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.07);
+      --shadow-md: 0 4px 10px -2px rgba(0,0,0,0.08);
     }
 
     * { box-sizing: border-box; }
 
     body {
-      font-family: 'Tajawal', system-ui, sans-serif;
+      font-family: 'Tajawal', system-ui, -apple-system, sans-serif;
       background-color: var(--bg);
       color: var(--text-main);
       margin: 0; padding: 0;
@@ -41,9 +42,9 @@
     }
 
     header {
-      background: linear-gradient(135deg, #0f172a, #1e293b);
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
       color: white;
-      padding: 15px 20px;
+      padding: 16px 24px;
       font-size: 20px;
       font-weight: 800;
       box-shadow: var(--shadow-md);
@@ -51,13 +52,13 @@
       justify-content: space-between;
       align-items: center;
       flex-wrap: wrap;
-      gap: 10px;
+      gap: 12px;
     }
 
-    .container { max-width: 1350px; margin: 20px auto; padding: 0 15px; }
+    .container { max-width: 1400px; margin: 20px auto; padding: 0 15px; }
 
     #cloudStatus {
-      padding: 10px 15px;
+      padding: 10px 16px;
       text-align: center;
       font-weight: 700;
       border-radius: var(--radius);
@@ -65,26 +66,48 @@
       background: #e2e8f0;
       color: var(--text-muted);
       font-size: 13px;
+      transition: all 0.3s ease;
     }
 
     .rate-box {
-      background: rgba(255,255,255,0.1);
-      padding: 6px 12px;
+      background: rgba(255,255,255,0.12);
+      padding: 6px 14px;
       border-radius: 8px;
       font-size: 13px;
       display: flex;
       gap: 8px;
       align-items: center;
+      border: 1px solid rgba(255,255,255,0.2);
     }
     .rate-box input {
-      width: 85px; margin: 0; padding: 4px 8px; font-size: 13px; text-align: center;
+      width: 90px; margin: 0; padding: 4px 8px; font-size: 13px; text-align: center; border-radius: 6px;
     }
 
-    .tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+    /* Dashboard Stats Bar */
+    .dashboard-summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    .dash-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .dash-card .label { font-size: 12px; color: var(--text-muted); font-weight: 700; margin-bottom: 4px; }
+    .dash-card .value { font-size: 20px; font-weight: 900; }
+
+    .tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
     .tab-btn {
-      flex: 1; min-width: 180px; padding: 14px; font-size: 15px; font-weight: 700;
+      flex: 1; min-width: 160px; padding: 12px; font-size: 14px; font-weight: 800;
       background: #e2e8f0; color: var(--text-muted); border: none; border-radius: var(--radius);
-      cursor: pointer; transition: all 0.2s ease; font-family: inherit;
+      cursor: pointer; transition: all 0.2s ease; font-family: inherit; text-align: center;
     }
     .tab-btn.active[data-tab="prices"] { background: var(--price); color: white; }
     .tab-btn.active[data-tab="debts"] { background: var(--debt); color: white; }
@@ -101,14 +124,15 @@
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 18px;
+      padding: 20px;
       box-shadow: var(--shadow-sm);
       margin-bottom: 20px;
     }
 
     h2 {
-      margin-top: 0; font-size: 17px; font-weight: 800;
+      margin-top: 0; font-size: 16px; font-weight: 800;
       border-bottom: 2px solid var(--border); padding-bottom: 10px; margin-bottom: 15px;
+      display: flex; justify-content: space-between; align-items: center;
     }
 
     input, select, textarea {
@@ -120,28 +144,32 @@
 
     button {
       width: 100%; padding: 11px; border: none; border-radius: 8px;
-      color: white; font-weight: 700; cursor: pointer; font-size: 14px; font-family: inherit;
+      color: white; font-weight: 800; cursor: pointer; font-size: 14px; font-family: inherit;
+      transition: opacity 0.2s ease;
     }
+    button:hover { opacity: 0.9; }
+
     .btn-price { background: var(--price); grid-column: span 2; }
     .btn-debt { background: var(--debt); }
     .btn-success { background: var(--success); }
     .btn-ai { background: var(--ai-color); }
+    .btn-secondary { background: #475569; }
 
     .table-wrapper { overflow-x: auto; margin-top: 10px; border-radius: 8px; border: 1px solid var(--border); }
     table { width: 100%; border-collapse: collapse; font-size: 13px; background: white; }
-    th, td { padding: 9px 11px; text-align: center; border-bottom: 1px solid var(--border); }
-    th { background: #f1f5f9; color: var(--text-muted); font-weight: 700; }
+    th, td { padding: 10px 12px; text-align: center; border-bottom: 1px solid var(--border); }
+    th { background: #f1f5f9; color: var(--text-muted); font-weight: 800; }
 
     .btn-edit { background: #0284c7; color: white; padding: 4px 8px; border-radius: 6px; border: none; cursor: pointer; font-size: 12px; }
     .btn-delete { background: #ef4444; color: white; padding: 4px 8px; border-radius: 6px; border: none; cursor: pointer; font-size: 12px; }
     .btn-receipt { background: #d97706; color: white; padding: 4px 8px; border-radius: 6px; border: none; cursor: pointer; font-size: 12px; }
 
-    .badge-pay { background: #dcfce7; color: #166534; padding: 3px 8px; border-radius: 12px; font-weight: 700; font-size: 11px; }
-    .badge-bill { background: #fee2e2; color: #991b1b; padding: 3px 8px; border-radius: 12px; font-weight: 700; font-size: 11px; }
+    .badge-pay { background: #dcfce7; color: #166534; padding: 4px 8px; border-radius: 12px; font-weight: 800; font-size: 11px; }
+    .badge-bill { background: #fee2e2; color: #991b1b; padding: 4px 8px; border-radius: 12px; font-weight: 800; font-size: 11px; }
 
     .statement-summary {
       display: flex; justify-content: space-between; background: #f1f5f9;
-      padding: 12px; border-radius: 8px; margin: 12px 0; font-weight: 700; font-size: 13px; flex-wrap: wrap; gap: 8px;
+      padding: 12px; border-radius: 8px; margin: 12px 0; font-weight: 800; font-size: 13px; flex-wrap: wrap; gap: 8px;
     }
 
     .report-cards {
@@ -150,21 +178,26 @@
     .report-card {
       background: white; border: 1px solid var(--border); padding: 15px; border-radius: var(--radius); text-align: center;
     }
-    .report-card .title { font-size: 12px; color: var(--text-muted); font-weight: 700; margin-bottom: 6px; }
-    .report-card .val { font-size: 18px; font-weight: 800; }
+    .report-card .title { font-size: 12px; color: var(--text-muted); font-weight: 800; margin-bottom: 6px; }
+    .report-card .val { font-size: 18px; font-weight: 900; }
 
     /* AI Chat UI */
     .ai-chat-box {
       background: #f8fafc; border: 1px solid var(--border); border-radius: 8px;
-      height: 320px; overflow-y: auto; padding: 15px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 10px;
+      height: 340px; overflow-y: auto; padding: 15px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 10px;
     }
-    .ai-msg { max-width: 80%; padding: 10px 14px; border-radius: 12px; font-size: 14px; line-height: 1.5; }
+    .ai-msg { max-width: 85%; padding: 10px 14px; border-radius: 12px; font-size: 14px; line-height: 1.6; }
     .ai-msg.user { background: var(--primary); color: white; align-self: flex-start; border-bottom-right-radius: 2px; }
-    .ai-msg.bot { background: #e9d5ff; color: #4c1d95; align-self: flex-end; border-bottom-left-radius: 2px; }
+    .ai-msg.bot { background: #f3e8ff; color: #581c87; align-self: flex-end; border-bottom-left-radius: 2px; }
+
+    .ai-quick-btn {
+      background: #e9d5ff; color: #6b21a8; padding: 6px 12px; border-radius: 20px; font-size: 12px; cursor: pointer; border: none; font-weight: 700;
+    }
+    .ai-quick-btn:hover { background: #d8b4fe; }
 
     .modal {
       display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%;
-      background-color: rgba(15, 23, 42, 0.6); backdrop-filter: blur(3px);
+      background-color: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px);
       justify-content: center; align-items: center;
     }
     .modal-content {
@@ -185,16 +218,37 @@
 <body>
 
 <header class="no-print">
-  <div>📦 دليل الأسعار وديون الشركات - محل الدباغ</div>
+  <div>📦 نظام الدباغ المحاسبي Pro</div>
   <div class="rate-box">
     <span>💵 $100 =</span>
-    <input type="number" id="usdExchangeRate" value="150000" onchange="renderDebts(); generateStatement(); renderDailyReport();" title="سعر صرف 100 دولار" />
+    <input type="number" id="usdExchangeRate" value="150000" onchange="updateAllViews()" title="سعر صرف 100 دولار" />
     <span>د.ع</span>
   </div>
 </header>
 
 <div class="container">
   <div id="cloudStatus" class="no-print">🔄 جاري الاتصال بالسحابة...</div>
+
+  <!-- لوحة المؤشرات السريعة (Dashboard Stats) -->
+  <div class="dashboard-summary no-print">
+    <div class="dash-card">
+      <div class="label">💳 إجمالي ديون الشركات المطلوب دفعها</div>
+      <div class="value" id="dashTotalDebt" style="color:var(--debt);">0 د.ع</div>
+      <div style="font-size:11px; color:var(--text-muted);" id="dashTotalDebtUsd">$ 0.00</div>
+    </div>
+    <div class="dash-card">
+      <div class="label">🏢 عدد الشركات / المجهزين</div>
+      <div class="value" id="dashCompaniesCount" style="color:var(--primary);">0</div>
+    </div>
+    <div class="dash-card">
+      <div class="label">📦 عدد المواد في الدليل</div>
+      <div class="value" id="dashPricesCount" style="color:var(--price);">0</div>
+    </div>
+    <div class="dash-card">
+      <div class="label">📅 حركات المشتريات اليوم</div>
+      <div class="value" id="dashTodayCount" style="color:#8b5cf6;">0</div>
+    </div>
+  </div>
 
   <!-- أزرار التنقل الرئيسية -->
   <div class="tabs no-print">
@@ -213,11 +267,11 @@
           <input type="text" id="pName" placeholder="اسم المادة" style="grid-column: span 2;" required />
           <input type="text" id="pCode" placeholder="الباركود / الكود (اختياري)" style="grid-column: span 2;" />
           
-          <div style="grid-column: span 2; font-weight:700; color:var(--price); font-size:12px;">📦 أسعار الباكيت:</div>
+          <div style="grid-column: span 2; font-weight:800; color:var(--price); font-size:12px;">📦 أسعار الباكيت:</div>
           <input type="number" id="pPacketCost" placeholder="كلفة الباكيت (د.ع)" />
           <input type="number" id="pPacketSell" placeholder="بيع الباكيت (د.ع)" />
 
-          <div style="grid-column: span 2; font-weight:700; color:var(--price); font-size:12px;">📦 أسعار الكارتون الكامل:</div>
+          <div style="grid-column: span 2; font-weight:800; color:var(--price); font-size:12px;">📦 أسعار الكارتون الكامل:</div>
           <input type="number" id="pCartonCost" placeholder="كلفة الكارتون (د.ع)" />
           <input type="number" id="pCartonSell" placeholder="بيع الكارتون (د.ع)" />
 
@@ -226,8 +280,11 @@
       </div>
 
       <div class="card">
-        <h2 style="color: var(--price);">🔍 الاستعلام السريع عن الأسعار</h2>
-        <input type="text" id="searchPrice" placeholder="🔍 اكتب اسم المادة أو امسح الباركود..." oninput="renderPrices()" autofocus style="font-size:16px; font-weight:700;" />
+        <h2 style="color: var(--price);">
+          <span>🔍 الاستعلام السريع عن الأسعار</span>
+          <button type="button" class="btn-secondary" onclick="exportCsv('prices')" style="width:auto; padding:4px 10px; font-size:11px;">📥 تصدير Excel</button>
+        </h2>
+        <input type="text" id="searchPrice" placeholder="🔍 اكتب اسم المادة أو امسح الباركود..." oninput="renderPrices()" autofocus style="font-size:15px; font-weight:700;" />
         <div class="table-wrapper">
           <table>
             <thead>
@@ -277,14 +334,22 @@
               <option value="pay">تسديد (تنقيص من الدين المطلوب عليك)</option>
               <option value="bill">قائمة جديدة (زيادة الدين المطلوب عليك)</option>
             </select>
-            <input type="number" id="tAmount" placeholder="المبلغ بالدينار (د.ع)" required />
+            
+            <div style="display:flex; gap:8px;">
+              <input type="number" id="tAmount" placeholder="المبلغ (د.ع)" required style="flex:2;" />
+              <input type="number" id="tAmountUsd" placeholder="أو بالـ $" style="flex:1;" oninput="calcIqdFromUsd()" />
+            </div>
+
             <input type="text" id="tNote" placeholder="ملاحظات / رقم القائمة (اختياري)" />
             <button type="submit" class="btn-success">حفظ الحركة وتحديث الدين</button>
           </form>
         </div>
 
         <div class="card">
-          <h2 style="color: var(--debt);">📒 ديون الشركات الحالية</h2>
+          <h2 style="color: var(--debt);">
+            <span>📒 ديون الشركات الحالية</span>
+            <button type="button" class="btn-secondary" onclick="exportCsv('debts')" style="width:auto; padding:4px 10px; font-size:11px;">📥 تصدير Excel</button>
+          </h2>
           <input type="text" id="searchDebt" placeholder="ابحث باسم الشركة..." oninput="renderDebts()" />
           <div class="table-wrapper">
             <table>
@@ -337,7 +402,7 @@
       <h2 style="color: #8b5cf6;">📊 تقرير حركات ومشتريات اليوم</h2>
       
       <div class="no-print" style="display:flex; gap:10px; align-items:center; margin-bottom:20px; flex-wrap:wrap;">
-        <label style="font-weight:700;">حدد التاريخ:</label>
+        <label style="font-weight:800;">حدد التاريخ:</label>
         <input type="date" id="reportDate" onchange="renderDailyReport()" style="width:auto; margin:0;" />
         <button type="button" onclick="setReportDateToday()" style="width:auto; background:#8b5cf6;">📅 اليوم</button>
       </div>
@@ -381,7 +446,7 @@
       </div>
 
       <div class="no-print" style="margin-top:15px; text-align:left;">
-        <button type="button" onclick="window.print()" style="width:auto; background:#475569; padding:8px 16px;">🖨️ طباعة التقرير اليومي</button>
+        <button type="button" onclick="window.print()" class="btn-secondary" style="width:auto; padding:8px 16px;">🖨️ طباعة التقرير اليومي</button>
       </div>
     </div>
   </div>
@@ -391,18 +456,27 @@
     <div class="grid">
       <div class="card">
         <h2 style="color: var(--ai-color);">🔑 إعدادات الذكاء الاصطناعي (Gemini)</h2>
-        <p style="font-size:12px; color:var(--text-muted);">أدخل مفتاح Gemini API الخاص بك لتفعيل المساعد الذكي:</p>
+        <p style="font-size:12px; color:var(--text-muted);">أدخل مفتاح Gemini API الخاص بك لتفعيل المساعد الذكي وإجراء التحليلات:</p>
         <input type="password" id="geminiApiKey" placeholder="أدخل مفتاح API هنا..." onchange="saveApiKey()" />
-        <button type="button" class="btn-ai" onclick="runAiAnalysis()">📊 إجراء تحليل ذكي شامل للحسابات والديون</button>
+        <button type="button" class="btn-ai" onclick="runAiAnalysis()">📊 إجراء تحليل مالـي واستشاري شامل</button>
+
+        <div style="margin-top:15px;">
+          <label style="font-size:12px; font-weight:800; color:var(--text-muted);">أسئلة سريعة مقترحة:</label>
+          <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;">
+            <button type="button" class="ai-quick-btn" onclick="askQuick('من هي أعلى 3 شركات أطلبها ديون حالياً؟')">🔝 أعلى 3 شركات ديوناً</button>
+            <button type="button" class="ai-quick-btn" onclick="askQuick('كم مجموع المشتريات المسجلة اليوم؟')">🛒 مجموع مشتريات اليوم</button>
+            <button type="button" class="ai-quick-btn" onclick="askQuick('اعطني ملخصاً لسجل أسعار المواد في الدليل')">📦 ملخص دليل الأسعار</button>
+          </div>
+        </div>
       </div>
 
       <div class="card">
         <h2 style="color: var(--ai-color);">💬 المحادثة مع المساعد الذكي</h2>
         <div class="ai-chat-box" id="aiChatBox">
-          <div class="ai-msg bot">مرحباً بك! أنا مساعدك الذكي في محل الدباغ. أستطيع الإجابة عن حساباتك، المشتريات، الديون، وأسعار المواد المسجلة. كيف أستطيع مساعدتك اليوم؟</div>
+          <div class="ai-msg bot">مرحباً بك علي! أنا مساعدك الذكي لنظام المحل. أستطيع الإجابة عن كافة تفاصيل الديون والأسعار والحركات المالية المخزنة لديك. كيف يمكنني مساعدتك؟</div>
         </div>
         <div style="display:flex; gap:8px;">
-          <input type="text" id="aiPrompt" placeholder="اسأل المساعد الذكي (مثلاً: من هي أكثر شركة تطلبني ديون؟)..." onkeydown="if(event.key==='Enter') sendAiMessage()" style="margin:0;" />
+          <input type="text" id="aiPrompt" placeholder="اسأل المساعد الذكي..." onkeydown="if(event.key==='Enter') sendAiMessage()" style="margin:0;" />
           <button type="button" class="btn-ai" onclick="sendAiMessage()" style="width: auto; padding: 10px 20px;">إرسال</button>
         </div>
       </div>
@@ -410,7 +484,7 @@
   </div>
 
   <div class="no-print" style="margin-top:20px; text-align:center;">
-    <button type="button" style="background:#475569; width:auto; padding:8px 16px;" onclick="exportBackup()">📥 تصدير نسخة احتياطية (JSON)</button>
+    <button type="button" class="btn-secondary" style="width:auto; padding:10px 20px;" onclick="exportBackup()">📥 تصدير نسخة احتياطية كاملة (JSON)</button>
   </div>
 </div>
 
@@ -419,9 +493,9 @@
   <div class="modal-content">
     <h3 style="margin-top:0; color:var(--price);">✏️ تعديل بيانات المادة</h3>
     <input type="hidden" id="editKey" />
-    <label style="font-size: 12px; font-weight:700;">اسم المادة:</label>
+    <label style="font-size: 12px; font-weight:800;">اسم المادة:</label>
     <input type="text" id="editName" required />
-    <label style="font-size: 12px; font-weight:700;">الكود:</label>
+    <label style="font-size: 12px; font-weight:800;">الكود:</label>
     <input type="text" id="editCode" />
     
     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
@@ -433,7 +507,7 @@
 
     <div style="display:flex; gap:8px; margin-top:10px;">
       <button type="button" onclick="savePriceEdit()" class="btn-price">حفظ</button>
-      <button type="button" onclick="closeEditModal()" style="background:#64748b;">إلغاء</button>
+      <button type="button" onclick="closeEditModal()" class="btn-secondary">إلغاء</button>
     </div>
   </div>
 </div>
@@ -442,16 +516,16 @@
   <div class="modal-content">
     <h3 style="margin-top:0; color:var(--debt);">✏️ تعديل حساب الشركة</h3>
     <input type="hidden" id="editCompKey" />
-    <label style="font-size: 12px; font-weight:700;">اسم الشركة:</label>
+    <label style="font-size: 12px; font-weight:800;">اسم الشركة:</label>
     <input type="text" id="editCompName" required />
-    <label style="font-size: 12px; font-weight:700;">رقم الهاتف:</label>
+    <label style="font-size: 12px; font-weight:800;">رقم الهاتف:</label>
     <input type="text" id="editCompPhone" />
-    <label style="font-size: 12px; font-weight:700;">الدين الحالي (دينار):</label>
+    <label style="font-size: 12px; font-weight:800;">الدين الحالي (دينار):</label>
     <input type="number" id="editCompAmount" required />
 
     <div style="display:flex; gap:8px; margin-top:10px;">
       <button type="button" onclick="saveCompanyEdit()" class="btn-debt">حفظ</button>
-      <button type="button" onclick="closeCompanyEditModal()" style="background:#64748b;">إلغاء</button>
+      <button type="button" onclick="closeCompanyEditModal()" class="btn-secondary">إلغاء</button>
     </div>
   </div>
 </div>
@@ -464,21 +538,21 @@
     <input type="hidden" id="editTransOldAmount" />
     <input type="hidden" id="editTransOldType" />
 
-    <label style="font-size: 12px; font-weight:700;">نوع الحركة:</label>
+    <label style="font-size: 12px; font-weight:800;">نوع الحركة:</label>
     <select id="editTransType" required>
       <option value="pay">تسديد (واصل)</option>
       <option value="bill">قائمة جديدة</option>
     </select>
 
-    <label style="font-size: 12px; font-weight:700;">المبلغ (دينار):</label>
+    <label style="font-size: 12px; font-weight:800;">المبلغ (دينار):</label>
     <input type="number" id="editTransAmount" required />
 
-    <label style="font-size: 12px; font-weight:700;">الملاحظات / رقم القائمة:</label>
+    <label style="font-size: 12px; font-weight:800;">الملاحظات / رقم القائمة:</label>
     <input type="text" id="editTransNote" />
 
     <div style="display:flex; gap:8px; margin-top:10px;">
       <button type="button" onclick="saveTransEdit()" class="btn-success">حفظ التعديل</button>
-      <button type="button" onclick="closeTransEditModal()" style="background:#64748b;">إلغاء</button>
+      <button type="button" onclick="closeTransEditModal()" class="btn-secondary">إلغاء</button>
     </div>
   </div>
 </div>
@@ -509,6 +583,21 @@
     return "$ " + usd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
 
+  function calcIqdFromUsd() {
+    const usd = parseFloat(document.getElementById("tAmountUsd").value) || 0;
+    const rate = parseFloat(document.getElementById("usdExchangeRate").value) || 150000;
+    if(usd > 0) {
+      document.getElementById("tAmount").value = Math.round((usd / 100) * rate);
+    }
+  }
+
+  function updateAllViews() {
+    renderDebts();
+    generateStatement();
+    renderDailyReport();
+    updateDashboard();
+  }
+
   function setReportDateToday() {
     const today = new Date().toISOString().split('T')[0];
     document.getElementById("reportDate").value = today;
@@ -521,7 +610,7 @@
 
     db.on("value", (snapshot) => {
       const status = document.getElementById("cloudStatus");
-      status.innerHTML = "🟢 متصل ومتزامن مع السحابة";
+      status.innerHTML = "🟢 متصل ومتزامن سحابياً مع البيانات";
       status.style.background = "#dcfce7"; status.style.color = "#166534";
 
       const val = snapshot.val() || {};
@@ -535,12 +624,12 @@
       renderTransactions();
       generateStatement();
       renderDailyReport();
+      updateDashboard();
     });
   } catch(e) {
-    document.getElementById("cloudStatus").innerHTML = "🔴 فشل الاتصال: " + e.message;
+    document.getElementById("cloudStatus").innerHTML = "🔴 فشل الاتصال بالسحابة: " + e.message;
   }
 
-  // تحميل المفتاح المحفوظ سابقاً
   const savedKey = localStorage.getItem("gemini_key") || "";
   document.getElementById("geminiApiKey").value = savedKey;
   document.getElementById("reportDate").value = new Date().toISOString().split('T')[0];
@@ -558,6 +647,21 @@
       document.getElementById(this.dataset.tab + "Section").classList.add("active");
     };
   });
+
+  function updateDashboard() {
+    let totalDebtIQD = 0;
+    const debtKeys = Object.keys(currentData.debts);
+    debtKeys.forEach(k => { totalDebtIQD += (currentData.debts[k].amount || 0); });
+
+    document.getElementById("dashTotalDebt").innerText = totalDebtIQD.toLocaleString() + " د.ع";
+    document.getElementById("dashTotalDebtUsd").innerText = formatUSD(totalDebtIQD);
+    document.getElementById("dashCompaniesCount").innerText = debtKeys.length;
+    document.getElementById("dashPricesCount").innerText = Object.keys(currentData.prices).length;
+
+    const todayStr = new Date().toISOString().split('T')[0];
+    const todayTrans = Object.keys(currentData.transactions).filter(k => currentData.transactions[k].date === todayStr);
+    document.getElementById("dashTodayCount").innerText = todayTrans.length;
+  }
 
   /* ---- إدارة الأسعار ---- */
   document.getElementById("priceForm").onsubmit = (e) => {
@@ -588,7 +692,7 @@
     });
 
     if(filtered.length === 0) {
-      tbody.innerHTML = "<tr><td colspan='8' style='color:var(--text-muted);'>لا توجد مواد مسجلة بهذه التسمية</td></tr>";
+      tbody.innerHTML = "<tr><td colspan='8' style='color:var(--text-muted);'>لا توجد مواد مسجلة مطابقة للبحث</td></tr>";
       return;
     }
 
@@ -599,9 +703,9 @@
         <td><strong>${item.name}</strong></td>
         <td>${item.code || '-'}</td>
         <td>${(item.packetCost || 0).toLocaleString()} د.ع</td>
-        <td style='color:var(--price); font-weight:700;'>${(item.packetSell || 0).toLocaleString()} د.ع</td>
+        <td style='color:var(--price); font-weight:800;'>${(item.packetSell || 0).toLocaleString()} د.ع</td>
         <td>${(item.cartonCost || 0).toLocaleString()} د.ع</td>
-        <td style='color:#b45309; font-weight:700;'>${(item.cartonSell || 0).toLocaleString()} د.ع</td>
+        <td style='color:#b45309; font-weight:800;'>${(item.cartonSell || 0).toLocaleString()} د.ع</td>
         <td class="no-print">
           <button class="btn-edit" onclick="openEditModal('${k}')">✏️</button>
           <button class="btn-delete" onclick="deletePrice('${k}')">🗑️</button>
@@ -679,8 +783,8 @@
         <td>${i+1}</td>
         <td><strong>${item.name}</strong></td>
         <td>${item.phone || '-'}</td>
-        <td style='color:var(--debt); font-weight:700;'>${amt.toLocaleString()} د.ع</td>
-        <td style='color:var(--text-muted); font-weight:700;'>${formatUSD(amt)}</td>
+        <td style='color:var(--debt); font-weight:800;'>${amt.toLocaleString()} د.ع</td>
+        <td style='color:var(--text-muted); font-weight:800;'>${formatUSD(amt)}</td>
         <td class="no-print">
           <button class="btn-edit" onclick="openCompanyEditModal('${k}')">✏️</button>
           <button class="btn-delete" onclick="deleteCompany('${k}')">🗑️</button>
@@ -752,6 +856,7 @@
     });
 
     document.getElementById("transForm").reset();
+    document.getElementById("tAmountUsd").value = "";
     alert("🟢 تم تسجيل الحركة بنجاح!");
   };
 
@@ -811,7 +916,7 @@
     const t = currentData.transactions[transKey];
     if (!t) return;
 
-    if (!confirm(`هل أنت متأكد من حذف هذه الحركة؟\nالمبلغ: ${t.amount.toLocaleString()} د.ع (${t.type === 'pay' ? 'تسديد' : 'قائمة'})`)) {
+    if (!confirm(`هل أنت متأكد من حذف هذه الحركة؟\nالمبلغ: ${t.amount.toLocaleString()} د.ع`)) {
       return;
     }
 
@@ -871,7 +976,7 @@
       rowsHtml += `<tr>
         <td>-</td>
         <td><span class="badge-bill">رصيد سابق</span></td>
-        <td style="font-weight:700;">${company.initialAmount.toLocaleString()} د.ع</td>
+        <td style="font-weight:800;">${company.initialAmount.toLocaleString()} د.ع</td>
         <td>الرصيد المفتوح سابقاً</td>
         <td class="no-print">-</td>
       </tr>`;
@@ -886,7 +991,7 @@
       rowsHtml += `<tr>
         <td style="font-size:12px; color:var(--text-muted);">${t.date} ${t.time || ''}</td>
         <td><span class="${isPay ? 'badge-pay' : 'badge-bill'}">${isPay ? 'تسديد (واصل)' : 'قائمة جديدة'}</span></td>
-        <td style="font-weight:700;">${t.amount.toLocaleString()} د.ع</td>
+        <td style="font-weight:800;">${t.amount.toLocaleString()} د.ع</td>
         <td>${t.note || '-'}</td>
         <td class="no-print" style="display:flex; gap:4px; justify-content:center;">
           <button class="btn-edit" onclick="openTransEditModal('${k}')">✏️</button>
@@ -927,7 +1032,7 @@
       </div>
 
       <div class="no-print" style="margin-top:12px;">
-        <button onclick="window.print()" style="background:#475569;">🖨️ طباعة كشف الحساب</button>
+        <button onclick="window.print()" class="btn-secondary">🖨️ طباعة كشف الحساب</button>
       </div>
     `;
   }
@@ -948,7 +1053,7 @@
         <td style="font-size:12px; color:var(--text-muted);">${t.date} ${t.time || ''}</td>
         <td><strong>${t.companyName}</strong></td>
         <td><span class="${isPay ? 'badge-pay' : 'badge-bill'}">${isPay ? 'تسديد' : 'قائمة جديدة'}</span></td>
-        <td style="font-weight:700;">${t.amount.toLocaleString()} د.ع</td>
+        <td style="font-weight:800;">${t.amount.toLocaleString()} د.ع</td>
         <td>${t.note || '-'}</td>
         <td class="no-print" style="display:flex; gap:4px; justify-content:center;">
           <button class="btn-receipt" onclick="printSingleReceipt('${k}')">🧾</button>
@@ -996,7 +1101,7 @@
         <td style="font-size:12px; color:var(--text-muted);">${t.time || '-'}</td>
         <td><strong>${t.companyName}</strong></td>
         <td><span class="${isPay ? 'badge-pay' : 'badge-bill'}">${isPay ? 'تسديد (واصل)' : 'قائمة (مشتريات)'}</span></td>
-        <td style="font-weight:700;">${t.amount.toLocaleString()} د.ع</td>
+        <td style="font-weight:800;">${t.amount.toLocaleString()} د.ع</td>
         <td>${t.note || '-'}</td>
         <td class="no-print" style="display:flex; gap:4px; justify-content:center;">
           <button class="btn-receipt" onclick="printSingleReceipt('${k}')">🧾</button>
@@ -1014,15 +1119,14 @@
     document.getElementById("repCount").innerText = dayKeys.length;
   }
 
-  /* ---- وظائف الذكاء الاصطناعي المعدلة (Gemini) ---- */
+  /* ---- وظائف الذكاء الاصطناعي السليمة والمؤمنة (Gemini API) ---- */
   async function callGemini(promptText) {
     const apiKey = document.getElementById("geminiApiKey").value.trim();
 
     if (!apiKey) {
-      return "⚠️ يرجى إدخال مفتاح Gemini API في تبويب إعدادات الذكاء الاصطناعي أولاً.";
+      return "⚠️ يرجى إدخال مفتاح Gemini API في تبويب الذكاء الاصطناعي وتحديده أولاً.";
     }
 
-    // رابط API الصحيح والسليم دون وسائط زائدة
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
     
     const systemContext = `أنت مساعد ذكي ونظام محاسبي لمحل "الدباغ". البيانات الحالية المحفوظة في النظام:
@@ -1060,23 +1164,23 @@
       }
     } catch(e) {
       console.error("Fetch Exception:", e);
-      return "🔴 تعذر الاتصال بـ Google API. تحقق من اتصال الإنترنت أو إعدادات المتصفح.";
+      return "🔴 تعذر الاتصال بـ Google API. تحقق من اتصال الإنترنت.";
     }
   }
 
-  async function sendAiMessage() {
+  async function sendAiMessage(customPrompt) {
     const input = document.getElementById("aiPrompt");
-    const userText = input.value.trim();
+    const userText = customPrompt || input.value.trim();
     if (!userText) return;
 
     const chatBox = document.getElementById("aiChatBox");
     
     chatBox.innerHTML += `<div class="ai-msg user">${userText}</div>`;
-    input.value = "";
+    if(!customPrompt) input.value = "";
     chatBox.scrollTop = chatBox.scrollHeight;
 
     const loadingId = "loading_" + Date.now();
-    chatBox.innerHTML += `<div class="ai-msg bot" id="${loadingId}">⏳ جاري التفكير والتحليل...</div>`;
+    chatBox.innerHTML += `<div class="ai-msg bot" id="${loadingId}">⏳ جاري التحليل والإجابة...</div>`;
     chatBox.scrollTop = chatBox.scrollHeight;
 
     const reply = await callGemini(userText);
@@ -1086,20 +1190,12 @@
     chatBox.scrollTop = chatBox.scrollHeight;
   }
 
+  function askQuick(text) {
+    sendAiMessage(text);
+  }
+
   async function runAiAnalysis() {
-    const chatBox = document.getElementById("aiChatBox");
-    chatBox.innerHTML += `<div class="ai-msg user">قم بإجراء تحليل ذكي وشامل لجميع حساباتي وديوني الحالية ورخص لي وضع المحل المالي.</div>`;
-    
-    const loadingId = "loading_" + Date.now();
-    chatBox.innerHTML += `<div class="ai-msg bot" id="${loadingId}">⏳ جاري قراءة كافة السجلات وتحليل الديون...</div>`;
-    chatBox.scrollTop = chatBox.scrollHeight;
-
-    const prompt = "قدم تحليلاً مالياً كاملاً وملخصاً: كم المجموع الكلي للديون المطلوبة مني للشركات؟ وما هي الشركة الأكبر ديناً؟ وتقديم نصيحة مالية سريعة لإدارة المشتريات بشكل أفضل بناء على الحركات.";
-    const reply = await callGemini(prompt);
-
-    document.getElementById(loadingId).remove();
-    chatBox.innerHTML += `<div class="ai-msg bot">${reply ? reply.replace(/\n/g, '<br/>') : 'تعذر الحصول على إجابة.'}</div>`;
-    chatBox.scrollTop = chatBox.scrollHeight;
+    askQuick("قدم تحليلاً مالياً شاملاً لجميع الديون والشركات والمواد المسجلة في النظام مع تقديم نصائح لترشيد الديون وإدارتها.");
   }
 
   function printSingleReceipt(transKey) {
@@ -1128,11 +1224,37 @@
     window.print();
   }
 
+  function exportCsv(type) {
+    let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
+    
+    if(type === 'prices') {
+      csvContent += "اسم المادة,الكود,كلفة الباكيت,بيع الباكيت,كلفة الكارتون,بيع الكارتون\n";
+      Object.keys(currentData.prices).forEach(k => {
+        const item = currentData.prices[k];
+        csvContent += `"${item.name}","${item.code||''}","${item.packetCost||0}","${item.packetSell||0}","${item.cartonCost||0}","${item.cartonSell||0}"\n`;
+      });
+    } else if(type === 'debts') {
+      csvContent += "اسم الشركة,الهاتف,المبلغ المطلوب بالدينار\n";
+      Object.keys(currentData.debts).forEach(k => {
+        const item = currentData.debts[k];
+        csvContent += `"${item.name}","${item.phone||''}","${item.amount||0}"\n`;
+      });
+    }
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `${type}_report.csv`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  }
+
   function exportBackup() {
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(currentData));
     const a = document.createElement('a');
     a.setAttribute("href", dataStr);
-    a.setAttribute("download", "price_debts_backup.json");
+    a.setAttribute("download", "dabbag_shop_backup.json");
     document.body.appendChild(a); a.click(); a.remove();
   }
 </script>
