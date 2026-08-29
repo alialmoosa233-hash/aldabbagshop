@@ -1,1190 +1,257 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <title>نظام إدارة الأسعار والديون والمشتريات - محل الدباغ Pro</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام إدارة المبيعات والديون</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --text: #0f172a;
+            --border: #e2e8f0;
+            --danger: #ef4444;
+            --success: #10b981;
+        }
 
-  <!-- مكتبات Firebase السحابية -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+        }
 
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Reem+Kufi:wght@400..700&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
 
-    :root {
-      /* لوحة الدفتر الورقي */
-      --paper: #E7DEC4;
-      --paper-card: #FBF6E8;
-      --paper-stripe: #F3EBD5;
-      --paper-line: rgba(30,46,69,0.06);
-      --ink: #1E2E45;
-      --ink-soft: #6B6152;
-      --border: #C9BE9C;
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
 
-      /* ألوان الأحبار حسب كل قسم */
-      --primary: #2C4368;
-      --primary-dark: #101B2C;
-      --price: #24508C;
-      --debt: #9B3A34;
-      --debt-hover: #7C2D28;
-      --success: #3F6B4F;
-      --reports: #5B3C6E;
-      --ai-color: #0F7A7C;
-      --warning: #A9822E;
-      --brass: #A9822E;
-      --brass-light: #C9A857;
+        .card {
+            background: var(--surface);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
 
-      --bg: var(--paper);
-      --card: var(--paper-card);
-      --text-main: var(--ink);
-      --text-muted: var(--ink-soft);
+        .card h3 { margin: 0 0 10px 0; font-size: 0.9rem; color: #64748b; }
+        .card .amount { font-size: 1.5rem; font-weight: bold; }
 
-      --radius: 8px;
-      --shadow-sm: 0 1px 3px rgba(40,28,10,0.12);
-      --shadow-md: 0 6px 18px -4px rgba(30,20,8,0.22);
+        .form-section, .list-section {
+            background: var(--surface);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            margin-bottom: 20px;
+        }
 
-      --font-display: 'Reem Kufi', sans-serif;
-      --font-body: 'IBM Plex Sans Arabic', 'Tajawal', system-ui, sans-serif;
-      --font-mono: 'IBM Plex Mono', 'Courier New', monospace;
-    }
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 10px;
+            margin-bottom: 15px;
+        }
 
-    * { box-sizing: border-box; }
+        input, select, button {
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.95rem;
+            outline: none;
+        }
 
-    body {
-      font-family: var(--font-body);
-      background:
-        repeating-linear-gradient(to bottom, transparent 0px, transparent 31px, var(--paper-line) 32px),
-        var(--paper);
-      color: var(--text-main);
-      margin: 0; padding: 0;
-      direction: rtl;
-      font-feature-settings: "tnum" 1, "lnum" 1;
-    }
+        input:focus { border-color: var(--primary); }
 
-    /* شاشة القفل بالرمز السري */
-    #pinLockOverlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(16, 24, 38, 0.97);
-      z-index: 9999;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #F4EBD0;
-    }
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+        }
 
-    .pin-box {
-      background: linear-gradient(160deg, #16233A, #1E2E45);
-      padding: 32px 28px;
-      border-radius: 12px;
-      text-align: center;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.55);
-      width: 90%;
-      max-width: 340px;
-      border: 1px solid var(--brass);
-    }
+        button:hover { opacity: 0.9; }
 
-    .pin-box h3 { margin-top: 0; margin-bottom: 22px; font-size: 19px; font-family: var(--font-display); font-weight: 400; letter-spacing: .3px; color: #F4EBD0; }
+        .btn-danger { background-color: var(--danger); }
+        .btn-print { background-color: #475569; }
 
-    .pin-input {
-      width: 78%; padding: 11px; font-size: 24px; text-align: center;
-      border-radius: 6px; border: 1px solid #3C5170; background: #0F1B2A;
-      color: #F4EBD0; letter-spacing: 10px; outline: none; margin-bottom: 16px;
-      font-family: var(--font-mono);
-    }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
 
-    .pin-btn {
-      width: 85%; padding: 12px; background: var(--success); color: white;
-      border: none; border-radius: 6px; font-size: 15px; font-weight: 700;
-      cursor: pointer; font-family: var(--font-body);
-    }
+        th, td {
+            text-align: right;
+            padding: 12px;
+            border-bottom: 1px solid var(--border);
+        }
 
-    .pin-error { color: #E88A83; font-size: 13px; margin-top: 12px; display: none; font-weight: 700; }
+        th { background-color: #f1f5f9; }
 
-    header {
-      background: linear-gradient(160deg, #101B2C 0%, #1E2E45 55%, #223350 100%);
-      color: #F4EBD0;
-      padding: 18px 26px;
-      font-size: 21px;
-      font-weight: 400;
-      font-family: var(--font-display);
-      letter-spacing: .4px;
-      box-shadow: var(--shadow-md);
-      border-bottom: 4px solid var(--brass);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 12px;
-    }
+        .search-bar {
+            width: 100%;
+            box-sizing: border-box;
+            margin-bottom: 15px;
+        }
 
-    .container { max-width: 1400px; margin: 20px auto; padding: 0 15px; }
-
-    #cloudStatus {
-      padding: 10px 16px;
-      text-align: center;
-      font-weight: 700;
-      border-radius: var(--radius);
-      margin-bottom: 20px;
-      background: var(--paper-card);
-      color: var(--text-muted);
-      font-size: 13px;
-      border: 1px dashed var(--border);
-      font-family: var(--font-mono);
-      transition: all 0.3s ease;
-    }
-
-    .rate-box {
-      background: rgba(244,235,208,0.08);
-      padding: 6px 14px;
-      border-radius: 6px;
-      font-size: 13px;
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      border: 1px solid rgba(201,168,87,0.45);
-      font-family: var(--font-mono);
-      color: #F4EBD0;
-    }
-    .rate-box input {
-      width: 90px; margin: 0; padding: 4px 8px; font-size: 13px; text-align: center; border-radius: 5px; font-family: var(--font-mono);
-    }
-
-    .dashboard-summary {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 15px;
-      margin-bottom: 20px;
-    }
-    .dash-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-inline-start: 4px solid var(--brass);
-      border-radius: var(--radius);
-      padding: 16px;
-      box-shadow: var(--shadow-sm);
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-    }
-    .dash-card .label { font-size: 12px; color: var(--text-muted); font-weight: 700; margin-bottom: 5px; font-family: var(--font-body); }
-    .dash-card .value { font-size: 21px; font-weight: 600; font-family: var(--font-mono); }
-
-    .tabs { display: flex; gap: 6px; margin-bottom: 20px; flex-wrap: wrap; align-items: flex-end; border-bottom: 3px solid var(--ink); }
-    .tab-btn {
-      flex: 1; min-width: 160px; padding: 13px 14px 11px; font-size: 14.5px; font-weight: 600;
-      background: #DCD0AA; color: var(--text-muted); border: none; border-radius: 8px 8px 0 0;
-      cursor: pointer; transition: all 0.18s ease; font-family: var(--font-display); text-align: center;
-      transform: translateY(4px); box-shadow: inset 0 -3px 0 rgba(0,0,0,0.05);
-    }
-    .tab-btn:hover { transform: translateY(1px); color: var(--ink); }
-    .tab-btn.active { color: #F7F1DE; transform: translateY(0); box-shadow: var(--shadow-sm); }
-    .tab-btn.active[data-tab="prices"] { background: var(--price); }
-    .tab-btn.active[data-tab="debts"] { background: var(--debt); }
-    .tab-btn.active[data-tab="reports"] { background: var(--reports); }
-    .tab-btn.active[data-tab="ai"] { background: var(--ai-color); }
-
-    .tab-content { display: none; }
-    .tab-content.active { display: block; }
-
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
-    .grid-form { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-
-    .card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 20px;
-      box-shadow: var(--shadow-sm);
-      margin-bottom: 20px;
-    }
-
-    h2 {
-      margin-top: 0; font-size: 17px; font-weight: 500; font-family: var(--font-display); letter-spacing: .2px;
-      border-bottom: 2px dashed var(--border); padding-bottom: 10px; margin-bottom: 16px;
-      display: flex; justify-content: space-between; align-items: center;
-    }
-
-    input, select, textarea {
-      width: 100%; padding: 10px 12px; margin-bottom: 12px;
-      border: 1.5px solid var(--border); border-radius: 6px;
-      font-size: 14px; font-family: var(--font-body); background-color: #FFFDF6;
-    }
-    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--price); background: #fff; box-shadow: 0 0 0 3px rgba(36,80,140,0.12); }
-
-    button {
-      width: 100%; padding: 11px; border: none; border-radius: 6px;
-      color: white; font-weight: 700; cursor: pointer; font-size: 14px; font-family: var(--font-body);
-      transition: transform 0.12s ease, opacity 0.2s ease; box-shadow: var(--shadow-sm);
-    }
-    button:hover { opacity: 0.92; }
-    button:active { transform: scale(0.97); }
-
-    .btn-price { background: var(--price); grid-column: span 2; }
-    .btn-debt { background: var(--debt); }
-    .btn-success { background: var(--success); }
-    .btn-ai { background: var(--ai-color); }
-    .btn-secondary { background: var(--ink-soft); }
-
-    .table-wrapper { overflow-x: auto; margin-top: 10px; border-radius: 8px; border: 1px solid var(--border); }
-    table { width: 100%; border-collapse: collapse; font-size: 13px; background: var(--paper-card); }
-    th, td { padding: 10px 12px; text-align: center; border-bottom: 1px solid var(--border); }
-    th { background: var(--ink); color: #F4EBD0; font-weight: 600; font-family: var(--font-body); letter-spacing: .2px; }
-    tbody tr:nth-child(even) { background: var(--paper-stripe); }
-
-    .btn-edit { background: var(--price); color: white; padding: 4px 8px; border-radius: 5px; border: none; cursor: pointer; font-size: 12px; width: auto; }
-    .btn-delete { background: var(--debt); color: white; padding: 4px 8px; border-radius: 5px; border: none; cursor: pointer; font-size: 12px; width: auto; }
-
-    .badge-pay { background: #E1EAE2; color: var(--success); padding: 4px 8px; border-radius: 12px; font-weight: 700; font-size: 11px; }
-    .badge-bill { background: #F1DEDB; color: var(--debt); padding: 4px 8px; border-radius: 12px; font-weight: 700; font-size: 11px; }
-
-    .report-cards {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;
-    }
-    .report-card {
-      background: var(--card); border: 1px solid var(--border); border-top: 3px solid var(--reports); padding: 15px; border-radius: var(--radius); text-align: center;
-    }
-    .report-card .title { font-size: 12px; color: var(--text-muted); font-weight: 700; margin-bottom: 6px; }
-    .report-card .val { font-size: 18px; font-weight: 600; font-family: var(--font-mono); }
-
-    .ai-chat-box {
-      background: #101B2C; border: 1px solid var(--ink); border-radius: 8px;
-      height: 340px; overflow-y: auto; padding: 15px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 10px;
-    }
-    .ai-msg { max-width: 85%; padding: 10px 14px; border-radius: 10px; font-size: 13.5px; line-height: 1.6; font-family: var(--font-mono); }
-    .ai-msg.user { background: var(--ai-color); color: white; align-self: flex-start; border-bottom-right-radius: 2px; }
-    .ai-msg.bot { background: #1B2C40; color: #BFE3E1; border: 1px solid #2A4155; align-self: flex-end; border-bottom-left-radius: 2px; }
-
-    .ai-quick-btn {
-      background: #123B3D; color: #8FDAD6; padding: 6px 12px; border-radius: 20px; font-size: 12px; cursor: pointer; border: 1px solid #1D5254; font-weight: 600; width: auto;
-    }
-    .ai-quick-btn:hover { background: #175052; }
-
-    .modal {
-      display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%;
-      background-color: rgba(16, 24, 38, 0.55); backdrop-filter: blur(4px);
-      justify-content: center; align-items: center;
-    }
-    .modal-content {
-      background-color: var(--paper-card); padding: 22px; border-radius: var(--radius); width: 90%; max-width: 480px;
-      border-top: 4px solid var(--brass); box-shadow: var(--shadow-md);
-    }
-
-    #receiptPrintArea { display: none; }
-
-    @media print {
-      body * { visibility: hidden; }
-      #printableArea, #printableArea *, #receiptPrintArea, #receiptPrintArea *, #dailyReportPrint, #dailyReportPrint * { visibility: visible; }
-      #printableArea, #dailyReportPrint { position: absolute; left: 0; top: 0; width: 100%; }
-      #receiptPrintArea { display: block !important; position: absolute; left: 0; top: 0; width: 100%; }
-      .no-print { display: none !important; }
-    }
-  </style>
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white; padding: 0; }
+            .card, .list-section { border: none; box-shadow: none; }
+        }
+    </style>
 </head>
 <body>
 
-<!-- 🔒 شاشة القفل بـ PIN Code -->
-<div id="pinLockOverlay">
-  <div class="pin-box">
-    <h3>🔒 أدخل الرمز السري</h3>
-    <input type="password" id="pinInput" maxlength="4" class="pin-input" placeholder="••••" autofocus onkeypress="if(event.key==='Enter') checkAppPin()">
-    <button onclick="checkAppPin()" class="pin-btn">فتح النظام</button>
-    <p id="pinError" class="pin-error">الرمز السري غير صحيح!</p>
-  </div>
-</div>
-
-<header class="no-print">
-  <div>📦 نظام الدباغ المحاسبي Pro</div>
-  <div style="display:flex; gap:10px; align-items:center;">
-    <button onclick="lockSystem()" style="background:rgba(244,235,208,0.1); color:#F4EBD0; border:1px solid var(--brass); padding:6px 12px; border-radius:6px; cursor:pointer; font-size:12px; width:auto;">🔒 قفل الشاشة</button>
-    <div class="rate-box">
-      <span>💵 $100 =</span>
-      <input type="number" id="usdExchangeRate" value="150000" onchange="updateAllViews()" title="سعر صرف 100 دولار" />
-      <span>د.ع</span>
-    </div>
-  </div>
-</header>
-
 <div class="container">
-  <div id="cloudStatus" class="no-print">🔄 جاري الاتصال بالسحابة...</div>
-
-  <!-- لوحة المؤشرات السريعة (Dashboard Stats) -->
-  <div class="dashboard-summary no-print">
-    <div class="dash-card">
-      <div class="label">💳 إجمالي ديون الشركات المطلوب دفعها</div>
-      <div class="value" id="dashTotalDebt" style="color:var(--debt);">0 د.ع</div>
-      <div style="font-size:11px; color:var(--text-muted);" id="dashTotalDebtUsd">$ 0.00</div>
-    </div>
-    <div class="dash-card">
-      <div class="label">🏢 عدد الشركات / المجهزين</div>
-      <div class="value" id="dashCompaniesCount" style="color:var(--primary);">0</div>
-    </div>
-    <div class="dash-card">
-      <div class="label">📦 عدد المواد في الدليل</div>
-      <div class="value" id="dashPricesCount" style="color:var(--price);">0</div>
-    </div>
-    <div class="dash-card">
-      <div class="label">📅 حركات المشتريات اليوم</div>
-      <div class="value" id="dashTodayCount" style="color:var(--reports);">0</div>
-    </div>
-  </div>
-
-  <!-- أزرار التنقل الرئيسية -->
-  <div class="tabs no-print">
-    <button class="tab-btn active" data-tab="prices">🔍 دليل الأسعار</button>
-    <button class="tab-btn" data-tab="debts">📒 ديون الشركات</button>
-    <button class="tab-btn" data-tab="reports">📊 تقارير المشتريات</button>
-    <button class="tab-btn" data-tab="ai">🤖 المساعد الذكي والأمان</button>
-  </div>
-
-  <!-- 1. قسم دليل الأسعار -->
-  <div id="pricesSection" class="tab-content active">
-    <div class="grid">
-      <div class="card">
-        <h2 style="color: var(--price);">➕ إضافة مادة جديدة للدليل</h2>
-        <form id="priceForm" class="grid-form">
-          <input type="text" id="pName" placeholder="اسم المادة" style="grid-column: span 2;" required />
-          <input type="text" id="pCode" placeholder="الباركود / الكود (اختياري)" style="grid-column: span 2;" />
-          
-          <div style="grid-column: span 2; font-weight:800; color:var(--price); font-size:12px;">📦 أسعار الباكيت:</div>
-          <input type="number" id="pPacketCost" placeholder="كلفة الباكيت (د.ع)" />
-          <input type="number" id="pPacketSell" placeholder="بيع الباكيت (د.ع)" />
-
-          <div style="grid-column: span 2; font-weight:800; color:var(--price); font-size:12px;">📦 أسعار الكارتون الكامل:</div>
-          <input type="number" id="pCartonCost" placeholder="كلفة الكارتون (د.ع)" />
-          <input type="number" id="pCartonSell" placeholder="بيع الكارتون (د.ع)" />
-
-          <button type="submit" class="btn-price">حفظ المادة في الدليل</button>
-        </form>
-      </div>
-
-      <div class="card">
-        <h2 style="color: var(--price);">
-          <span>🔍 الاستعلام السريع عن الأسعار</span>
-          <button type="button" class="btn-secondary" onclick="exportCsv('prices')" style="width:auto; padding:4px 10px; font-size:11px;">📥 تصدير Excel</button>
-        </h2>
-        <input type="text" id="searchPrice" placeholder="🔍 اكتب اسم المادة أو امسح الباركود..." oninput="renderPrices()" autofocus style="font-size:15px; font-weight:700;" />
-        <div class="table-wrapper">
-          <table>
-            <thead>
-              <tr>
-                <th rowspan="2">#</th>
-                <th rowspan="2">اسم المادة</th>
-                <th rowspan="2">الكود</th>
-                <th colspan="2">📦 الباكيت</th>
-                <th colspan="2">📦 الكارتون</th>
-                <th rowspan="2" class="no-print">إجراءات</th>
-              </tr>
-              <tr>
-                <th>الكلفة</th>
-                <th>البيع</th>
-                <th>الكلفة</th>
-                <th>البيع</th>
-              </tr>
-            </thead>
-            <tbody id="pricesTable"><tr><td colspan="8">جاري التحميل...</td></tr></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- 2. قسم ديون الشركات -->
-  <div id="debtsSection" class="tab-content">
-    <div class="grid">
-      <div>
+    <!-- ملخص الإحصائيات -->
+    <div class="stats-grid no-print">
         <div class="card">
-          <h2 style="color: var(--debt);">➕ إضافة شركة أو مجهز جديد</h2>
-          <form id="companyForm">
-            <input type="text" id="cName" placeholder="اسم الشركة أو المجهز" required />
-            <input type="text" id="cPhone" placeholder="رقم الهاتف (اختياري)" />
-            <input type="number" id="cInitialDebt" placeholder="الرصيد الأولي / الدين الحالي (دينار)" value="0" />
-            <button type="submit" class="btn-debt">حفظ الشركة</button>
-          </form>
+            <h3>إجمالي المبيعات</h3>
+            <div class="amount" id="totalSales" style="color: var(--success)">0</div>
         </div>
-
         <div class="card">
-          <h2 style="color: var(--success);">💸 تسجيل حركة (تسديد / فاتورة جديدة)</h2>
-          <form id="transForm">
-            <select id="tCompany" required>
-              <option value="">-- اختر الشركة --</option>
-            </select>
-            <select id="tType" required>
-              <option value="pay">تسديد (تنقيص من الدين المطلوب عليك)</option>
-              <option value="bill">قائمة جديدة (زيادة الدين المطلوب عليك)</option>
-            </select>
-            
-            <div style="display:flex; gap:8px;">
-              <input type="number" id="tAmount" placeholder="المبلغ (د.ع)" required style="flex:2;" />
-              <input type="number" id="tAmountUsd" placeholder="أو بالـ $" style="flex:1;" oninput="calcIqdFromUsd()" />
-            </div>
-
-            <input type="text" id="tNote" placeholder="ملاحظات / رقم القائمة (اختياري)" />
-            <button type="submit" class="btn-success">حفظ الحركة وتحديث الدين</button>
-          </form>
+            <h3>إجمالي الديون المتبقية</h3>
+            <div class="amount" id="totalDebts" style="color: var(--danger)">0</div>
         </div>
-
-        <div class="card">
-          <h2 style="color: var(--debt);">
-            <span>📒 ديون الشركات الحالية</span>
-            <button type="button" class="btn-secondary" onclick="exportCsv('debts')" style="width:auto; padding:4px 10px; font-size:11px;">📥 تصدير Excel</button>
-          </h2>
-          <input type="text" id="searchDebt" placeholder="ابحث باسم الشركة..." oninput="renderDebts()" />
-          <div class="table-wrapper">
-            <table>
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>الشركة</th>
-                  <th>الهاتف</th>
-                  <th>المطلوب (د.ع)</th>
-                  <th>المعادل ($)</th>
-                  <th class="no-print">إجراءات</th>
-                </tr>
-              </thead>
-              <tbody id="debtsTable"><tr><td colspan="6">جاري التحميل...</td></tr></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <div>
-        <div class="card" id="printableArea">
-          <h2 style="color: var(--ink);" class="no-print">📑 كشف حساب تفصيلي لشركة</h2>
-          <div class="no-print" style="margin-bottom: 12px;">
-            <select id="statementSelect" onchange="generateStatement()">
-              <option value="">-- اختر الشركة لرؤية كشف الحساب --</option>
-            </select>
-          </div>
-
-          <div id="statementContent">
-            <p style="text-align:center; color:var(--text-muted); margin: 20px 0;">اختر شركة من القائمة أعلاه لمشاهدة التفاصيل.</p>
-          </div>
-        </div>
-
-        <div class="card no-print">
-          <h2>📜 سجل آخر حركات التسديد والقوائم</h2>
-          <div class="table-wrapper">
-            <table>
-              <thead><tr><th>التاريخ</th><th>الشركة</th><th>نوع الحركة</th><th>المبلغ</th><th>ملاحظات</th><th class="no-print">إجراءات</th></tr></thead>
-              <tbody id="transTable"><tr><td colspan="6">لا توجد حركات مسجلة</td></tr></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
     </div>
-  </div>
 
-  <!-- 3. قسم تقارير المشتريات اليومية -->
-  <div id="reportsSection" class="tab-content">
-    <div class="card" id="dailyReportPrint">
-      <h2 style="color: var(--reports);">📊 تقرير حركات ومشتريات اليوم</h2>
-      
-      <div class="no-print" style="display:flex; gap:10px; align-items:center; margin-bottom:20px; flex-wrap:wrap;">
-        <label style="font-weight:800;">حدد التاريخ:</label>
-        <input type="date" id="reportDate" onchange="renderDailyReport()" style="width:auto; margin:0;" />
-        <button type="button" onclick="setReportDateToday()" style="width:auto; background:var(--reports);">📅 اليوم</button>
-      </div>
+    <!-- نموذج إضافة حركة -->
+    <div class="form-section no-print">
+        <h2>تسجيل حركة جديدة</h2>
+        <div class="form-grid">
+            <input type="text" id="customerName" placeholder="اسم العميل / المحل">
+            <input type="text" id="itemDetails" placeholder="البيان / المادة">
+            <input type="number" id="amount" placeholder="المبلغ">
+            <select id="type">
+                <option value="debt">دين (على العميل)</option>
+                <option value="pay">تسديد (من العميل)</option>
+            </select>
+            <button onclick="addTransaction()">إضافة الحركة</button>
+        </div>
+    </div>
 
-      <div class="report-cards">
-        <div class="report-card">
-          <div class="title">📦 إجمالي القوائم (المشتريات)</div>
-          <div class="val" id="repTotalBills" style="color:var(--debt);">0 د.ع</div>
+    <!-- قائمة السجلات -->
+    <div class="list-section">
+        <div style="display: flex; justify-content: space-between; align-items: center;" class="no-print">
+            <h2>سجل الحركات المالية</h2>
+            <button class="btn-print" onclick="window.print()">طباعة التقرير</button>
         </div>
-        <div class="report-card">
-          <div class="title">💸 إجمالي التسديدات (الواصل)</div>
-          <div class="val" id="repTotalPays" style="color:var(--success);">0 د.ع</div>
-        </div>
-        <div class="report-card">
-          <div class="title">⚖️ صافي الحركة اليومية</div>
-          <div class="val" id="repNetTotal" style="color:var(--price);">0 د.ع</div>
-        </div>
-        <div class="report-card">
-          <div class="title">🔢 عدد الحركات</div>
-          <div class="val" id="repCount" style="color:var(--text-main);">0</div>
-        </div>
-      </div>
 
-      <div class="table-wrapper">
+        <input type="text" id="searchInput" class="search-bar no-print" placeholder="ابحث باسم العميل أو البيان..." onkeyup="filterData()">
+
         <table>
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>الوقت</th>
-              <th>الشركة / المجهز</th>
-              <th>نوع الحركة</th>
-              <th>المبلغ (د.ع)</th>
-              <th>الملاحظات / رقم القائمة</th>
-              <th class="no-print">إجراءات</th>
-            </tr>
-          </thead>
-          <tbody id="dailyReportTable">
-            <tr><td colspan="7">اختر تاريخاً لفيض البيانات</td></tr>
-          </tbody>
+            <thead>
+                <tr>
+                    <th>التاريخ</th>
+                    <th>العميل</th>
+                    <th>البيان</th>
+                    <th>المبلغ</th>
+                    <th>النوع</th>
+                    <th class="no-print">إجراء</th>
+                </tr>
+            </thead>
+            <tbody id="dataTable">
+                <!-- يتم التعبئة تلقائياً -->
+            </tbody>
         </table>
-      </div>
-
-      <div class="no-print" style="margin-top:15px; text-align:left;">
-        <button type="button" onclick="window.print()" class="btn-secondary" style="width:auto; padding:8px 16px;">🖨️ طباعة التقرير اليومي</button>
-      </div>
     </div>
-  </div>
-
-  <!-- 4. قسم المساعد الذكي والأمان (AI & Security) -->
-  <div id="aiSection" class="tab-content">
-    <div class="grid">
-      <div>
-        <div class="card">
-          <h2 style="color: var(--ai-color);">🔑 إعدادات الذكاء الاصطناعي (Gemini)</h2>
-          <p style="font-size:12px; color:var(--text-muted);">أدخل مفتاح Gemini API الخاص بك لتفعيل المساعد الذكي وإجراء التحليلات:</p>
-          <input type="password" id="geminiApiKey" placeholder="أدخل مفتاح API هنا..." onchange="saveApiKey()" />
-          <button type="button" class="btn-ai" onclick="runAiAnalysis()">📊 إجراء تحليل مالـي واستشاري شامل</button>
-
-          <div style="margin-top:15px;">
-            <label style="font-size:12px; font-weight:800; color:var(--text-muted);">أسئلة سريعة مقترحة:</label>
-            <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;">
-              <button type="button" class="ai-quick-btn" onclick="askQuick('من هي أعلى 3 شركات أطلبها ديون حالياً؟')">🔝 أعلى 3 شركات ديوناً</button>
-              <button type="button" class="ai-quick-btn" onclick="askQuick('كم مجموع المشتريات المسجلة اليوم؟')">🛒 مجموع مشتريات اليوم</button>
-              <button type="button" class="ai-quick-btn" onclick="askQuick('اعطني ملخصاً لسجل أسعار المواد في الدليل')">📦 ملخص دليل الأسعار</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- 🛡️ قسم إعدادات الأمان والقفل -->
-        <div class="card">
-          <h2 style="color: var(--success);">🛡️ أمان النظام والرمز السري</h2>
-          <p style="font-size:12px; color:var(--text-muted);">تغيير رمز القفل المكون من 4 أرقام لحماية التطبيق:</p>
-          <input type="password" id="newPinInput" maxlength="4" placeholder="الرمز السري الجديد (4 أرقام)" style="text-align:center; font-size:18px; letter-spacing:4px;" />
-          <button type="button" onclick="updateAppPin()" class="btn-success">حفظ الرمز السري الجديد</button>
-        </div>
-      </div>
-
-      <div class="card">
-        <h2 style="color: var(--ai-color);">💬 المحادثة مع المساعد الذكي</h2>
-        <div class="ai-chat-box" id="aiChatBox">
-          <div class="ai-msg bot">مرحباً بك! أنا مساعدك الذكي لنظام المحل. أستطيع الإجابة عن كافة تفاصيل الديون والأسعار والحركات المالية المخزنة لديك. كيف يمكنني مساعدتك؟</div>
-        </div>
-        <div style="display:flex; gap:8px;">
-          <input type="text" id="aiPrompt" placeholder="اسأل المساعد الذكي..." onkeydown="if(event.key==='Enter') sendAiMessage()" style="margin:0;" />
-          <button type="button" class="btn-ai" onclick="sendAiMessage()" style="width: auto; padding: 10px 20px;">إرسال</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="no-print" style="margin-top:20px; text-align:center;">
-    <button type="button" class="btn-secondary" style="width:auto; padding:10px 20px;" onclick="exportBackup()">📥 تصدير نسخة احتياطية كاملة (JSON)</button>
-  </div>
-</div>
-
-<!-- Modals تعديل البيانات -->
-<div id="editModal" class="modal">
-  <div class="modal-content">
-    <h3 style="margin-top:0; color:var(--price);">✏️ تعديل بيانات المادة</h3>
-    <input type="hidden" id="editKey" />
-    <label style="font-size: 12px; font-weight:800;">اسم المادة:</label>
-    <input type="text" id="editName" required />
-    <label style="font-size: 12px; font-weight:800;">الكود:</label>
-    <input type="text" id="editCode" />
-    
-    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
-      <div><label style="font-size: 11px;">كلفة الباكيت:</label><input type="number" id="editPacketCost" /></div>
-      <div><label style="font-size: 11px;">بيع الباكيت:</label><input type="number" id="editPacketSell" /></div>
-      <div><label style="font-size: 11px;">كلفة الكارتون:</label><input type="number" id="editCartonCost" /></div>
-      <div><label style="font-size: 11px;">بيع الكارتون:</label><input type="number" id="editCartonSell" /></div>
-    </div>
-
-    <div style="display:flex; gap:8px; margin-top:10px;">
-      <button type="button" onclick="savePriceEdit()" class="btn-price">حفظ</button>
-      <button type="button" onclick="closeEditModal()" class="btn-secondary">إلغاء</button>
-    </div>
-  </div>
-</div>
-
-<div id="editCompanyModal" class="modal">
-  <div class="modal-content">
-    <h3 style="margin-top:0; color:var(--debt);">✏️ تعديل حساب الشركة</h3>
-    <input type="hidden" id="editCompKey" />
-    <label style="font-size: 12px; font-weight:800;">اسم الشركة:</label>
-    <input type="text" id="editCompName" required />
-    <label style="font-size: 12px; font-weight:800;">رقم الهاتف:</label>
-    <input type="text" id="editCompPhone" />
-    <label style="font-size: 12px; font-weight:800;">الدين الحالي (دينار):</label>
-    <input type="number" id="editCompAmount" required />
-
-    <div style="display:flex; gap:8px; margin-top:10px;">
-      <button type="button" onclick="saveCompanyEdit()" class="btn-debt">حفظ</button>
-      <button type="button" onclick="closeCompanyEditModal()" class="btn-secondary">إلغاء</button>
-    </div>
-  </div>
 </div>
 
 <script>
-  // ---- نظام القفل بالرمز السري ----
-  const DEFAULT_APP_PIN = "1234";
+    let db = JSON.parse(localStorage.getItem('store_data')) || [];
 
-  function checkAppPin() {
-    const enteredPin = document.getElementById("pinInput").value;
-    const storedPin = localStorage.getItem("app_pin") || DEFAULT_APP_PIN;
-
-    if (enteredPin === storedPin) {
-      document.getElementById("pinLockOverlay").style.display = "none";
-      document.getElementById("pinError").style.display = "none";
-      document.getElementById("pinInput").value = "";
-    } else {
-      document.getElementById("pinError").style.display = "block";
-      document.getElementById("pinInput").value = "";
-    }
-  }
-
-  function lockSystem() {
-    document.getElementById("pinLockOverlay").style.display = "flex";
-    document.getElementById("pinInput").focus();
-  }
-
-  function updateAppPin() {
-    const newPin = document.getElementById("newPinInput").value.trim();
-    if (newPin && newPin.length === 4 && !isNaN(newPin)) {
-      localStorage.setItem("app_pin", newPin);
-      alert("✅ تم تغيير الرمز السري بنجاح!");
-      document.getElementById("newPinInput").value = "";
-    } else {
-      alert("⚠️ يرجى إدخال رمز مكون من 4 أرقام فقط.");
-    }
-  }
-
-  // ---- إعدادات Firebase ----
-  const firebaseConfig = {
-    apiKey: "AIzaSyC-QqnQTbbyVFS8QFkf4CYZTcURcr9nBW0",
-    authDomain: "gimi-fd7fe.firebaseapp.com",
-    databaseURL: "https://gimi-fd7fe-default-rtdb.firebaseio.com",
-    projectId: "gimi-fd7fe",
-    storageBucket: "gimi-fd7fe.firebasestorage.app",
-    messagingSenderId: "642364940251",
-    appId: "1:642364940251:web:6dd47f47d500ae9ed791fe"
-  };
-
-  let db;
-  let currentData = { prices: {}, debts: {}, transactions: {} };
-
-  function normalizeText(text) {
-    return text ? text.toString().trim().toLowerCase().replace(/\s+/g, ' ') : '';
-  }
-
-  function formatUSD(iqdAmount) {
-    const rate = parseFloat(document.getElementById("usdExchangeRate").value) || 150000;
-    const usd = (iqdAmount / rate) * 100;
-    return "$ " + usd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  }
-
-  function calcIqdFromUsd() {
-    const usd = parseFloat(document.getElementById("tAmountUsd").value) || 0;
-    const rate = parseFloat(document.getElementById("usdExchangeRate").value) || 150000;
-    if(usd > 0) {
-      document.getElementById("tAmount").value = Math.round((usd / 100) * rate);
-    }
-  }
-
-  function updateAllViews() {
-    renderDebts();
-    generateStatement();
-    renderDailyReport();
-    updateDashboard();
-  }
-
-  function setReportDateToday() {
-    const today = new Date().toISOString().split('T')[0];
-    document.getElementById("reportDate").value = today;
-    renderDailyReport();
-  }
-
-  try {
-    firebase.initializeApp(firebaseConfig);
-    db = firebase.database().ref("simple_price_debts_v2");
-
-    db.on("value", (snapshot) => {
-      const status = document.getElementById("cloudStatus");
-      status.innerHTML = "🟢 متصل ومتزامن سحابياً مع البيانات";
-      status.style.background = "#E1EAE2"; status.style.color = "#3F6B4F";
-
-      const val = snapshot.val() || {};
-      currentData.prices = val.prices || {};
-      currentData.debts = val.debts || {};
-      currentData.transactions = val.transactions || {};
-
-      renderPrices();
-      renderDebts();
-      renderCompanySelect();
-      renderTransactions();
-      generateStatement();
-      renderDailyReport();
-      updateDashboard();
-    });
-  } catch(e) {
-    document.getElementById("cloudStatus").innerHTML = "🔴 فشل الاتصال بالسحابة: " + e.message;
-  }
-
-  const savedKey = localStorage.getItem("gemini_key") || "";
-  document.getElementById("geminiApiKey").value = savedKey;
-  document.getElementById("reportDate").value = new Date().toISOString().split('T')[0];
-
-  function saveApiKey() {
-    const key = document.getElementById("geminiApiKey").value.trim();
-    localStorage.setItem("gemini_key", key);
-  }
-
-  document.querySelectorAll(".tab-btn").forEach(btn => {
-    btn.onclick = function() {
-      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
-      document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
-      this.classList.add("active");
-      document.getElementById(this.dataset.tab + "Section").classList.add("active");
-    };
-  });
-
-  function updateDashboard() {
-    let totalDebtIQD = 0;
-    const debtKeys = Object.keys(currentData.debts);
-    debtKeys.forEach(k => { totalDebtIQD += (Number(currentData.debts[k].amount) || 0); });
-
-    document.getElementById("dashTotalDebt").innerText = totalDebtIQD.toLocaleString() + " د.ع";
-    document.getElementById("dashTotalDebtUsd").innerText = formatUSD(totalDebtIQD);
-    document.getElementById("dashCompaniesCount").innerText = debtKeys.length;
-    document.getElementById("dashPricesCount").innerText = Object.keys(currentData.prices).length;
-
-    const todayStr = new Date().toISOString().split('T')[0];
-    let todayCount = 0;
-    Object.values(currentData.transactions).forEach(t => {
-      if (t.date && t.date.startsWith(todayStr)) todayCount++;
-    });
-    document.getElementById("dashTodayCount").innerText = todayCount;
-  }
-
-  // ---- إدارة دليل الأسعار ----
-  document.getElementById("priceForm").onsubmit = function(e) {
-    e.preventDefault();
-    const item = {
-      name: document.getElementById("pName").value.trim(),
-      code: document.getElementById("pCode").value.trim(),
-      packetCost: Number(document.getElementById("pPacketCost").value) || 0,
-      packetSell: Number(document.getElementById("pPacketSell").value) || 0,
-      cartonCost: Number(document.getElementById("pCartonCost").value) || 0,
-      cartonSell: Number(document.getElementById("pCartonSell").value) || 0,
-      updatedAt: new Date().toISOString()
-    };
-    db.child("prices").push(item);
-    this.reset();
-  };
-
-  function renderPrices() {
-    const tbody = document.getElementById("pricesTable");
-    const search = normalizeText(document.getElementById("searchPrice").value);
-    tbody.innerHTML = "";
-    let idx = 1;
-
-    for (let key in currentData.prices) {
-      const p = currentData.prices[key];
-      if (search && !normalizeText(p.name).includes(search) && !normalizeText(p.code).includes(search)) continue;
-
-      tbody.innerHTML += `
-        <tr>
-          <td>${idx++}</td>
-          <td style="font-weight:700;">${p.name}</td>
-          <td style="font-family:var(--font-mono);">${p.code || '-'}</td>
-          <td>${p.packetCost ? p.packetCost.toLocaleString() : '-'}</td>
-          <td style="color:var(--price); font-weight:700;">${p.packetSell ? p.packetSell.toLocaleString() : '-'}</td>
-          <td>${p.cartonCost ? p.cartonCost.toLocaleString() : '-'}</td>
-          <td style="color:var(--price); font-weight:700;">${p.cartonSell ? p.cartonSell.toLocaleString() : '-'}</td>
-          <td class="no-print">
-            <button class="btn-edit" onclick="openEditModal('${key}')">تعديل</button>
-            <button class="btn-delete" onclick="deletePrice('${key}')">حذف</button>
-          </td>
-        </tr>
-      `;
-    }
-    if (tbody.innerHTML === "") tbody.innerHTML = `<tr><td colspan="8">لا توجد مواد مطابقة للبحث</td></tr>`;
-  }
-
-  function openEditModal(key) {
-    const p = currentData.prices[key];
-    document.getElementById("editKey").value = key;
-    document.getElementById("editName").value = p.name;
-    document.getElementById("editCode").value = p.code || "";
-    document.getElementById("editPacketCost").value = p.packetCost || "";
-    document.getElementById("editPacketSell").value = p.packetSell || "";
-    document.getElementById("editCartonCost").value = p.cartonCost || "";
-    document.getElementById("editCartonSell").value = p.cartonSell || "";
-    document.getElementById("editModal").style.display = "flex";
-  }
-
-  function closeEditModal() { document.getElementById("editModal").style.display = "none"; }
-
-  function savePriceEdit() {
-    const key = document.getElementById("editKey").value;
-    db.child("prices/" + key).update({
-      name: document.getElementById("editName").value.trim(),
-      code: document.getElementById("editCode").value.trim(),
-      packetCost: Number(document.getElementById("editPacketCost").value) || 0,
-      packetSell: Number(document.getElementById("editPacketSell").value) || 0,
-      cartonCost: Number(document.getElementById("editCartonCost").value) || 0,
-      cartonSell: Number(document.getElementById("editCartonSell").value) || 0
-    });
-    closeEditModal();
-  }
-
-  function deletePrice(key) {
-    if (confirm("هل أنت تأكد من حذف هذه المادة من الدليل؟")) db.child("prices/" + key).remove();
-  }
-
-  // ---- إدارة الشركات والديون ----
-  document.getElementById("companyForm").onsubmit = function(e) {
-    e.preventDefault();
-    const company = {
-      name: document.getElementById("cName").value.trim(),
-      phone: document.getElementById("cPhone").value.trim(),
-      amount: Number(document.getElementById("cInitialDebt").value) || 0
-    };
-    db.child("debts").push(company);
-    this.reset();
-  };
-
-  function renderDebts() {
-    const tbody = document.getElementById("debtsTable");
-    const search = normalizeText(document.getElementById("searchDebt").value);
-    tbody.innerHTML = "";
-    let idx = 1;
-
-    for (let key in currentData.debts) {
-      const c = currentData.debts[key];
-      if (search && !normalizeText(c.name).includes(search)) continue;
-
-      tbody.innerHTML += `
-        <tr>
-          <td>${idx++}</td>
-          <td style="font-weight:700;">${c.name}</td>
-          <td style="font-family:var(--font-mono);">${c.phone || '-'}</td>
-          <td style="font-weight:800; color:var(--debt);">${(c.amount || 0).toLocaleString()} د.ع</td>
-          <td style="font-family:var(--font-mono);">${formatUSD(c.amount || 0)}</td>
-          <td class="no-print">
-            <button class="btn-edit" onclick="openCompanyEditModal('${key}')">تعديل</button>
-            <button class="btn-delete" onclick="deleteCompany('${key}')">حذف</button>
-          </td>
-        </tr>
-      `;
-    }
-  }
-
-  function openCompanyEditModal(key) {
-    const c = currentData.debts[key];
-    document.getElementById("editCompKey").value = key;
-    document.getElementById("editCompName").value = c.name;
-    document.getElementById("editCompPhone").value = c.phone || "";
-    document.getElementById("editCompAmount").value = c.amount || 0;
-    document.getElementById("editCompanyModal").style.display = "flex";
-  }
-
-  function closeCompanyEditModal() { document.getElementById("editCompanyModal").style.display = "none"; }
-
-  function saveCompanyEdit() {
-    const key = document.getElementById("editCompKey").value;
-    db.child("debts/" + key).update({
-      name: document.getElementById("editCompName").value.trim(),
-      phone: document.getElementById("editCompPhone").value.trim(),
-      amount: Number(document.getElementById("editCompAmount").value) || 0
-    });
-    closeCompanyEditModal();
-  }
-
-  function deleteCompany(key) {
-    if (confirm("سيتم حذف حساب الشركة نهائياً، هل تريد الاستمرار؟")) db.child("debts/" + key).remove();
-  }
-
-  function renderCompanySelect() {
-    const select1 = document.getElementById("tCompany");
-    const select2 = document.getElementById("statementSelect");
-    const currentVal1 = select1.value;
-    const currentVal2 = select2.value;
-
-    select1.innerHTML = '<option value="">-- اختر الشركة --</option>';
-    select2.innerHTML = '<option value="">-- اختر الشركة لرؤية كشف الحساب --</option>';
-
-    for (let key in currentData.debts) {
-      const cName = currentData.debts[key].name;
-      select1.innerHTML += `<option value="${key}">${cName}</option>`;
-      select2.innerHTML += `<option value="${key}">${cName}</option>`;
-    }
-    select1.value = currentVal1;
-    select2.value = currentVal2;
-  }
-
-  // ---- الحركات الماليـــة ----
-  document.getElementById("transForm").onsubmit = function(e) {
-    e.preventDefault();
-    const compKey = document.getElementById("tCompany").value;
-    const type = document.getElementById("tType").value;
-    const amount = Number(document.getElementById("tAmount").value) || 0;
-    const note = document.getElementById("tNote").value.trim();
-
-    if (!compKey || amount <= 0) return alert("يرجى إدخال الحقول المطلوبة بمبالغ صحيحة");
-
-    const comp = currentData.debts[compKey];
-    let newAmount = comp.amount || 0;
-    if (type === "pay") newAmount -= amount;
-    else if (type === "bill") newAmount += amount;
-
-    const transData = {
-      companyKey: compKey,
-      companyName: comp.name,
-      type: type,
-      amount: amount,
-      note: note,
-      date: new Date().toISOString()
-    };
-
-    db.child("transactions").push(transData);
-    db.child("debts/" + compKey).update({ amount: newAmount });
-
-    this.reset();
-    document.getElementById("tAmountUsd").value = "";
-  };
-
-  function renderTransactions() {
-    const tbody = document.getElementById("transTable");
-    tbody.innerHTML = "";
-    const list = Object.entries(currentData.transactions).reverse().slice(0, 15);
-
-    list.forEach(([key, t]) => {
-      const dateStr = new Date(t.date).toLocaleString("ar-IQ");
-      const badge = t.type === "pay" ? `<span class="badge-pay">واصل (تسديد)</span>` : `<span class="badge-bill">قائمة جديدة</span>`;
-
-      tbody.innerHTML += `
-        <tr>
-          <td style="font-size:11px;">${dateStr}</td>
-          <td>${t.companyName}</td>
-          <td>${badge}</td>
-          <td style="font-weight:700;">${t.amount.toLocaleString()} د.ع</td>
-          <td>${t.note || '-'}</td>
-          <td class="no-print"><button class="btn-delete" onclick="deleteTransaction('${key}', '${t.companyKey}', '${t.type}', ${t.amount})">حذف</button></td>
-        </tr>
-      `;
-    });
-  }
-
-  function deleteTransaction(transKey, compKey, type, amount) {
-    if (!confirm("هل ترغب بحذف هذه الحركة وإعادة تسوية رصيد الدين؟")) return;
-    
-    if (currentData.debts[compKey]) {
-      let currentDebt = currentData.debts[compKey].amount || 0;
-      if (type === "pay") currentDebt += amount;
-      else if (type === "bill") currentDebt -= amount;
-      db.child("debts/" + compKey).update({ amount: currentDebt });
-    }
-    db.child("transactions/" + transKey).remove();
-  }
-
-  // ---- كشف حساب تفصيلي ----
-  function generateStatement() {
-    const compKey = document.getElementById("statementSelect").value;
-    const div = document.getElementById("statementContent");
-    if (!compKey || !currentData.debts[compKey]) {
-      div.innerHTML = `<p style="text-align:center; color:var(--text-muted); margin: 20px 0;">اختر شركة من القائمة أعلاه لمشاهدة التفاصيل.</p>`;
-      return;
+    function saveData() {
+        localStorage.setItem('store_data', JSON.stringify(db));
+        render();
     }
 
-    const comp = currentData.debts[compKey];
-    const compTrans = Object.values(currentData.transactions)
-      .filter(t => t.companyKey === compKey)
-      .sort((a,b) => new Date(a.date) - new Date(b.date));
+    function addTransaction() {
+        const name = document.getElementById('customerName').value.trim();
+        const item = document.getElementById('itemDetails').value.trim();
+        const amount = parseFloat(document.getElementById('amount').value);
+        const type = document.getElementById('type').value;
 
-    let html = `
-      <div style="margin-bottom:15px; border-bottom:1px dashed var(--border); padding-bottom:10px;">
-        <h3 style="margin:0; font-family:var(--font-display);">${comp.name}</h3>
-        <p style="margin:4px 0; font-size:12px; color:var(--text-muted);">الهاتف: ${comp.phone || 'غير مسجل'}</p>
-        <div style="font-size:16px; font-weight:800; color:var(--debt); margin-top:8px;">
-          الرصيد المطلوب حالياً: ${comp.amount.toLocaleString()} د.ع (${formatUSD(comp.amount)})
-        </div>
-      </div>
-      <table style="width:100%; font-size:12px;">
-        <thead>
-          <tr>
-            <th>التاريخ</th>
-            <th>نوع الحركة</th>
-            <th>المبلغ</th>
-            <th>ملاحظات</th>
-          </tr>
-        </thead>
-        <tbody>
-    `;
+        if (!name || isNaN(amount) || amount <= 0) {
+            alert('يرجى إدخال اسم العميل والمبلغ بشكل صحيح.');
+            return;
+        }
 
-    if (compTrans.length === 0) {
-      html += `<tr><td colspan="4">لا توجد حركات سابقة لهذه الشركة</td></tr>`;
-    } else {
-      compTrans.forEach(t => {
-        const d = new Date(t.date).toLocaleDateString("ar-IQ");
-        const badge = t.type === "pay" ? `<span class="badge-pay">تسديد واصل</span>` : `<span class="badge-bill">فاتورة/قائمة</span>`;
-        html += `
-          <tr>
-            <td>${d}</td>
-            <td>${badge}</td>
-            <td style="font-weight:700;">${t.amount.toLocaleString()} د.ع</td>
-            <td>${t.note || '-'}</td>
-          </tr>
-        `;
-      });
+        const entry = {
+            id: Date.now(),
+            date: new Date().toLocaleDateString('ar-EG'),
+            name,
+            item: item || '-',
+            amount,
+            type
+        };
+
+        db.unshift(entry);
+        saveData();
+
+        document.getElementById('customerName').value = '';
+        document.getElementById('itemDetails').value = '';
+        document.getElementById('amount').value = '';
     }
 
-    html += `</tbody></table>
-    <div class="no-print" style="margin-top:15px; text-align:left;">
-      <button onclick="window.print()" class="btn-secondary" style="width:auto; padding:6px 14px;">🖨️ طباعة كشف الحساب</button>
-    </div>`;
-    div.innerHTML = html;
-  }
-
-  // ---- التقارير اليوميـــة ----
-  function renderDailyReport() {
-    const selectedDate = document.getElementById("reportDate").value;
-    const tbody = document.getElementById("dailyReportTable");
-    tbody.innerHTML = "";
-
-    if (!selectedDate) return;
-
-    let totalBills = 0;
-    let totalPays = 0;
-    let count = 0;
-    let idx = 1;
-
-    Object.entries(currentData.transactions).forEach(([key, t]) => {
-      const tDate = t.date.split('T')[0];
-      if (tDate === selectedDate) {
-        count++;
-        if (t.type === "bill") totalBills += t.amount;
-        if (t.type === "pay") totalPays += t.amount;
-
-        const time = new Date(t.date).toLocaleTimeString("ar-IQ", { hour: '2-digit', minute: '2-digit' });
-        const badge = t.type === "pay" ? `<span class="badge-pay">تسديد واصل</span>` : `<span class="badge-bill">قائمة مشتريات</span>`;
-
-        tbody.innerHTML += `
-          <tr>
-            <td>${idx++}</td>
-            <td style="font-size:11px;">${time}</td>
-            <td style="font-weight:700;">${t.companyName}</td>
-            <td>${badge}</td>
-            <td style="font-weight:700;">${t.amount.toLocaleString()} د.ع</td>
-            <td>${t.note || '-'}</td>
-            <td class="no-print"><button class="btn-delete" onclick="deleteTransaction('${key}', '${t.companyKey}', '${t.type}', ${t.amount})">حذف</button></td>
-          </tr>
-        `;
-      }
-    });
-
-    document.getElementById("repTotalBills").innerText = totalBills.toLocaleString() + " د.ع";
-    document.getElementById("repTotalPays").innerText = totalPays.toLocaleString() + " د.ع";
-    document.getElementById("repNetTotal").innerText = (totalBills - totalPays).toLocaleString() + " د.ع";
-    document.getElementById("repCount").innerText = count;
-
-    if (tbody.innerHTML === "") tbody.innerHTML = `<tr><td colspan="7">لا توجد حركات مسجلة لهذا اليوم</td></tr>`;
-  }
-
-  // ---- التصدير إلى Excel / CSV النسخ الاحتياطي ----
-  function exportCsv(type) {
-    let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
-    if (type === "prices") {
-      csvContent += "اسم المادة,الباركود,كلفة الباكيت,بيع الباكيت,كلفة الكارتون,بيع الكارتون\n";
-      Object.values(currentData.prices).forEach(p => {
-        csvContent += `"${p.name}","${p.code||''}","${p.packetCost||0}","${p.packetSell||0}","${p.cartonCost||0}","${p.cartonSell||0}"\n`;
-      });
-    } else if (type === "debts") {
-      csvContent += "اسم الشركة,رقم الهاتف,المبلغ المطلوب بالدينار\n";
-      Object.values(currentData.debts).forEach(c => {
-        csvContent += `"${c.name}","${c.phone||''}","${c.amount||0}"\n`;
-      });
+    function deleteEntry(id) {
+        if (confirm('هل أنت تأكد من حذف هذا السجل؟')) {
+            db = db.filter(item => item.id !== id);
+            saveData();
+        }
     }
 
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `${type}_backup_${new Date().toISOString().split('T')[0]}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  }
-
-  function exportBackup() {
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(currentData, null, 2));
-    const dlAnchor = document.createElement('a');
-    dlAnchor.setAttribute("href", dataStr);
-    dlAnchor.setAttribute("download", `aldabbagh_backup_${new Date().toISOString().split('T')[0]}.json`);
-    document.body.appendChild(dlAnchor);
-    dlAnchor.click();
-    dlAnchor.remove();
-  }
-
-  // ---- الذكاء الاصطناعي Gemini API ----
-  async function askGemini(promptText) {
-    const apiKey = localStorage.getItem("gemini_key");
-    if (!apiKey) {
-      alert("يرجى إدخال مفتاح Gemini API في تبويب (المساعد الذكي والأمان) أولاً.");
-      return null;
+    function filterData() {
+        const query = document.getElementById('searchInput').value.toLowerCase();
+        render(query);
     }
 
-    const systemContext = `
-      أنت مساعد محاسبي ومالي لـ "محل الدباغ Pro".
-      إليك البيانات الحالية في النظام:
-      - ديون الشركات: ${JSON.stringify(currentData.debts)}
-      - حركات التسديد والقوائم: ${JSON.stringify(currentData.transactions)}
-      - دليل الأسعار: ${JSON.stringify(currentData.prices)}
-      سعر الصرف المعتمد حاليا: 100 دولار = ${document.getElementById("usdExchangeRate").value} دينار.
-      اجعل إجاباتك مختصرة ومباشرة ودقيقة جداً بالأرقام والعملة.
-    `;
+    function render(query = '') {
+        const tableBody = document.getElementById('dataTable');
+        tableBody.innerHTML = '';
 
-    try {
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: systemContext + "\n\nسؤال المستخدم: " + promptText }] }]
-        })
-      });
-      const data = await response.json();
-      return data.candidates[0].content.parts[0].text;
-    } catch (err) {
-      return "عذراً، حدث خطأ أثناء الاتصال بالذكاء الاصطناعي: " + err.message;
+        let salesSum = 0;
+        let debtSum = 0;
+
+        db.forEach(item => {
+            if (item.type === 'debt') debtSum += item.amount;
+            if (item.type === 'pay') salesSum += item.amount;
+
+            if (item.name.toLowerCase().includes(query) || item.item.toLowerCase().includes(query)) {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${item.date}</td>
+                    <td><b>${item.name}</b></td>
+                    <td>${item.item}</td>
+                    <td>${item.amount.toLocaleString()}</td>
+                    <td style="color: ${item.type === 'debt' ? 'var(--danger)' : 'var(--success)'}">
+                        ${item.type === 'debt' ? 'دين' : 'تسديد'}
+                    </td>
+                    <td class="no-print">
+                        <button class="btn-danger" style="padding: 4px 8px; font-size: 0.8rem;" onclick="deleteEntry(${item.id})">حذف</button>
+                    </td>
+                `;
+                tableBody.appendChild(tr);
+            }
+        });
+
+        document.getElementById('totalSales').textContent = salesSum.toLocaleString();
+        document.getElementById('totalDebts').textContent = debtSum.toLocaleString();
     }
-  }
 
-  async function sendAiMessage() {
-    const input = document.getElementById("aiPrompt");
-    const text = input.value.trim();
-    if (!text) return;
-
-    const chatBox = document.getElementById("aiChatBox");
-    chatBox.innerHTML += `<div class="ai-msg user">${text}</div>`;
-    input.value = "";
-    chatBox.scrollTop = chatBox.scrollHeight;
-
-    const botLoading = document.createElement("div");
-    botLoading.className = "ai-msg bot";
-    botLoading.innerText = "جاري التحليل والحساب...";
-    chatBox.appendChild(botLoading);
-    chatBox.scrollTop = chatBox.scrollHeight;
-
-    const reply = await askGemini(text);
-    botLoading.innerText = reply || "لم يتم استلام رد من النظام.";
-    chatBox.scrollTop = chatBox.scrollHeight;
-  }
-
-  function askQuick(q) {
-    document.getElementById("aiPrompt").value = q;
-    sendAiMessage();
-  }
-
-  async function runAiAnalysis() {
-    askQuick("قم بإجراء تحليل مالـي واستشاري شامل لديون الشركات والحركات ودليل الأسعار، وحدد أكثر الديون خطورة واقترح توصيات مالية للمحل.");
-  }
+    // التشغيل الأول
+    render();
 </script>
+
 </body>
 </html>
