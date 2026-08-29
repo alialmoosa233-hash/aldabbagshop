@@ -749,7 +749,7 @@
   function updateDashboard() {
     let totalDebtIQD = 0;
     const debtKeys = Object.keys(currentData.debts);
-    debtKeys.forEach(k => { totalDebtIQD += (currentData.debts[k].amount || 0); });
+    debtKeys.forEach(k => { totalDebtIQD += (Number(currentData.debts[k].amount) || 0); });
 
     document.getElementById("dashTotalDebt").innerText = totalDebtIQD.toLocaleString() + " د.ع";
     document.getElementById("dashTotalDebtUsd").innerText = formatUSD(totalDebtIQD);
@@ -757,73 +757,67 @@
     document.getElementById("dashPricesCount").innerText = Object.keys(currentData.prices).length;
 
     const todayStr = new Date().toISOString().split('T')[0];
-    const todayTrans = Object.keys(currentData.transactions).filter(k => currentData.transactions[k].date === todayStr);
-    document.getElementById("dashTodayCount").innerText = todayTrans.length;
+    let todayCount = 0;
+    Object.values(currentData.transactions).forEach(t => {
+      if (t.date && t.date.startsWith(todayStr)) todayCount++;
+    });
+    document.getElementById("dashTodayCount").innerText = todayCount;
   }
 
-  /* ---- إدارة الأسعار ---- */
-  document.getElementById("priceForm").onsubmit = (e) => {
+  // ---- إدارة دليل الأسعار ----
+  document.getElementById("priceForm").onsubmit = function(e) {
     e.preventDefault();
-    if(!db) return;
-    
-    db.child("prices").push().set({
+    const item = {
       name: document.getElementById("pName").value.trim(),
       code: document.getElementById("pCode").value.trim(),
-      packetCost: parseFloat(document.getElementById("pPacketCost").value) || 0,
-      packetSell: parseFloat(document.getElementById("pPacketSell").value) || 0,
-      cartonCost: parseFloat(document.getElementById("pCartonCost").value) || 0,
-      cartonSell: parseFloat(document.getElementById("pCartonSell").value) || 0
-    });
-    
-    document.getElementById("priceForm").reset();
-    alert("🟢 تم حفظ المادة بنجاح!");
+      packetCost: Number(document.getElementById("pPacketCost").value) || 0,
+      packetSell: Number(document.getElementById("pPacketSell").value) || 0,
+      cartonCost: Number(document.getElementById("pCartonCost").value) || 0,
+      cartonSell: Number(document.getElementById("pCartonSell").value) || 0,
+      updatedAt: new Date().toISOString()
+    };
+    db.child("prices").push(item);
+    this.reset();
   };
 
   function renderPrices() {
-    const tbody = document.getElementById("pricesTable"); tbody.innerHTML = "";
-    const query = normalizeText(document.getElementById("searchPrice").value);
-    const keys = Object.keys(currentData.prices);
+    const tbody = document.getElementById("pricesTable");
+    const search = normalizeText(document.getElementById("searchPrice").value);
+    tbody.innerHTML = "";
+    let idx = 1;
 
-    const filtered = keys.filter(k => {
-      const item = currentData.prices[k];
-      return normalizeText(item.name).includes(query) || normalizeText(item.code).includes(query);
-    });
+    for (let key in currentData.prices) {
+      const p = currentData.prices[key];
+      if (search && !normalizeText(p.name).includes(search) && !normalizeText(p.code).includes(search)) continue;
 
-    if(filtered.length === 0) {
-      tbody.innerHTML = "<tr><td colspan='8' style='color:var(--text-muted);'>لا توجد مواد مسجلة مطابقة للبحث</td></tr>";
-      return;
+      tbody.innerHTML += `
+        <tr>
+          <td>${idx++}</td>
+          <td style="font-weight:700;">${p.name}</td>
+          <td style="font-family:var(--font-mono);">${p.code || '-'}</td>
+          <td>${p.packetCost ? p.packetCost.toLocaleString() : '-'}</td>
+          <td style="color:var(--price); font-weight:700;">${p.packetSell ? p.packetSell.toLocaleString() : '-'}</td>
+          <td>${p.cartonCost ? p.cartonCost.toLocaleString() : '-'}</td>
+          <td style="color:var(--price); font-weight:700;">${p.cartonSell ? p.cartonSell.toLocaleString() : '-'}</td>
+          <td class="no-print">
+            <button class="btn-edit" onclick="openEditModal('${key}')">تعديل</button>
+            <button class="btn-delete" onclick="deletePrice('${key}')">حذف</button>
+          </td>
+        </tr>
+      `;
     }
-
-    filtered.forEach((k, i) => {
-      const item = currentData.prices[k];
-      tbody.innerHTML += `<tr>
-        <td>${i+1}</td>
-        <td><strong>${item.name}</strong></td>
-        <td>${item.code || '-'}</td>
-        <td>${(item.packetCost || 0).toLocaleString()} د.ع</td>
-        <td style='color:var(--price); font-weight:800;'>${(item.packetSell || 0).toLocaleString()} د.ع</td>
-        <td>${(item.cartonCost || 0).toLocaleString()} د.ع</td>
-        <td style='color:#b45309; font-weight:800;'>${(item.cartonSell || 0).toLocaleString()} د.ع</td>
-        <td class="no-print">
-          <button class="btn-edit" onclick="openEditModal('${k}')">✏️</button>
-          <button class="btn-delete" onclick="deletePrice('${k}')">🗑️</button>
-        </td>
-      </tr>`;
-    });
+    if (tbody.innerHTML === "") tbody.innerHTML = `<tr><td colspan="8">لا توجد مواد مطابقة للبحث</td></tr>`;
   }
 
   function openEditModal(key) {
-    const item = currentData.prices[key];
-    if(!item) return;
-
+    const p = currentData.prices[key];
     document.getElementById("editKey").value = key;
-    document.getElementById("editName").value = item.name || "";
-    document.getElementById("editCode").value = item.code || "";
-    document.getElementById("editPacketCost").value = item.packetCost || 0;
-    document.getElementById("editPacketSell").value = item.packetSell || 0;
-    document.getElementById("editCartonCost").value = item.cartonCost || 0;
-    document.getElementById("editCartonSell").value = item.cartonSell || 0;
-
+    document.getElementById("editName").value = p.name;
+    document.getElementById("editCode").value = p.code || "";
+    document.getElementById("editPacketCost").value = p.packetCost || "";
+    document.getElementById("editPacketSell").value = p.packetSell || "";
+    document.getElementById("editCartonCost").value = p.cartonCost || "";
+    document.getElementById("editCartonSell").value = p.cartonSell || "";
     document.getElementById("editModal").style.display = "flex";
   }
 
@@ -831,154 +825,65 @@
 
   function savePriceEdit() {
     const key = document.getElementById("editKey").value;
-    if(!key || !db) return;
-
     db.child("prices/" + key).update({
       name: document.getElementById("editName").value.trim(),
       code: document.getElementById("editCode").value.trim(),
-      packetCost: parseFloat(document.getElementById("editPacketCost").value) || 0,
-      packetSell: parseFloat(document.getElementById("editPacketSell").value) || 0,
-      cartonCost: parseFloat(document.getElementById("editCartonCost").value) || 0,
-      cartonSell: parseFloat(document.getElementById("editCartonSell").value) || 0
-    }).then(() => closeEditModal());
+      packetCost: Number(document.getElementById("editPacketCost").value) || 0,
+      packetSell: Number(document.getElementById("editPacketSell").value) || 0,
+      cartonCost: Number(document.getElementById("editCartonCost").value) || 0,
+      cartonSell: Number(document.getElementById("editCartonSell").value) || 0
+    });
+    closeEditModal();
   }
 
   function deletePrice(key) {
-    if(confirm("هل أنت متأكد من حذف هذه المادة؟")) db.child("prices/" + key).remove();
+    if (confirm("هل أنت تأكد من حذف هذه المادة من الدليل؟")) db.child("prices/" + key).remove();
   }
 
-  /* ---- إدارة ديون الشركات ---- */
-  document.getElementById("companyForm").onsubmit = (e) => {
+  // ---- إدارة الشركات والديون ----
+  document.getElementById("companyForm").onsubmit = function(e) {
     e.preventDefault();
-    if(!db) return;
-
-    db.child("debts").push().set({
+    const company = {
       name: document.getElementById("cName").value.trim(),
       phone: document.getElementById("cPhone").value.trim(),
-      amount: parseFloat(document.getElementById("cInitialDebt").value) || 0
-    });
-
-    document.getElementById("companyForm").reset();
-    alert("🟢 تم إضافة الشركة بنجاح!");
+      amount: Number(document.getElementById("cInitialDebt").value) || 0
+    };
+    db.child("debts").push(company);
+    this.reset();
   };
 
   function renderDebts() {
-    const tbody = document.getElementById("debtsTable"); tbody.innerHTML = "";
-    const query = normalizeText(document.getElementById("searchDebt").value);
-    const keys = Object.keys(currentData.debts);
+    const tbody = document.getElementById("debtsTable");
+    const search = normalizeText(document.getElementById("searchDebt").value);
+    tbody.innerHTML = "";
+    let idx = 1;
 
-    const filtered = keys.filter(k => normalizeText(currentData.debts[k].name).includes(query));
+    for (let key in currentData.debts) {
+      const c = currentData.debts[key];
+      if (search && !normalizeText(c.name).includes(search)) continue;
 
-    if(filtered.length === 0) {
-      tbody.innerHTML = "<tr><td colspan='6' style='color:var(--text-muted);'>لا توجد شركات مسجلة</td></tr>";
-      return;
-    }
-
-    filtered.forEach((k, i) => {
-      const item = currentData.debts[k];
-      const amt = item.amount || 0;
-      tbody.innerHTML += `<tr>
-        <td>${i+1}</td>
-        <td><strong>${item.name}</strong></td>
-        <td>${item.phone || '-'}</td>
-        <td style="color:${amt > 0 ? 'var(--debt)' : 'var(--success)'}; font-weight:800;">${amt.toLocaleString()} د.ع</td>
-        <td>${formatUSD(amt)}</td>
-        <td class="no-print">
-          <button class="btn-edit" onclick="openCompanyEditModal('${k}')">✏️</button>
-          <button class="btn-delete" onclick="deleteCompany('${k}')">🗑️</button>
-        </td>
-      </tr>`;
-    });
-  }
-
-  function renderCompanySelect() {
-    const tSel = document.getElementById("tCompany");
-    const sSel = document.getElementById("statementSelect");
-    
-    tSel.innerHTML = '<option value="">-- اختر الشركة --</option>';
-    sSel.innerHTML = '<option value="">-- اختر الشركة لرؤية كشف الحساب --</option>';
-
-    Object.keys(currentData.debts).forEach(k => {
-      const name = currentData.debts[k].name;
-      tSel.innerHTML += `<option value="${k}">${name}</option>`;
-      sSel.innerHTML += `<option value="${k}">${name}</option>`;
-    });
-  }
-
-  document.getElementById("transForm").onsubmit = (e) => {
-    e.preventDefault();
-    if(!db) return;
-
-    const compId = document.getElementById("tCompany").value;
-    const type = document.getElementById("tType").value;
-    const amount = parseFloat(document.getElementById("tAmount").value) || 0;
-    const note = document.getElementById("tNote").value.trim();
-
-    if(!compId || amount <= 0) return alert("يرجى اختيار شركة وتحديد مبلغ صحيح");
-
-    const currentCompany = currentData.debts[compId];
-    let newAmount = currentCompany.amount || 0;
-    if(type === "pay") newAmount -= amount;
-    else newAmount += amount;
-
-    const now = new Date();
-    const dateStr = now.toISOString().split('T')[0];
-    const timeStr = now.toTimeString().split(' ')[0].substring(0, 5);
-
-    db.child("debts/" + compId + "/amount").set(newAmount);
-    db.child("transactions").push().set({
-      companyId: compId,
-      companyName: currentCompany.name,
-      type: type,
-      amount: amount,
-      note: note,
-      date: dateStr,
-      time: timeStr
-    });
-
-    document.getElementById("transForm").reset();
-    alert("🟢 تم تسجيل الحركة وتحديث حساب الشركة!");
-  };
-
-  function renderTransactions() {
-    const tbody = document.getElementById("transTable"); tbody.innerHTML = "";
-    const keys = Object.keys(currentData.transactions).reverse();
-
-    if(keys.length === 0) {
-      tbody.innerHTML = "<tr><td colspan='6'>لا توجد حركات مسجلة</td></tr>";
-      return;
-    }
-
-    keys.slice(0, 15).forEach(k => {
-      const t = currentData.transactions[k];
-      tbody.innerHTML += `<tr>
-        <td>${t.date} ${t.time || ''}</td>
-        <td><strong>${t.companyName}</strong></td>
-        <td><span class="${t.type === 'pay' ? 'badge-pay' : 'badge-bill'}">${t.type === 'pay' ? 'تسديد' : 'قائمة'}</span></td>
-        <td style="font-weight:800;">${t.amount.toLocaleString()} د.ع</td>
-        <td>${t.note || '-'}</td>
-        <td class="no-print">
-          <button class="btn-delete" onclick="deleteTransaction('${k}')">🗑️</button>
-        </td>
-      </tr>`;
-    });
-  }
-
-  function deleteTransaction(key) {
-    if(confirm("هل أنت متأكد من حذف هذه الحركة؟")) {
-      db.child("transactions/" + key).remove();
+      tbody.innerHTML += `
+        <tr>
+          <td>${idx++}</td>
+          <td style="font-weight:700;">${c.name}</td>
+          <td style="font-family:var(--font-mono);">${c.phone || '-'}</td>
+          <td style="font-weight:800; color:var(--debt);">${(c.amount || 0).toLocaleString()} د.ع</td>
+          <td style="font-family:var(--font-mono);">${formatUSD(c.amount || 0)}</td>
+          <td class="no-print">
+            <button class="btn-edit" onclick="openCompanyEditModal('${key}')">تعديل</button>
+            <button class="btn-delete" onclick="deleteCompany('${key}')">حذف</button>
+          </td>
+        </tr>
+      `;
     }
   }
 
   function openCompanyEditModal(key) {
-    const item = currentData.debts[key];
-    if(!item) return;
-
+    const c = currentData.debts[key];
     document.getElementById("editCompKey").value = key;
-    document.getElementById("editCompName").value = item.name || "";
-    document.getElementById("editCompPhone").value = item.phone || "";
-    document.getElementById("editCompAmount").value = item.amount || 0;
-
+    document.getElementById("editCompName").value = c.name;
+    document.getElementById("editCompPhone").value = c.phone || "";
+    document.getElementById("editCompAmount").value = c.amount || 0;
     document.getElementById("editCompanyModal").style.display = "flex";
   }
 
@@ -986,255 +891,289 @@
 
   function saveCompanyEdit() {
     const key = document.getElementById("editCompKey").value;
-    if(!key || !db) return;
-
     db.child("debts/" + key).update({
       name: document.getElementById("editCompName").value.trim(),
       phone: document.getElementById("editCompPhone").value.trim(),
-      amount: parseFloat(document.getElementById("editCompAmount").value) || 0
-    }).then(() => closeCompanyEditModal());
+      amount: Number(document.getElementById("editCompAmount").value) || 0
+    });
+    closeCompanyEditModal();
   }
 
   function deleteCompany(key) {
-    if(confirm("هل أنت متأكد من حذف هذه الشركة؟")) db.child("debts/" + key).remove();
+    if (confirm("سيتم حذف حساب الشركة نهائياً، هل تريد الاستمرار؟")) db.child("debts/" + key).remove();
   }
 
-  /* ---- كشف حساب مطابق للتصميم الصوري ---- */
-  function generateStatement() {
-    const compId = document.getElementById("statementSelect").value;
-    const container = document.getElementById("statementContent");
+  function renderCompanySelect() {
+    const select1 = document.getElementById("tCompany");
+    const select2 = document.getElementById("statementSelect");
+    const currentVal1 = select1.value;
+    const currentVal2 = select2.value;
 
-    if(!compId || !currentData.debts[compId]) {
-      container.innerHTML = '<p style="text-align:center; color:var(--text-muted); margin: 20px 0;">اختر شركة من القائمة أعلاه لمشاهدة التفاصيل.</p>';
+    select1.innerHTML = '<option value="">-- اختر الشركة --</option>';
+    select2.innerHTML = '<option value="">-- اختر الشركة لرؤية كشف الحساب --</option>';
+
+    for (let key in currentData.debts) {
+      const cName = currentData.debts[key].name;
+      select1.innerHTML += `<option value="${key}">${cName}</option>`;
+      select2.innerHTML += `<option value="${key}">${cName}</option>`;
+    }
+    select1.value = currentVal1;
+    select2.value = currentVal2;
+  }
+
+  // ---- الحركات الماليـــة ----
+  document.getElementById("transForm").onsubmit = function(e) {
+    e.preventDefault();
+    const compKey = document.getElementById("tCompany").value;
+    const type = document.getElementById("tType").value;
+    const amount = Number(document.getElementById("tAmount").value) || 0;
+    const note = document.getElementById("tNote").value.trim();
+
+    if (!compKey || amount <= 0) return alert("يرجى إدخال الحقول المطلوبة بمبالغ صحيحة");
+
+    const comp = currentData.debts[compKey];
+    let newAmount = comp.amount || 0;
+    if (type === "pay") newAmount -= amount;
+    else if (type === "bill") newAmount += amount;
+
+    const transData = {
+      companyKey: compKey,
+      companyName: comp.name,
+      type: type,
+      amount: amount,
+      note: note,
+      date: new Date().toISOString()
+    };
+
+    db.child("transactions").push(transData);
+    db.child("debts/" + compKey).update({ amount: newAmount });
+
+    this.reset();
+    document.getElementById("tAmountUsd").value = "";
+  };
+
+  function renderTransactions() {
+    const tbody = document.getElementById("transTable");
+    tbody.innerHTML = "";
+    const list = Object.entries(currentData.transactions).reverse().slice(0, 15);
+
+    list.forEach(([key, t]) => {
+      const dateStr = new Date(t.date).toLocaleString("ar-IQ");
+      const badge = t.type === "pay" ? `<span class="badge-pay">واصل (تسديد)</span>` : `<span class="badge-bill">قائمة جديدة</span>`;
+
+      tbody.innerHTML += `
+        <tr>
+          <td style="font-size:11px;">${dateStr}</td>
+          <td>${t.companyName}</td>
+          <td>${badge}</td>
+          <td style="font-weight:700;">${t.amount.toLocaleString()} د.ع</td>
+          <td>${t.note || '-'}</td>
+          <td class="no-print"><button class="btn-delete" onclick="deleteTransaction('${key}', '${t.companyKey}', '${t.type}', ${t.amount})">حذف</button></td>
+        </tr>
+      `;
+    });
+  }
+
+  function deleteTransaction(transKey, compKey, type, amount) {
+    if (!confirm("هل ترغب بحذف هذه الحركة وإعادة تسوية رصيد الدين؟")) return;
+    
+    if (currentData.debts[compKey]) {
+      let currentDebt = currentData.debts[compKey].amount || 0;
+      if (type === "pay") currentDebt += amount;
+      else if (type === "bill") currentDebt -= amount;
+      db.child("debts/" + compKey).update({ amount: currentDebt });
+    }
+    db.child("transactions/" + transKey).remove();
+  }
+
+  // ---- كشف حساب تفصيلي ----
+  function generateStatement() {
+    const compKey = document.getElementById("statementSelect").value;
+    const div = document.getElementById("statementContent");
+    if (!compKey || !currentData.debts[compKey]) {
+      div.innerHTML = `<p style="text-align:center; color:var(--text-muted); margin: 20px 0;">اختر شركة من القائمة أعلاه لمشاهدة التفاصيل.</p>`;
       return;
     }
 
-    const comp = currentData.debts[compId];
-    
-    // جلب وترتيب حركات الشركة زمنياً
-    const trans = Object.keys(currentData.transactions)
-      .map(k => currentData.transactions[k])
-      .filter(t => t.companyId === compId)
-      .sort((a, b) => new Date(a.date + ' ' + (a.time || '00:00')) - new Date(b.date + ' ' + (b.time || '00:00')));
-
-    const startDate = trans.length > 0 ? trans[0].date : '---';
-    const endDate = new Date().toISOString().split('T')[0];
-
-    let runningBalance = 0;
+    const comp = currentData.debts[compKey];
+    const compTrans = Object.values(currentData.transactions)
+      .filter(t => t.companyKey === compKey)
+      .sort((a,b) => new Date(a.date) - new Date(b.date));
 
     let html = `
-      <div style="background: var(--paper-card); padding: 10px; border-radius: 8px; font-family: var(--font-body);">
-        <!-- الترويسة العلوية -->
-        <div style="text-align: center; margin-bottom: 15px;">
-          <h1 style="color: var(--paper); -webkit-text-stroke: 1px var(--border); font-size: 32px; margin: 0; font-weight: 700; font-family: var(--font-display);">كشف حساب</h1>
-          
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; font-weight: 700; font-size: 14px; color: var(--ink-soft);">
-            <div>التاريخ من: <span style="font-weight: 400;">${startDate}</span></div>
-            <div>الى غاية: <span style="font-weight: 400;">${endDate}</span></div>
-          </div>
-          
-          <div style="text-align: center; margin-top: 8px; font-weight: 800; font-size: 16px; color: var(--ink);">
-            اسم الحساب: <span style="color: var(--price);">${comp.name}</span>
-          </div>
+      <div style="margin-bottom:15px; border-bottom:1px dashed var(--border); padding-bottom:10px;">
+        <h3 style="margin:0; font-family:var(--font-display);">${comp.name}</h3>
+        <p style="margin:4px 0; font-size:12px; color:var(--text-muted);">الهاتف: ${comp.phone || 'غير مسجل'}</p>
+        <div style="font-size:16px; font-weight:800; color:var(--debt); margin-top:8px;">
+          الرصيد المطلوب حالياً: ${comp.amount.toLocaleString()} د.ع (${formatUSD(comp.amount)})
         </div>
+      </div>
+      <table style="width:100%; font-size:12px;">
+        <thead>
+          <tr>
+            <th>التاريخ</th>
+            <th>نوع الحركة</th>
+            <th>المبلغ</th>
+            <th>ملاحظات</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
 
-        <!-- جدول الحركات -->
-        <div class="table-wrapper">
-          <table style="width: 100%; border-collapse: collapse; font-size: 13px; text-align: center; border: 1px solid var(--border);">
-            <thead>
-              <tr style="background-color: var(--ink); color: #F4EBD0; border-bottom: 2px solid var(--brass);">
-                <th style="padding: 6px; border: 1px solid var(--border);">ت</th>
-                <th style="padding: 6px; border: 1px solid var(--border);">تاريخ الحركة</th>
-                <th style="padding: 6px; border: 1px solid var(--border);">رقم الحركة</th>
-                <th style="padding: 6px; border: 1px solid var(--border);">مدين</th>
-                <th style="padding: 6px; border: 1px solid var(--border);">دائن</th>
-                <th style="padding: 6px; border: 1px solid var(--border);">الصافي</th>
-                <th style="padding: 6px; border: 1px solid var(--border); min-width: 140px;">الوصف</th>
-              </tr>
-            </thead>
-            <tbody>
-              <!-- السطر الأول: الحساب السابق -->
-              <tr style="background-color: var(--paper-card); font-weight: bold;">
-                <td style="border: 1px solid var(--border);">1</td>
-                <td style="border: 1px solid var(--border);">-</td>
-                <td style="border: 1px solid var(--border);">-</td>
-                <td style="border: 1px solid var(--border);">0</td>
-                <td style="border: 1px solid var(--border);">0</td>
-                <td style="border: 1px solid var(--border);">0</td>
-                <td style="border: 1px solid var(--border);">الحساب السابق</td>
-              </tr>`;
-
-    if(trans.length === 0) {
-      html += `<tr><td colspan="7" style="padding:15px; color:var(--text-muted);">لا توجد حركات مسجلة لهذا الحساب</td></tr>`;
+    if (compTrans.length === 0) {
+      html += `<tr><td colspan="4">لا توجد حركات سابقة لهذه الشركة</td></tr>`;
     } else {
-      trans.forEach((t, i) => {
-        let debit = 0;  // مدين (قوائم / مشتريات)
-        let credit = 0; // دائن (واصل / تسديد)
-
-        if (t.type === 'bill') {
-          debit = t.amount;
-          runningBalance -= t.amount;
-        } else if (t.type === 'pay') {
-          credit = t.amount;
-          runningBalance += t.amount;
-        }
-
-        // التبديل بين شريطين ورقيّين فاتح وأغمق قليلاً كخطوط الدفتر
-        const rowBg = (i % 2 === 0) ? 'var(--paper-stripe)' : 'var(--paper-card)';
-
+      compTrans.forEach(t => {
+        const d = new Date(t.date).toLocaleDateString("ar-IQ");
+        const badge = t.type === "pay" ? `<span class="badge-pay">تسديد واصل</span>` : `<span class="badge-bill">فاتورة/قائمة</span>`;
         html += `
-          <tr style="background-color: ${rowBg}; font-weight: 700; color: var(--ink); border-bottom: 1px solid var(--border);">
-            <td style="border: 1px solid var(--border); padding: 5px;">${i + 2}</td>
-            <td style="border: 1px solid var(--border); padding: 5px;">${t.date}</td>
-            <td style="border: 1px solid var(--border); padding: 5px;">${t.time || '0'}</td>
-            <td style="border: 1px solid var(--border); padding: 5px; font-family: var(--font-mono);">
-              ${debit > 0 ? debit.toLocaleString() : '0'}
-            </td>
-            <td style="border: 1px solid var(--border); padding: 5px; font-family: var(--font-mono);">
-              ${credit > 0 ? credit.toLocaleString() : '0'}
-            </td>
-            <td style="border: 1px solid var(--border); padding: 5px; direction: ltr; font-weight: 800; font-family: var(--font-mono); color: ${runningBalance < 0 ? 'var(--debt)' : 'var(--success)'};">
-              ${runningBalance < 0 ? '-' + Math.abs(runningBalance).toLocaleString() : runningBalance.toLocaleString()}
-            </td>
-            <td style="border: 1px solid var(--border); padding: 5px; text-align: right;">
-              ${t.note || (t.type === 'pay' ? 'تسديد واصل' : 'عن حساب القائمة')}
-            </td>
-          </tr>`;
+          <tr>
+            <td>${d}</td>
+            <td>${badge}</td>
+            <td style="font-weight:700;">${t.amount.toLocaleString()} د.ع</td>
+            <td>${t.note || '-'}</td>
+          </tr>
+        `;
       });
     }
 
-    html += `
-            </tbody>
-          </table>
-        </div>
-
-        <div class="no-print" style="margin-top: 15px; display: flex; justify-content: space-between; align-items: center;">
-          <span style="font-size: 12px; color: var(--text-muted);">إجمالي الحركات: ${trans.length}</span>
-          <button onclick="window.print()" class="btn-secondary" style="width: auto; padding: 8px 16px; font-size: 13px;">🖨️ طباعة كشف الحساب</button>
-        </div>
-      </div>`;
-
-    container.innerHTML = html;
+    html += `</tbody></table>
+    <div class="no-print" style="margin-top:15px; text-align:left;">
+      <button onclick="window.print()" class="btn-secondary" style="width:auto; padding:6px 14px;">🖨️ طباعة كشف الحساب</button>
+    </div>`;
+    div.innerHTML = html;
   }
 
+  // ---- التقارير اليوميـــة ----
   function renderDailyReport() {
-    const reportDate = document.getElementById("reportDate").value;
+    const selectedDate = document.getElementById("reportDate").value;
     const tbody = document.getElementById("dailyReportTable");
     tbody.innerHTML = "";
+
+    if (!selectedDate) return;
 
     let totalBills = 0;
     let totalPays = 0;
     let count = 0;
+    let idx = 1;
 
-    const filteredKeys = Object.keys(currentData.transactions).filter(k => currentData.transactions[k].date === reportDate);
-
-    if(filteredKeys.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="7" style="color:var(--text-muted);">لا توجد حركات مالية في هذا التاريخ (${reportDate})</td></tr>`;
-    } else {
-      filteredKeys.forEach((k, i) => {
-        const t = currentData.transactions[k];
+    Object.entries(currentData.transactions).forEach(([key, t]) => {
+      const tDate = t.date.split('T')[0];
+      if (tDate === selectedDate) {
         count++;
-        if(t.type === 'bill') totalBills += t.amount;
-        if(t.type === 'pay') totalPays += t.amount;
+        if (t.type === "bill") totalBills += t.amount;
+        if (t.type === "pay") totalPays += t.amount;
 
-        tbody.innerHTML += `<tr>
-          <td>${i+1}</td>
-          <td>${t.time || '-'}</td>
-          <td><strong>${t.companyName}</strong></td>
-          <td><span class="${t.type === 'pay' ? 'badge-pay' : 'badge-bill'}">${t.type === 'pay' ? 'تسديد' : 'قائمة'}</span></td>
-          <td style="font-weight:800;">${t.amount.toLocaleString()} د.ع</td>
-          <td>${t.note || '-'}</td>
-          <td class="no-print"><button class="btn-delete" onclick="deleteTransaction('${k}')">🗑️</button></td>
-        </tr>`;
-      });
-    }
+        const time = new Date(t.date).toLocaleTimeString("ar-IQ", { hour: '2-digit', minute: '2-digit' });
+        const badge = t.type === "pay" ? `<span class="badge-pay">تسديد واصل</span>` : `<span class="badge-bill">قائمة مشتريات</span>`;
+
+        tbody.innerHTML += `
+          <tr>
+            <td>${idx++}</td>
+            <td style="font-size:11px;">${time}</td>
+            <td style="font-weight:700;">${t.companyName}</td>
+            <td>${badge}</td>
+            <td style="font-weight:700;">${t.amount.toLocaleString()} د.ع</td>
+            <td>${t.note || '-'}</td>
+            <td class="no-print"><button class="btn-delete" onclick="deleteTransaction('${key}', '${t.companyKey}', '${t.type}', ${t.amount})">حذف</button></td>
+          </tr>
+        `;
+      }
+    });
 
     document.getElementById("repTotalBills").innerText = totalBills.toLocaleString() + " د.ع";
     document.getElementById("repTotalPays").innerText = totalPays.toLocaleString() + " د.ع";
     document.getElementById("repNetTotal").innerText = (totalBills - totalPays).toLocaleString() + " د.ع";
     document.getElementById("repCount").innerText = count;
+
+    if (tbody.innerHTML === "") tbody.innerHTML = `<tr><td colspan="7">لا توجد حركات مسجلة لهذا اليوم</td></tr>`;
   }
 
-  /* ---- التصدير والنسخ الاحتياطي ---- */
+  // ---- التصدير إلى Excel / CSV النسخ الاحتياطي ----
   function exportCsv(type) {
     let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
-    if(type === 'prices') {
-      csvContent += "اسم المادة,الكود,كلفة الباكيت,بيع الباكيت,كلفة الكارتون,بيع الكارتون\n";
-      Object.keys(currentData.prices).forEach(k => {
-        const p = currentData.prices[k];
+    if (type === "prices") {
+      csvContent += "اسم المادة,الباركود,كلفة الباكيت,بيع الباكيت,كلفة الكارتون,بيع الكارتون\n";
+      Object.values(currentData.prices).forEach(p => {
         csvContent += `"${p.name}","${p.code||''}","${p.packetCost||0}","${p.packetSell||0}","${p.cartonCost||0}","${p.cartonSell||0}"\n`;
       });
-    } else {
-      csvContent += "اسم الشركة,الهاتف,الدين الحالي\n";
-      Object.keys(currentData.debts).forEach(k => {
-        const d = currentData.debts[k];
-        csvContent += `"${d.name}","${d.phone||''}","${d.amount||0}"\n`;
+    } else if (type === "debts") {
+      csvContent += "اسم الشركة,رقم الهاتف,المبلغ المطلوب بالدينار\n";
+      Object.values(currentData.debts).forEach(c => {
+        csvContent += `"${c.name}","${c.phone||''}","${c.amount||0}"\n`;
       });
     }
+
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `${type}_backup.csv`);
+    link.setAttribute("download", `${type}_backup_${new Date().toISOString().split('T')[0]}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   }
 
   function exportBackup() {
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(currentData));
-    const dlAnchorElem = document.createElement('a');
-    dlAnchorElem.setAttribute("href", dataStr);
-    dlAnchorElem.setAttribute("download", `store_backup_${new Date().toISOString().split('T')[0]}.json`);
-    dlAnchorElem.click();
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(currentData, null, 2));
+    const dlAnchor = document.createElement('a');
+    dlAnchor.setAttribute("href", dataStr);
+    dlAnchor.setAttribute("download", `aldabbagh_backup_${new Date().toISOString().split('T')[0]}.json`);
+    document.body.appendChild(dlAnchor);
+    dlAnchor.click();
+    dlAnchor.remove();
   }
 
-  /* ---- المساعد الذكي (Gemini API) ---- */
-  async function askGemini(prompt) {
+  // ---- الذكاء الاصطناعي Gemini API ----
+  async function askGemini(promptText) {
     const apiKey = localStorage.getItem("gemini_key");
-    if(!apiKey) return "⚠️ يرجى أدخال مفتاح Gemini API أولاً في إعدادات المساعد الذكي.";
+    if (!apiKey) {
+      alert("يرجى إدخال مفتاح Gemini API في تبويب (المساعد الذكي والأمان) أولاً.");
+      return null;
+    }
 
-    const systemContext = `أنت مساعد ذكي ونظام محاسبي لمحل تجاري. البيانات الحالية للنظام هي:
-- عدد الشركات: ${Object.keys(currentData.debts).length}
-- إجمالي ديون الشركات المطلوب دفعها: ${document.getElementById("dashTotalDebt").innerText}
-- إجمالي المواد في دليل الأسعار: ${Object.keys(currentData.prices).length}
-- بيانات الديون: ${JSON.stringify(currentData.debts)}
-- بيانات دليل الأسعار: ${JSON.stringify(currentData.prices)}
-أجب باختصار وبطريقة ودودة ومباشرة وبناءً على البيانات المتاحة أعلاه.`;
+    const systemContext = `
+      أنت مساعد محاسبي ومالي لـ "محل الدباغ Pro".
+      إليك البيانات الحالية في النظام:
+      - ديون الشركات: ${JSON.stringify(currentData.debts)}
+      - حركات التسديد والقوائم: ${JSON.stringify(currentData.transactions)}
+      - دليل الأسعار: ${JSON.stringify(currentData.prices)}
+      سعر الصرف المعتمد حاليا: 100 دولار = ${document.getElementById("usdExchangeRate").value} دينار.
+      اجعل إجاباتك مختصرة ومباشرة ودقيقة جداً بالأرقام والعملة.
+    `;
 
     try {
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`, {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: systemContext + "\n\nسؤال المستخدم: " + prompt }] }]
+          contents: [{ parts: [{ text: systemContext + "\n\nسؤال المستخدم: " + promptText }] }]
         })
       });
-
       const data = await response.json();
       return data.candidates[0].content.parts[0].text;
-    } catch(err) {
-      return "❌ حدث خطأ أثناء الاتصال بالذكاء الاصطناعي: " + err.message;
+    } catch (err) {
+      return "عذراً، حدث خطأ أثناء الاتصال بالذكاء الاصطناعي: " + err.message;
     }
   }
 
   async function sendAiMessage() {
     const input = document.getElementById("aiPrompt");
     const text = input.value.trim();
-    if(!text) return;
+    if (!text) return;
 
     const chatBox = document.getElementById("aiChatBox");
     chatBox.innerHTML += `<div class="ai-msg user">${text}</div>`;
     input.value = "";
     chatBox.scrollTop = chatBox.scrollHeight;
 
-    const botMsg = document.createElement("div");
-    botMsg.className = "ai-msg bot";
-    botMsg.innerText = "جاري التفكير...";
-    chatBox.appendChild(botMsg);
+    const botLoading = document.createElement("div");
+    botLoading.className = "ai-msg bot";
+    botLoading.innerText = "جاري التحليل والحساب...";
+    chatBox.appendChild(botLoading);
     chatBox.scrollTop = chatBox.scrollHeight;
 
     const reply = await askGemini(text);
-    botMsg.innerText = reply;
+    botLoading.innerText = reply || "لم يتم استلام رد من النظام.";
     chatBox.scrollTop = chatBox.scrollHeight;
   }
 
@@ -1244,7 +1183,7 @@
   }
 
   async function runAiAnalysis() {
-    askQuick("اعطني تحليلاً مالياً وملاحظات واستشارات حول ديون الشركات والمواد المتاحة في النظام");
+    askQuick("قم بإجراء تحليل مالـي واستشاري شامل لديون الشركات والحركات ودليل الأسعار، وحدد أكثر الديون خطورة واقترح توصيات مالية للمحل.");
   }
 </script>
 </body>
