@@ -463,7 +463,7 @@
     } else { document.getElementById("scannerModal").style.display = "none"; }
   }
 
-  // AI GEMINI INTEGRATION
+  // AI GEMINI INTEGRATION (المحدث)
   function saveApiKey() { localStorage.setItem("gemini_key", document.getElementById("geminiApiKey").value.trim()); }
   document.getElementById("geminiApiKey").value = localStorage.getItem("gemini_key") || "";
 
@@ -478,7 +478,9 @@
     input.value = "";
 
     const context = JSON.stringify({ debts: currentData.debts, pricesCount: Object.keys(currentData.prices).length });
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+    
+    // تم تحديث اسم الموديل للتوافق مع الإصدارات الحديثة
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
     try {
       const res = await fetch(url, {
@@ -487,8 +489,13 @@
         body: JSON.stringify({ contents: [{ parts: [{ text: `بيانات النظام: ${context}\n\nالسؤال: ${prompt}` }] }] })
       });
       const data = await res.json();
-      const reply = data.candidates[0].content.parts[0].text;
-      box.innerHTML += `<div style="color:var(--ai-color);"><b>المساعد:</b> ${reply}</div>`;
+
+      if (data.error) {
+        box.innerHTML += `<div style="color:red;">خطأ من Google: ${data.error.message}</div>`;
+      } else {
+        const reply = data.candidates[0].content.parts[0].text;
+        box.innerHTML += `<div style="color:var(--ai-color);"><b>المساعد:</b> ${reply}</div>`;
+      }
       box.scrollTop = box.scrollHeight;
     } catch(e) { box.innerHTML += `<div style="color:red;">خطأ: ${e.message}</div>`; }
   }
