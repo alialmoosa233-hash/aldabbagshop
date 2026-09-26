@@ -2,18 +2,20 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>نظام إدارة الأسعار والديون والمشتريات - محل الدباغ Pro</title>
+  <title>نظام إدارة الأسعار والديون والمشتريات - محل الدباغ Pro Ultra</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <!-- مكتبات Firebase السحابية -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
+  <!-- مكتبة مسح الباركود عبر الكاميرا -->
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Reem+Kufi:wght@400..700&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
 
     :root {
-      /* لوحة الدفتر الورقي */
       --paper: #E7DEC4;
       --paper-card: #FBF6E8;
       --paper-stripe: #F3EBD5;
@@ -22,7 +24,6 @@
       --ink-soft: #6B6152;
       --border: #C9BE9C;
 
-      /* ألوان الأحبار حسب كل قسم */
       --primary: #2C4368;
       --primary-dark: #101B2C;
       --price: #24508C;
@@ -31,7 +32,7 @@
       --success: #3F6B4F;
       --reports: #5B3C6E;
       --ai-color: #0F7A7C;
-      --warning: #A9822E;
+      --whatsapp: #1E7E34;
       --brass: #A9822E;
       --brass-light: #C9A857;
 
@@ -53,9 +54,7 @@
 
     body {
       font-family: var(--font-body);
-      background:
-        repeating-linear-gradient(to bottom, transparent 0px, transparent 31px, var(--paper-line) 32px),
-        var(--paper);
+      background: repeating-linear-gradient(to bottom, transparent 0px, transparent 31px, var(--paper-line) 32px), var(--paper);
       color: var(--text-main);
       margin: 0; padding: 0;
       direction: rtl;
@@ -64,125 +63,61 @@
 
     /* شاشة القفل بالرمز السري */
     #pinLockOverlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(16, 24, 38, 0.97);
-      z-index: 9999;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #F4EBD0;
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(16, 24, 38, 0.97); z-index: 9999;
+      display: flex; align-items: center; justify-content: center; color: #F4EBD0;
     }
 
     .pin-box {
       background: linear-gradient(160deg, #16233A, #1E2E45);
-      padding: 32px 28px;
-      border-radius: 12px;
-      text-align: center;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.55);
-      width: 90%;
-      max-width: 340px;
+      padding: 32px 28px; border-radius: 12px; text-align: center;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.55); width: 90%; max-width: 340px;
       border: 1px solid var(--brass);
     }
-
-    .pin-box h3 { margin-top: 0; margin-bottom: 22px; font-size: 19px; font-family: var(--font-display); font-weight: 400; letter-spacing: .3px; color: #F4EBD0; }
-
+    .pin-box h3 { margin-top: 0; margin-bottom: 22px; font-size: 19px; font-family: var(--font-display); color: #F4EBD0; }
     .pin-input {
       width: 78%; padding: 11px; font-size: 24px; text-align: center;
       border-radius: 6px; border: 1px solid #3C5170; background: #0F1B2A;
-      color: #F4EBD0; letter-spacing: 10px; outline: none; margin-bottom: 16px;
-      font-family: var(--font-mono);
+      color: #F4EBD0; letter-spacing: 10px; outline: none; margin-bottom: 16px; font-family: var(--font-mono);
     }
-
-    .pin-btn {
-      width: 85%; padding: 12px; background: var(--success); color: white;
-      border: none; border-radius: 6px; font-size: 15px; font-weight: 700;
-      cursor: pointer; font-family: var(--font-body);
-    }
-
+    .pin-btn { width: 85%; padding: 12px; background: var(--success); color: white; border: none; border-radius: 6px; font-size: 15px; font-weight: 700; cursor: pointer; }
     .pin-error { color: #E88A83; font-size: 13px; margin-top: 12px; display: none; font-weight: 700; }
 
     header {
       background: linear-gradient(160deg, #101B2C 0%, #1E2E45 55%, #223350 100%);
-      color: #F4EBD0;
-      padding: 18px 26px;
-      font-size: 21px;
-      font-weight: 400;
-      font-family: var(--font-display);
-      letter-spacing: .4px;
-      box-shadow: var(--shadow-md);
-      border-bottom: 4px solid var(--brass);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 12px;
+      color: #F4EBD0; padding: 18px 26px; font-size: 21px; font-family: var(--font-display);
+      border-bottom: 4px solid var(--brass); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
     }
 
     .container { max-width: 1400px; margin: 20px auto; padding: 0 15px; }
 
     #cloudStatus {
-      padding: 10px 16px;
-      text-align: center;
-      font-weight: 700;
-      border-radius: var(--radius);
-      margin-bottom: 20px;
-      background: var(--paper-card);
-      color: var(--text-muted);
-      font-size: 13px;
-      border: 1px dashed var(--border);
-      font-family: var(--font-mono);
-      transition: all 0.3s ease;
+      padding: 10px 16px; text-align: center; font-weight: 700; border-radius: var(--radius);
+      margin-bottom: 20px; background: var(--paper-card); color: var(--text-muted); font-size: 13px;
+      border: 1px dashed var(--border); font-family: var(--font-mono);
     }
 
     .rate-box {
-      background: rgba(244,235,208,0.08);
-      padding: 6px 14px;
-      border-radius: 6px;
-      font-size: 13px;
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      border: 1px solid rgba(201,168,87,0.45);
-      font-family: var(--font-mono);
-      color: #F4EBD0;
+      background: rgba(244,235,208,0.08); padding: 6px 14px; border-radius: 6px; font-size: 13px;
+      display: flex; gap: 8px; align-items: center; border: 1px solid rgba(201,168,87,0.45); font-family: var(--font-mono); color: #F4EBD0;
     }
-    .rate-box input {
-      width: 90px; margin: 0; padding: 4px 8px; font-size: 13px; text-align: center; border-radius: 5px; font-family: var(--font-mono);
-    }
+    .rate-box input { width: 90px; margin: 0; padding: 4px 8px; font-size: 13px; text-align: center; border-radius: 5px; font-family: var(--font-mono); }
 
-    .dashboard-summary {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 15px;
-      margin-bottom: 20px;
-    }
+    .dashboard-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 20px; }
     .dash-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-inline-start: 4px solid var(--brass);
-      border-radius: var(--radius);
-      padding: 16px;
-      box-shadow: var(--shadow-sm);
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
+      background: var(--card); border: 1px solid var(--border); border-inline-start: 4px solid var(--brass);
+      border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow-sm); display: flex; flex-direction: column; justify-content: center;
     }
-    .dash-card .label { font-size: 12px; color: var(--text-muted); font-weight: 700; margin-bottom: 5px; font-family: var(--font-body); }
+    .dash-card .label { font-size: 12px; color: var(--text-muted); font-weight: 700; margin-bottom: 5px; }
     .dash-card .value { font-size: 21px; font-weight: 600; font-family: var(--font-mono); }
 
     .tabs { display: flex; gap: 6px; margin-bottom: 20px; flex-wrap: wrap; align-items: flex-end; border-bottom: 3px solid var(--ink); }
     .tab-btn {
-      flex: 1; min-width: 160px; padding: 13px 14px 11px; font-size: 14.5px; font-weight: 600;
+      flex: 1; min-width: 150px; padding: 13px 14px 11px; font-size: 14.5px; font-weight: 600;
       background: #DCD0AA; color: var(--text-muted); border: none; border-radius: 8px 8px 0 0;
-      cursor: pointer; transition: all 0.18s ease; font-family: var(--font-display); text-align: center;
-      transform: translateY(4px); box-shadow: inset 0 -3px 0 rgba(0,0,0,0.05);
+      cursor: pointer; font-family: var(--font-display); text-align: center; transform: translateY(4px);
     }
-    .tab-btn:hover { transform: translateY(1px); color: var(--ink); }
-    .tab-btn.active { color: #F7F1DE; transform: translateY(0); box-shadow: var(--shadow-sm); }
+    .tab-btn.active { color: #F7F1DE; transform: translateY(0); }
     .tab-btn.active[data-tab="prices"] { background: var(--price); }
     .tab-btn.active[data-tab="debts"] { background: var(--debt); }
     .tab-btn.active[data-tab="reports"] { background: var(--reports); }
@@ -194,46 +129,24 @@
     .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
     .grid-form { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
-    .card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 20px;
-      box-shadow: var(--shadow-sm);
-      margin-bottom: 20px;
-    }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow-sm); margin-bottom: 20px; }
+    h2 { margin-top: 0; font-size: 17px; font-family: var(--font-display); border-bottom: 2px dashed var(--border); padding-bottom: 10px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
 
-    h2 {
-      margin-top: 0; font-size: 17px; font-weight: 500; font-family: var(--font-display); letter-spacing: .2px;
-      border-bottom: 2px dashed var(--border); padding-bottom: 10px; margin-bottom: 16px;
-      display: flex; justify-content: space-between; align-items: center;
-    }
+    input, select, textarea { width: 100%; padding: 10px 12px; margin-bottom: 12px; border: 1.5px solid var(--border); border-radius: 6px; font-size: 14px; font-family: var(--font-body); background-color: #FFFDF6; }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--price); background: #fff; }
 
-    input, select, textarea {
-      width: 100%; padding: 10px 12px; margin-bottom: 12px;
-      border: 1.5px solid var(--border); border-radius: 6px;
-      font-size: 14px; font-family: var(--font-body); background-color: #FFFDF6;
-    }
-    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--price); background: #fff; box-shadow: 0 0 0 3px rgba(36,80,140,0.12); }
-
-    button {
-      width: 100%; padding: 11px; border: none; border-radius: 6px;
-      color: white; font-weight: 700; cursor: pointer; font-size: 14px; font-family: var(--font-body);
-      transition: transform 0.12s ease, opacity 0.2s ease; box-shadow: var(--shadow-sm);
-    }
-    button:hover { opacity: 0.92; }
-    button:active { transform: scale(0.97); }
-
+    button { width: 100%; padding: 11px; border: none; border-radius: 6px; color: white; font-weight: 700; cursor: pointer; font-size: 14px; font-family: var(--font-body); }
     .btn-price { background: var(--price); grid-column: span 2; }
     .btn-debt { background: var(--debt); }
     .btn-success { background: var(--success); }
     .btn-ai { background: var(--ai-color); }
+    .btn-whatsapp { background: var(--whatsapp); color: white; width: auto; padding: 6px 12px; font-size: 12px; border-radius: 6px; }
     .btn-secondary { background: var(--ink-soft); }
 
     .table-wrapper { overflow-x: auto; margin-top: 10px; border-radius: 8px; border: 1px solid var(--border); }
     table { width: 100%; border-collapse: collapse; font-size: 13px; background: var(--paper-card); }
     th, td { padding: 10px 12px; text-align: center; border-bottom: 1px solid var(--border); }
-    th { background: var(--ink); color: #F4EBD0; font-weight: 600; font-family: var(--font-body); letter-spacing: .2px; }
+    th { background: var(--ink); color: #F4EBD0; font-weight: 600; }
     tbody tr:nth-child(even) { background: var(--paper-stripe); }
 
     .btn-edit { background: var(--price); color: white; padding: 4px 8px; border-radius: 5px; border: none; cursor: pointer; font-size: 12px; width: auto; }
@@ -242,45 +155,22 @@
     .badge-pay { background: #E1EAE2; color: var(--success); padding: 4px 8px; border-radius: 12px; font-weight: 700; font-size: 11px; }
     .badge-bill { background: #F1DEDB; color: var(--debt); padding: 4px 8px; border-radius: 12px; font-weight: 700; font-size: 11px; }
 
-    .report-cards {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;
-    }
-    .report-card {
-      background: var(--card); border: 1px solid var(--border); border-top: 3px solid var(--reports); padding: 15px; border-radius: var(--radius); text-align: center;
-    }
-    .report-card .title { font-size: 12px; color: var(--text-muted); font-weight: 700; margin-bottom: 6px; }
-    .report-card .val { font-size: 18px; font-weight: 600; font-family: var(--font-mono); }
+    .report-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+    .report-card { background: var(--card); border: 1px solid var(--border); border-top: 3px solid var(--reports); padding: 15px; border-radius: var(--radius); text-align: center; }
 
-    .ai-chat-box {
-      background: #101B2C; border: 1px solid var(--ink); border-radius: 8px;
-      height: 340px; overflow-y: auto; padding: 15px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 10px;
-    }
+    .ai-chat-box { background: #101B2C; border: 1px solid var(--ink); border-radius: 8px; height: 340px; overflow-y: auto; padding: 15px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 10px; }
     .ai-msg { max-width: 85%; padding: 10px 14px; border-radius: 10px; font-size: 13.5px; line-height: 1.6; font-family: var(--font-mono); }
-    .ai-msg.user { background: var(--ai-color); color: white; align-self: flex-start; border-bottom-right-radius: 2px; }
-    .ai-msg.bot { background: #1B2C40; color: #BFE3E1; border: 1px solid #2A4155; align-self: flex-end; border-bottom-left-radius: 2px; }
+    .ai-msg.user { background: var(--ai-color); color: white; align-self: flex-start; }
+    .ai-msg.bot { background: #1B2C40; color: #BFE3E1; border: 1px solid #2A4155; align-self: flex-end; }
 
-    .ai-quick-btn {
-      background: #123B3D; color: #8FDAD6; padding: 6px 12px; border-radius: 20px; font-size: 12px; cursor: pointer; border: 1px solid #1D5254; font-weight: 600; width: auto;
-    }
-    .ai-quick-btn:hover { background: #175052; }
+    .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(16, 24, 38, 0.55); backdrop-filter: blur(4px); justify-content: center; align-items: center; }
+    .modal-content { background-color: var(--paper-card); padding: 22px; border-radius: var(--radius); width: 90%; max-width: 480px; border-top: 4px solid var(--brass); }
 
-    .modal {
-      display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%;
-      background-color: rgba(16, 24, 38, 0.55); backdrop-filter: blur(4px);
-      justify-content: center; align-items: center;
-    }
-    .modal-content {
-      background-color: var(--paper-card); padding: 22px; border-radius: var(--radius); width: 90%; max-width: 480px;
-      border-top: 4px solid var(--brass); box-shadow: var(--shadow-md);
-    }
-
-    #receiptPrintArea { display: none; }
-
+    /* تنسيق الطباعة الحرارية (80mm Thermal Print) */
     @media print {
       body * { visibility: hidden; }
-      #printableArea, #printableArea *, #receiptPrintArea, #receiptPrintArea *, #dailyReportPrint, #dailyReportPrint * { visibility: visible; }
-      #printableArea, #dailyReportPrint { position: absolute; left: 0; top: 0; width: 100%; }
-      #receiptPrintArea { display: block !important; position: absolute; left: 0; top: 0; width: 100%; }
+      #printableArea, #printableArea *, #dailyReportPrint, #dailyReportPrint * { visibility: visible; }
+      #printableArea, #dailyReportPrint { position: absolute; left: 0; top: 0; width: 100%; font-size: 12px; }
       .no-print { display: none !important; }
     }
   </style>
@@ -298,7 +188,7 @@
 </div>
 
 <header class="no-print">
-  <div>📦 نظام الدباغ المحاسبي Pro</div>
+  <div>📦 نظام الدباغ المحاسبي Pro Ultra</div>
   <div style="display:flex; gap:10px; align-items:center;">
     <button onclick="lockSystem()" style="background:rgba(244,235,208,0.1); color:#F4EBD0; border:1px solid var(--brass); padding:6px 12px; border-radius:6px; cursor:pointer; font-size:12px; width:auto;">🔒 قفل الشاشة</button>
     <div class="rate-box">
@@ -312,7 +202,7 @@
 <div class="container">
   <div id="cloudStatus" class="no-print">🔄 جاري الاتصال بالسحابة...</div>
 
-  <!-- لوحة المؤشرات السريعة (Dashboard Stats) -->
+  <!-- Dashboard Stats -->
   <div class="dashboard-summary no-print">
     <div class="dash-card">
       <div class="label">💳 إجمالي ديون الشركات المطلوب دفعها</div>
@@ -367,7 +257,21 @@
           <span>🔍 الاستعلام السريع عن الأسعار</span>
           <button type="button" class="btn-secondary" onclick="exportCsv('prices')" style="width:auto; padding:4px 10px; font-size:11px;">📥 تصدير Excel</button>
         </h2>
-        <input type="text" id="searchPrice" placeholder="🔍 اكتب اسم المادة أو امسح الباركود..." oninput="renderPrices()" autofocus style="font-size:15px; font-weight:700;" />
+
+        <!-- زر مسح الباركود بالكاميرا -->
+        <div style="display:flex; gap:8px; margin-bottom:12px;">
+          <input type="text" id="searchPrice" placeholder="🔍 اكتب اسم المادة أو امسح الباركود..." oninput="renderPrices()" autofocus style="font-size:15px; font-weight:700; margin:0;" />
+          <button type="button" onclick="startScanner()" class="btn-price" style="width:auto; padding:0 15px; white-space:nowrap;">📷 كاميرا</button>
+        </div>
+        
+        <div id="scannerModal" class="modal">
+          <div class="modal-content" style="text-align:center;">
+            <h3>📷 قراءة الباركود عبر الكاميرا</h3>
+            <div id="interactive" style="width:100%; height:250px; background:#000; margin-bottom:10px;"></div>
+            <button type="button" onclick="stopScanner()" class="btn-secondary">إغلاق الكاميرا</button>
+          </div>
+        </div>
+
         <div class="table-wrapper">
           <table>
             <thead>
@@ -401,7 +305,7 @@
           <h2 style="color: var(--debt);">➕ إضافة شركة أو مجهز جديد</h2>
           <form id="companyForm">
             <input type="text" id="cName" placeholder="اسم الشركة أو المجهز" required />
-            <input type="text" id="cPhone" placeholder="رقم الهاتف (اختياري)" />
+            <input type="text" id="cPhone" placeholder="رقم الهاتف مع رمز الدولة (مثال: 9647700000000)" />
             <input type="number" id="cInitialDebt" placeholder="الرصيد الأولي / الدين الحالي (دينار)" value="0" />
             <button type="submit" class="btn-debt">حفظ الشركة</button>
           </form>
@@ -534,7 +438,7 @@
     </div>
   </div>
 
-  <!-- 4. قسم المساعد الذكي والأمان (AI & Security) -->
+  <!-- 4. قسم المساعد الذكي والأمان -->
   <div id="aiSection" class="tab-content">
     <div class="grid">
       <div>
@@ -554,7 +458,6 @@
           </div>
         </div>
 
-        <!-- 🛡️ قسم إعدادات الأمان والقفل -->
         <div class="card">
           <h2 style="color: var(--success);">🛡️ أمان النظام والرمز السري</h2>
           <p style="font-size:12px; color:var(--text-muted);">تغيير رمز القفل المكون من 4 أرقام لحماية التطبيق:</p>
@@ -624,7 +527,7 @@
 </div>
 
 <script>
-  // ---- نظام القفل بالرمز السري ----
+  // ---- 🔐 نظام القفل بالرمز السري ----
   const DEFAULT_APP_PIN = "1234";
 
   function checkAppPin() {
@@ -657,7 +560,7 @@
     }
   }
 
-  // ---- إعدادات Firebase ----
+  // ---- 🌐 إعدادات Firebase السحابية ----
   const firebaseConfig = {
     apiKey: "AIzaSyC-QqnQTbbyVFS8QFkf4CYZTcURcr9nBW0",
     authDomain: "gimi-fd7fe.firebaseapp.com",
@@ -757,67 +660,90 @@
     document.getElementById("dashPricesCount").innerText = Object.keys(currentData.prices).length;
 
     const todayStr = new Date().toISOString().split('T')[0];
-    let todayCount = 0;
+    let todayTxCount = 0;
     Object.values(currentData.transactions).forEach(t => {
-      if (t.date && t.date.startsWith(todayStr)) todayCount++;
+      if (t.date && t.date.startsWith(todayStr)) todayTxCount++;
     });
-    document.getElementById("dashTodayCount").innerText = todayCount;
+    document.getElementById("dashTodayCount").innerText = todayTxCount;
   }
 
-  // ---- إدارة دليل الأسعار ----
+  // ---- 1. إدارة دليل الأسعار ----
   document.getElementById("priceForm").onsubmit = function(e) {
     e.preventDefault();
-    const item = {
-      name: document.getElementById("pName").value.trim(),
+    const pName = document.getElementById("pName").value.trim();
+    if (!pName) return;
+
+    const newPrice = {
+      name: pName,
       code: document.getElementById("pCode").value.trim(),
       packetCost: Number(document.getElementById("pPacketCost").value) || 0,
       packetSell: Number(document.getElementById("pPacketSell").value) || 0,
       cartonCost: Number(document.getElementById("pCartonCost").value) || 0,
       cartonSell: Number(document.getElementById("pCartonSell").value) || 0,
-      updatedAt: new Date().toISOString()
+      createdAt: new Date().toISOString()
     };
-    db.child("prices").push(item);
-    this.reset();
+
+    db.child("prices").push(newPrice, (err) => {
+      if (!err) {
+        document.getElementById("priceForm").reset();
+      } else {
+        alert("⚠️ حدث خطأ أثناء الحفظ: " + err.message);
+      }
+    });
   };
 
   function renderPrices() {
     const tbody = document.getElementById("pricesTable");
-    const search = normalizeText(document.getElementById("searchPrice").value);
+    const query = normalizeText(document.getElementById("searchPrice").value);
     tbody.innerHTML = "";
-    let idx = 1;
 
-    for (let key in currentData.prices) {
-      const p = currentData.prices[key];
-      if (search && !normalizeText(p.name).includes(search) && !normalizeText(p.code).includes(search)) continue;
-
-      tbody.innerHTML += `
-        <tr>
-          <td>${idx++}</td>
-          <td style="font-weight:700;">${p.name}</td>
-          <td style="font-family:var(--font-mono);">${p.code || '-'}</td>
-          <td>${p.packetCost ? p.packetCost.toLocaleString() : '-'}</td>
-          <td style="color:var(--price); font-weight:700;">${p.packetSell ? p.packetSell.toLocaleString() : '-'}</td>
-          <td>${p.cartonCost ? p.cartonCost.toLocaleString() : '-'}</td>
-          <td style="color:var(--price); font-weight:700;">${p.cartonSell ? p.cartonSell.toLocaleString() : '-'}</td>
-          <td class="no-print">
-            <button class="btn-edit" onclick="openEditModal('${key}')">تعديل</button>
-            <button class="btn-delete" onclick="deletePrice('${key}')">حذف</button>
-          </td>
-        </tr>
-      `;
+    const keys = Object.keys(currentData.prices);
+    if (keys.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="8">لا توجد مواد مسجلة في الدليل.</td></tr>';
+      return;
     }
-    if (tbody.innerHTML === "") tbody.innerHTML = `<tr><td colspan="8">لا توجد مواد مطابقة للبحث</td></tr>`;
+
+    let count = 0;
+    keys.forEach(k => {
+      const item = currentData.prices[k];
+      const matchName = normalizeText(item.name).includes(query);
+      const matchCode = normalizeText(item.code).includes(query);
+
+      if (matchName || matchCode) {
+        count++;
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${count}</td>
+          <td style="font-weight:700; text-align:right;">${item.name}</td>
+          <td><code>${item.code || '-'}</code></td>
+          <td>${(item.packetCost || 0).toLocaleString()}</td>
+          <td style="color:var(--price); font-weight:700;">${(item.packetSell || 0).toLocaleString()}</td>
+          <td>${(item.cartonCost || 0).toLocaleString()}</td>
+          <td style="color:var(--price); font-weight:700;">${(item.cartonSell || 0).toLocaleString()}</td>
+          <td class="no-print">
+            <button class="btn-edit" onclick="openEditPrice('${k}')">✏️</button>
+            <button class="btn-delete" onclick="deletePrice('${k}')">🗑️</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      }
+    });
+
+    if (count === 0) {
+      tbody.innerHTML = '<tr><td colspan="8">لا توجد نتائج تطابق البحث.</td></tr>';
+    }
   }
 
-  function openEditModal(key) {
-    const p = currentData.prices[key];
+  function openEditPrice(key) {
+    const item = currentData.prices[key];
+    if (!item) return;
     document.getElementById("editKey").value = key;
-    document.getElementById("editName").value = p.name;
-    document.getElementById("editCode").value = p.code || "";
-    document.getElementById("editPacketCost").value = p.packetCost || "";
-    document.getElementById("editPacketSell").value = p.packetSell || "";
-    document.getElementById("editCartonCost").value = p.cartonCost || "";
-    document.getElementById("editCartonSell").value = p.cartonSell || "";
+    document.getElementById("editName").value = item.name || "";
+    document.getElementById("editCode").value = item.code || "";
+    document.getElementById("editPacketCost").value = item.packetCost || 0;
+    document.getElementById("editPacketSell").value = item.packetSell || 0;
+    document.getElementById("editCartonCost").value = item.cartonCost || 0;
+    document.getElementById("editCartonSell").value = item.cartonSell || 0;
     document.getElementById("editModal").style.display = "flex";
   }
 
@@ -825,65 +751,150 @@
 
   function savePriceEdit() {
     const key = document.getElementById("editKey").value;
-    db.child("prices/" + key).update({
+    if (!key) return;
+
+    const updated = {
       name: document.getElementById("editName").value.trim(),
       code: document.getElementById("editCode").value.trim(),
       packetCost: Number(document.getElementById("editPacketCost").value) || 0,
       packetSell: Number(document.getElementById("editPacketSell").value) || 0,
       cartonCost: Number(document.getElementById("editCartonCost").value) || 0,
-      cartonSell: Number(document.getElementById("editCartonSell").value) || 0
+      cartonSell: Number(document.getElementById("editCartonSell").value) || 0,
+      updatedAt: new Date().toISOString()
+    };
+
+    db.child("prices").child(key).update(updated, (err) => {
+      if (!err) closeEditModal();
+      else alert("⚠️ خطأ في التعديل: " + err.message);
     });
-    closeEditModal();
   }
 
   function deletePrice(key) {
-    if (confirm("هل أنت تأكد من حذف هذه المادة من الدليل؟")) db.child("prices/" + key).remove();
+    if (confirm("هل أنت تأكد من حذف هذه المادة من الدليل؟")) {
+      db.child("prices").child(key).remove();
+    }
   }
 
-  // ---- إدارة الشركات والديون ----
+  // ---- 📷 قارئ الباركود بالكاميرا ----
+  let html5QrcodeScanner = null;
+
+  function startScanner() {
+    document.getElementById("scannerModal").style.display = "flex";
+    html5QrcodeScanner = new Html5Qrcode("interactive");
+    html5QrcodeScanner.start(
+      { facingMode: "environment" },
+      { fps: 10, qrbox: { width: 250, height: 150 } },
+      (decodedText) => {
+        document.getElementById("searchPrice").value = decodedText;
+        renderPrices();
+        stopScanner();
+      },
+      () => {}
+    ).catch(err => {
+      alert("⚠️ لم يتم العثور على كاميرا أو تعذر الحصول على الإذن: " + err);
+      stopScanner();
+    });
+  }
+
+  function stopScanner() {
+    if (html5QrcodeScanner) {
+      html5QrcodeScanner.stop().then(() => {
+        html5QrcodeScanner.clear();
+        document.getElementById("scannerModal").style.display = "none";
+      }).catch(() => {
+        document.getElementById("scannerModal").style.display = "none";
+      });
+    } else {
+      document.getElementById("scannerModal").style.display = "none";
+    }
+  }
+
+  // ---- 2. إدارة ديون الشركات والمجهزين ----
   document.getElementById("companyForm").onsubmit = function(e) {
     e.preventDefault();
-    const company = {
-      name: document.getElementById("cName").value.trim(),
+    const cName = document.getElementById("cName").value.trim();
+    if (!cName) return;
+
+    const newCompany = {
+      name: cName,
       phone: document.getElementById("cPhone").value.trim(),
-      amount: Number(document.getElementById("cInitialDebt").value) || 0
+      amount: Number(document.getElementById("cInitialDebt").value) || 0,
+      createdAt: new Date().toISOString()
     };
-    db.child("debts").push(company);
-    this.reset();
+
+    db.child("debts").push(newCompany, (err) => {
+      if (!err) document.getElementById("companyForm").reset();
+      else alert("⚠️ حدث خطأ أثناء الحفظ: " + err.message);
+    });
   };
 
   function renderDebts() {
     const tbody = document.getElementById("debtsTable");
-    const search = normalizeText(document.getElementById("searchDebt").value);
+    const query = normalizeText(document.getElementById("searchDebt").value);
     tbody.innerHTML = "";
-    let idx = 1;
 
-    for (let key in currentData.debts) {
-      const c = currentData.debts[key];
-      if (search && !normalizeText(c.name).includes(search)) continue;
+    const keys = Object.keys(currentData.debts);
+    if (keys.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6">لا توجد شركات أو مجهزين مضافين.</td></tr>';
+      return;
+    }
 
-      tbody.innerHTML += `
-        <tr>
-          <td>${idx++}</td>
-          <td style="font-weight:700;">${c.name}</td>
-          <td style="font-family:var(--font-mono);">${c.phone || '-'}</td>
-          <td style="font-weight:800; color:var(--debt);">${(c.amount || 0).toLocaleString()} د.ع</td>
-          <td style="font-family:var(--font-mono);">${formatUSD(c.amount || 0)}</td>
+    let count = 0;
+    keys.forEach(k => {
+      const comp = currentData.debts[k];
+      if (normalizeText(comp.name).includes(query)) {
+        count++;
+        const amount = Number(comp.amount) || 0;
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${count}</td>
+          <td style="font-weight:700; text-align:right;">${comp.name}</td>
+          <td>${comp.phone || '-'}</td>
+          <td style="font-weight:700; color:${amount > 0 ? 'var(--debt)' : 'var(--success)'}">${amount.toLocaleString()} د.ع</td>
+          <td style="font-weight:600;">${formatUSD(amount)}</td>
           <td class="no-print">
-            <button class="btn-edit" onclick="openCompanyEditModal('${key}')">تعديل</button>
-            <button class="btn-delete" onclick="deleteCompany('${key}')">حذف</button>
+            <button class="btn-edit" onclick="openEditCompany('${k}')">✏️</button>
+            <button class="btn-delete" onclick="deleteCompany('${k}')">🗑️</button>
           </td>
-        </tr>
-      `;
+        `;
+        tbody.appendChild(tr);
+      }
+    });
+
+    if (count === 0) {
+      tbody.innerHTML = '<tr><td colspan="6">لا توجد نتائج تطابق البحث.</td></tr>';
     }
   }
 
-  function openCompanyEditModal(key) {
-    const c = currentData.debts[key];
+  function renderCompanySelect() {
+    const selectT = document.getElementById("tCompany");
+    const selectS = document.getElementById("statementSelect");
+
+    const curT = selectT.value;
+    const curS = selectS.value;
+
+    selectT.innerHTML = '<option value="">-- اختر الشركة --</option>';
+    selectS.innerHTML = '<option value="">-- اختر الشركة لرؤية كشف الحساب --</option>';
+
+    Object.keys(currentData.debts).forEach(k => {
+      const comp = currentData.debts[k];
+      const opt1 = new Option(comp.name, k);
+      const opt2 = new Option(comp.name, k);
+      selectT.add(opt1);
+      selectS.add(opt2);
+    });
+
+    selectT.value = curT;
+    selectS.value = curS;
+  }
+
+  function openEditCompany(key) {
+    const comp = currentData.debts[key];
+    if (!comp) return;
     document.getElementById("editCompKey").value = key;
-    document.getElementById("editCompName").value = c.name;
-    document.getElementById("editCompPhone").value = c.phone || "";
-    document.getElementById("editCompAmount").value = c.amount || 0;
+    document.getElementById("editCompName").value = comp.name || "";
+    document.getElementById("editCompPhone").value = comp.phone || "";
+    document.getElementById("editCompAmount").value = comp.amount || 0;
     document.getElementById("editCompanyModal").style.display = "flex";
   }
 
@@ -891,160 +902,190 @@
 
   function saveCompanyEdit() {
     const key = document.getElementById("editCompKey").value;
-    db.child("debts/" + key).update({
+    if (!key) return;
+
+    const updated = {
       name: document.getElementById("editCompName").value.trim(),
       phone: document.getElementById("editCompPhone").value.trim(),
-      amount: Number(document.getElementById("editCompAmount").value) || 0
+      amount: Number(document.getElementById("editCompAmount").value) || 0,
+      updatedAt: new Date().toISOString()
+    };
+
+    db.child("debts").child(key).update(updated, (err) => {
+      if (!err) closeCompanyEditModal();
+      else alert("⚠️ خطأ في التعديل: " + err.message);
     });
-    closeCompanyEditModal();
   }
 
   function deleteCompany(key) {
-    if (confirm("سيتم حذف حساب الشركة نهائياً، هل تريد الاستمرار؟")) db.child("debts/" + key).remove();
-  }
-
-  function renderCompanySelect() {
-    const select1 = document.getElementById("tCompany");
-    const select2 = document.getElementById("statementSelect");
-    const currentVal1 = select1.value;
-    const currentVal2 = select2.value;
-
-    select1.innerHTML = '<option value="">-- اختر الشركة --</option>';
-    select2.innerHTML = '<option value="">-- اختر الشركة لرؤية كشف الحساب --</option>';
-
-    for (let key in currentData.debts) {
-      const cName = currentData.debts[key].name;
-      select1.innerHTML += `<option value="${key}">${cName}</option>`;
-      select2.innerHTML += `<option value="${key}">${cName}</option>`;
+    if (confirm("هل أنت تأكد من حذف هذه الشركة وكل بياناتها؟")) {
+      db.child("debts").child(key).remove();
     }
-    select1.value = currentVal1;
-    select2.value = currentVal2;
   }
 
-  // ---- الحركات الماليـــة ----
+  // ---- 3. تسجيل الحركات الماليّة (تسديد / فاتورة) ----
   document.getElementById("transForm").onsubmit = function(e) {
     e.preventDefault();
-    const compKey = document.getElementById("tCompany").value;
+    const companyKey = document.getElementById("tCompany").value;
     const type = document.getElementById("tType").value;
-    const amount = Number(document.getElementById("tAmount").value) || 0;
+    const amount = Number(document.getElementById("tAmount").value);
     const note = document.getElementById("tNote").value.trim();
 
-    if (!compKey || amount <= 0) return alert("يرجى إدخال الحقول المطلوبة بمبالغ صحيحة");
+    if (!companyKey || !amount || amount <= 0) {
+      alert("⚠️ يرجى اختيار الشركة وإدخال مبلغ صحيح.");
+      return;
+    }
 
-    const comp = currentData.debts[compKey];
-    let newAmount = comp.amount || 0;
-    if (type === "pay") newAmount -= amount;
-    else if (type === "bill") newAmount += amount;
+    const company = currentData.debts[companyKey];
+    if (!company) return;
 
-    const transData = {
-      companyKey: compKey,
-      companyName: comp.name,
+    let currentDebt = Number(company.amount) || 0;
+    let newDebt = (type === "pay") ? (currentDebt - amount) : (currentDebt + amount);
+
+    const now = new Date();
+    const newTrans = {
+      companyKey: companyKey,
+      companyName: company.name,
       type: type,
       amount: amount,
       note: note,
-      date: new Date().toISOString()
+      date: now.toISOString(),
+      displayDate: now.toLocaleDateString("ar-IQ") + " " + now.toLocaleTimeString("ar-IQ", {hour: '2-digit', minute:'2-digit'})
     };
 
-    db.child("transactions").push(transData);
-    db.child("debts/" + compKey).update({ amount: newAmount });
+    const updates = {};
+    const transKey = db.child("transactions").push().key;
+    updates["/transactions/" + transKey] = newTrans;
+    updates["/debts/" + companyKey + "/amount"] = newDebt;
 
-    this.reset();
-    document.getElementById("tAmountUsd").value = "";
+    db.update(updates, (err) => {
+      if (!err) {
+        document.getElementById("transForm").reset();
+        document.getElementById("tAmountUsd").value = "";
+      } else {
+        alert("⚠️ فشل تسجيل الحركة: " + err.message);
+      }
+    });
   };
 
   function renderTransactions() {
     const tbody = document.getElementById("transTable");
     tbody.innerHTML = "";
-    const list = Object.entries(currentData.transactions).reverse().slice(0, 15);
 
-    list.forEach(([key, t]) => {
-      const dateStr = new Date(t.date).toLocaleString("ar-IQ");
-      const badge = t.type === "pay" ? `<span class="badge-pay">واصل (تسديد)</span>` : `<span class="badge-bill">قائمة جديدة</span>`;
-
-      tbody.innerHTML += `
-        <tr>
-          <td style="font-size:11px;">${dateStr}</td>
-          <td>${t.companyName}</td>
-          <td>${badge}</td>
-          <td style="font-weight:700;">${t.amount.toLocaleString()} د.ع</td>
-          <td>${t.note || '-'}</td>
-          <td class="no-print"><button class="btn-delete" onclick="deleteTransaction('${key}', '${t.companyKey}', '${t.type}', ${t.amount})">حذف</button></td>
-        </tr>
-      `;
-    });
-  }
-
-  function deleteTransaction(transKey, compKey, type, amount) {
-    if (!confirm("هل ترغب بحذف هذه الحركة وإعادة تسوية رصيد الدين؟")) return;
-    
-    if (currentData.debts[compKey]) {
-      let currentDebt = currentData.debts[compKey].amount || 0;
-      if (type === "pay") currentDebt += amount;
-      else if (type === "bill") currentDebt -= amount;
-      db.child("debts/" + compKey).update({ amount: currentDebt });
-    }
-    db.child("transactions/" + transKey).remove();
-  }
-
-  // ---- كشف حساب تفصيلي ----
-  function generateStatement() {
-    const compKey = document.getElementById("statementSelect").value;
-    const div = document.getElementById("statementContent");
-    if (!compKey || !currentData.debts[compKey]) {
-      div.innerHTML = `<p style="text-align:center; color:var(--text-muted); margin: 20px 0;">اختر شركة من القائمة أعلاه لمشاهدة التفاصيل.</p>`;
+    const keys = Object.keys(currentData.transactions).reverse();
+    if (keys.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6">لا توجد حركات مسجلة.</td></tr>';
       return;
     }
 
-    const comp = currentData.debts[compKey];
-    const compTrans = Object.values(currentData.transactions)
-      .filter(t => t.companyKey === compKey)
-      .sort((a,b) => new Date(a.date) - new Date(b.date));
+    keys.slice(0, 15).forEach(k => {
+      const t = currentData.transactions[k];
+      const isPay = t.type === "pay";
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td style="font-size:11px; color:var(--text-muted);">${t.displayDate || '-'}</td>
+        <td style="font-weight:700;">${t.companyName || '-'}</td>
+        <td><span class="${isPay ? 'badge-pay' : 'badge-bill'}">${isPay ? '💸 تسديد' : '📦 قائمة جديدة'}</span></td>
+        <td style="font-weight:700;">${(t.amount || 0).toLocaleString()} د.ع</td>
+        <td>${t.note || '-'}</td>
+        <td class="no-print"><button class="btn-delete" onclick="deleteTransaction('${k}')">🗑️</button></td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function deleteTransaction(key) {
+    if (confirm("هل أنت تأكد من إلغاء وحذف هذه الحركة؟")) {
+      db.child("transactions").child(key).remove();
+    }
+  }
+
+  // ---- 4. كشف حساب تفصيلي وإرسال واتساب ----
+  function generateStatement() {
+    const companyKey = document.getElementById("statementSelect").value;
+    const container = document.getElementById("statementContent");
+
+    if (!companyKey || !currentData.debts[companyKey]) {
+      container.innerHTML = '<p style="text-align:center; color:var(--text-muted); margin: 20px 0;">اختر شركة من القائمة أعلاه لمشاهدة التفاصيل.</p>';
+      return;
+    }
+
+    const comp = currentData.debts[companyKey];
+    const compTrans = [];
+
+    Object.keys(currentData.transactions).forEach(k => {
+      const t = currentData.transactions[k];
+      if (t.companyKey === companyKey) {
+        compTrans.push({ ...t, id: k });
+      }
+    });
+
+    compTrans.sort((a, b) => new Date(a.date) - new Date(b.date));
 
     let html = `
-      <div style="margin-bottom:15px; border-bottom:1px dashed var(--border); padding-bottom:10px;">
-        <h3 style="margin:0; font-family:var(--font-display);">${comp.name}</h3>
-        <p style="margin:4px 0; font-size:12px; color:var(--text-muted);">الهاتف: ${comp.phone || 'غير مسجل'}</p>
-        <div style="font-size:16px; font-weight:800; color:var(--debt); margin-top:8px;">
-          الرصيد المطلوب حالياً: ${comp.amount.toLocaleString()} د.ع (${formatUSD(comp.amount)})
+      <div style="border-bottom: 2px dashed var(--border); padding-bottom: 12px; margin-bottom: 15px;">
+        <div style="display:flex; justify-style:space-between; align-items:center;">
+          <h3 style="margin:0; color:var(--primary); font-family:var(--font-display);">${comp.name}</h3>
+          ${comp.phone ? `<button class="btn-whatsapp no-print" onclick="sendWhatsApp('${comp.phone}', '${comp.name}',${comp.amount})">📲 إرسال كشف عبر WhatsApp</button>` : ''}
+        </div>
+        <div style="font-size:13px; color:var(--text-muted); margin-top:5px;">رقم الهاتف: <b>${comp.phone || 'غير مسجل'}</b></div>
+        <div style="font-size:18px; font-weight:700; margin-top:8px; color:var(--debt);">
+          الرصيد النهائي المطلوب: ${Number(comp.amount).toLocaleString()} د.ع
+          <span style="font-size:13px; color:var(--text-muted); font-weight:400;">(${formatUSD(comp.amount)})</span>
         </div>
       </div>
-      <table style="width:100%; font-size:12px;">
-        <thead>
-          <tr>
-            <th>التاريخ</th>
-            <th>نوع الحركة</th>
-            <th>المبلغ</th>
-            <th>ملاحظات</th>
-          </tr>
-        </thead>
-        <tbody>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>التاريخ والوقت</th>
+              <th>نوع الحركة</th>
+              <th>المبلغ (د.ع)</th>
+              <th>ملاحظات</th>
+            </tr>
+          </thead>
+          <tbody>
     `;
 
     if (compTrans.length === 0) {
-      html += `<tr><td colspan="4">لا توجد حركات سابقة لهذه الشركة</td></tr>`;
+      html += '<tr><td colspan="5">لا توجد حركات مسجلة سابقاً لهذه الشركة.</td></tr>';
     } else {
-      compTrans.forEach(t => {
-        const d = new Date(t.date).toLocaleDateString("ar-IQ");
-        const badge = t.type === "pay" ? `<span class="badge-pay">تسديد واصل</span>` : `<span class="badge-bill">فاتورة/قائمة</span>`;
+      compTrans.forEach((t, i) => {
+        const isPay = t.type === "pay";
         html += `
           <tr>
-            <td>${d}</td>
-            <td>${badge}</td>
-            <td style="font-weight:700;">${t.amount.toLocaleString()} د.ع</td>
-            <td>${t.note || '-'}</td>
+            <td>${i + 1}</td>
+            <td style="font-size:11px;">${t.displayDate || '-'}</td>
+            <td><span class="${isPay ? 'badge-pay' : 'badge-bill'}">${isPay ? '💸 تسديد' : '📦 قائمة'}</span></td>
+            <td style="font-weight:700;">${Number(t.amount).toLocaleString()}</td>
+            <td style="text-align:right;">${t.note || '-'}</td>
           </tr>
         `;
       });
     }
 
-    html += `</tbody></table>
-    <div class="no-print" style="margin-top:15px; text-align:left;">
-      <button onclick="window.print()" class="btn-secondary" style="width:auto; padding:6px 14px;">🖨️ طباعة كشف الحساب</button>
-    </div>`;
-    div.innerHTML = html;
+    html += `
+          </tbody>
+        </table>
+      </div>
+      <div class="no-print" style="margin-top:15px; text-align:left;">
+        <button type="button" class="btn-secondary" onclick="window.print()" style="width:auto; padding:8px 16px;">🖨️ طباعة كشف الحساب</button>
+      </div>
+    `;
+
+    container.innerHTML = html;
   }
 
-  // ---- التقارير اليوميـــة ----
+  // إرسال كشف عبر واتساب
+  function sendWhatsApp(phone, companyName, debtAmount) {
+    let cleanPhone = phone.replace(/[^0-9]/g, '');
+    const msg = `مرحباً ${companyName}،%0Aتحية طيبة من *محلات الدباغ*.%0Aيرجى العلم أن الرصيد الحالي المتبقي للساب هو: *${debtAmount.toLocaleString()} د.ع*.%0Aشكراً لتعاملكم معنا!`;
+    window.open(`https://wa.me/${cleanPhone}?text=${msg}`, '_blank');
+  }
+
+  // ---- 5. تقارير المشتريات اليومية ----
   function renderDailyReport() {
     const selectedDate = document.getElementById("reportDate").value;
     const tbody = document.getElementById("dailyReportTable");
@@ -1055,105 +1096,94 @@
     let totalBills = 0;
     let totalPays = 0;
     let count = 0;
-    let idx = 1;
 
-    Object.entries(currentData.transactions).forEach(([key, t]) => {
-      const tDate = t.date.split('T')[0];
-      if (tDate === selectedDate) {
+    Object.keys(currentData.transactions).forEach(k => {
+      const t = currentData.transactions[k];
+      if (t.date && t.date.startsWith(selectedDate)) {
         count++;
-        if (t.type === "bill") totalBills += t.amount;
-        if (t.type === "pay") totalPays += t.amount;
+        const isPay = t.type === "pay";
+        const amt = Number(t.amount) || 0;
 
-        const time = new Date(t.date).toLocaleTimeString("ar-IQ", { hour: '2-digit', minute: '2-digit' });
-        const badge = t.type === "pay" ? `<span class="badge-pay">تسديد واصل</span>` : `<span class="badge-bill">قائمة مشتريات</span>`;
+        if (isPay) totalPays += amt;
+        else totalBills += amt;
 
-        tbody.innerHTML += `
-          <tr>
-            <td>${idx++}</td>
-            <td style="font-size:11px;">${time}</td>
-            <td style="font-weight:700;">${t.companyName}</td>
-            <td>${badge}</td>
-            <td style="font-weight:700;">${t.amount.toLocaleString()} د.ع</td>
-            <td>${t.note || '-'}</td>
-            <td class="no-print"><button class="btn-delete" onclick="deleteTransaction('${key}', '${t.companyKey}', '${t.type}', ${t.amount})">حذف</button></td>
-          </tr>
+        const timeStr = new Date(t.date).toLocaleTimeString("ar-IQ", { hour: '2-digit', minute: '2-digit' });
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${count}</td>
+          <td>${timeStr}</td>
+          <td style="font-weight:700;">${t.companyName || '-'}</td>
+          <td><span class="${isPay ? 'badge-pay' : 'badge-bill'}">${isPay ? '💸 تسديد' : '📦 قائمة جديدة'}</span></td>
+          <td style="font-weight:700;">${amt.toLocaleString()}</td>
+          <td>${t.note || '-'}</td>
+          <td class="no-print"><button class="btn-delete" onclick="deleteTransaction('${k}')">🗑️</button></td>
         `;
+        tbody.appendChild(tr);
       }
     });
 
-    document.getElementById("repTotalBills").innerText = totalBills.toLocaleString() + " د.ع";
-    document.getElementById("repTotalPays").innerText = totalPays.toLocaleString() + " د.ع";
-    document.getElementById("repNetTotal").innerText = (totalBills - totalPays).toLocaleString() + " د.ع";
-    document.getElementById("repCount").innerText = count;
-
-    if (tbody.innerHTML === "") tbody.innerHTML = `<tr><td colspan="7">لا توجد حركات مسجلة لهذا اليوم</td></tr>`;
-  }
-
-  // ---- التصدير إلى Excel / CSV النسخ الاحتياطي ----
-  function exportCsv(type) {
-    let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
-    if (type === "prices") {
-      csvContent += "اسم المادة,الباركود,كلفة الباكيت,بيع الباكيت,كلفة الكارتون,بيع الكارتون\n";
-      Object.values(currentData.prices).forEach(p => {
-        csvContent += `"${p.name}","${p.code||''}","${p.packetCost||0}","${p.packetSell||0}","${p.cartonCost||0}","${p.cartonSell||0}"\n`;
-      });
-    } else if (type === "debts") {
-      csvContent += "اسم الشركة,رقم الهاتف,المبلغ المطلوب بالدينار\n";
-      Object.values(currentData.debts).forEach(c => {
-        csvContent += `"${c.name}","${c.phone||''}","${c.amount||0}"\n`;
-      });
+    if (count === 0) {
+      tbody.innerHTML = '<tr><td colspan="7">لا توجد أي حركة مسجلة لهذا اليوم.</td></tr>';
     }
 
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `${type}_backup_${new Date().toISOString().split('T')[0]}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    document.getElementById("repTotalBills").innerText = totalBills.toLocaleString() + " د.ع";
+    document.getElementById("repTotalPays").innerText = totalPays.toLocaleString() + " د.ع";
+    
+    const net = totalBills - totalPays;
+    const netElem = document.getElementById("repNetTotal");
+    netElem.innerText = net.toLocaleString() + " د.ع";
+    netElem.style.color = net >= 0 ? "var(--debt)" : "var(--success)";
+
+    document.getElementById("repCount").innerText = count;
   }
 
-  function exportBackup() {
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(currentData, null, 2));
-    const dlAnchor = document.createElement('a');
-    dlAnchor.setAttribute("href", dataStr);
-    dlAnchor.setAttribute("download", `aldabbagh_backup_${new Date().toISOString().split('T')[0]}.json`);
-    document.body.appendChild(dlAnchor);
-    dlAnchor.click();
-    dlAnchor.remove();
-  }
-
-  // ---- الذكاء الاصطناعي Gemini API ----
+  // ---- 6. المساعد الذكي Gemini ----
   async function askGemini(promptText) {
-    const apiKey = localStorage.getItem("gemini_key");
+    const apiKey = localStorage.getItem("gemini_key") || "";
     if (!apiKey) {
-      alert("يرجى إدخال مفتاح Gemini API في تبويب (المساعد الذكي والأمان) أولاً.");
+      alert("⚠️ يرجى إدخال مفتاح Gemini API في قسم المساعد الذكي وحفظه أولاً.");
       return null;
     }
 
-    const systemContext = `
-      أنت مساعد محاسبي ومالي لـ "محل الدباغ Pro".
-      إليك البيانات الحالية في النظام:
-      - ديون الشركات: ${JSON.stringify(currentData.debts)}
-      - حركات التسديد والقوائم: ${JSON.stringify(currentData.transactions)}
-      - دليل الأسعار: ${JSON.stringify(currentData.prices)}
-      سعر الصرف المعتمد حاليا: 100 دولار = ${document.getElementById("usdExchangeRate").value} دينار.
-      اجعل إجاباتك مختصرة ومباشرة ودقيقة جداً بالأرقام والعملة.
-    `;
+    const contextData = {
+      storeName: "محلات الدباغ للمواد الغذائية بالجملة",
+      usdRate: document.getElementById("usdExchangeRate").value,
+      debtsSummary: currentData.debts,
+      pricesCount: Object.keys(currentData.prices).length,
+      samplePrices: Object.values(currentData.prices).slice(0, 25),
+      recentTransactions: Object.values(currentData.transactions).slice(-20)
+    };
+
+    const systemInstruction = `أنت مساعد محاسبي ومالي ذكي بنظام محلات الدباغ. أجوبتك دقيقة ومختصرة باللغة العربية. البيانات الحالية: ${JSON.stringify(contextData)}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
 
     try {
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+      const response = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: systemContext + "\n\nسؤال المستخدم: " + promptText }] }]
-        })
+        body: JSON.stringify({ contents: [{ parts: [{ text: `${systemInstruction}\n\nالسؤال: ${promptText}` }] }] })
       });
+
       const data = await response.json();
-      return data.candidates[0].content.parts[0].text;
+      if (data.candidates && data.candidates[0].content.parts[0].text) {
+        return data.candidates[0].content.parts[0].text;
+      } else {
+        throw new Error(data.error ? data.error.message : "تعذر استلام رد من النموذج");
+      }
     } catch (err) {
-      return "عذراً، حدث خطأ أثناء الاتصال بالذكاء الاصطناعي: " + err.message;
+      alert("⚠️ خطأ في الاتصال بالمساعد الذكي: " + err.message);
+      return null;
     }
+  }
+
+  function appendChatMessage(msg, sender) {
+    const box = document.getElementById("aiChatBox");
+    const div = document.createElement("div");
+    div.className = `ai-msg ${sender}`;
+    div.innerText = msg;
+    box.appendChild(div);
+    box.scrollTop = box.scrollHeight;
   }
 
   async function sendAiMessage() {
@@ -1161,29 +1191,54 @@
     const text = input.value.trim();
     if (!text) return;
 
-    const chatBox = document.getElementById("aiChatBox");
-    chatBox.innerHTML += `<div class="ai-msg user">${text}</div>`;
+    appendChatMessage(text, "user");
     input.value = "";
-    chatBox.scrollTop = chatBox.scrollHeight;
-
-    const botLoading = document.createElement("div");
-    botLoading.className = "ai-msg bot";
-    botLoading.innerText = "جاري التحليل والحساب...";
-    chatBox.appendChild(botLoading);
-    chatBox.scrollTop = chatBox.scrollHeight;
 
     const reply = await askGemini(text);
-    botLoading.innerText = reply || "لم يتم استلام رد من النظام.";
-    chatBox.scrollTop = chatBox.scrollHeight;
+    if (reply) appendChatMessage(reply, "bot");
   }
 
-  function askQuick(q) {
-    document.getElementById("aiPrompt").value = q;
+  function askQuick(qText) {
+    document.getElementById("aiPrompt").value = qText;
     sendAiMessage();
   }
 
   async function runAiAnalysis() {
-    askQuick("قم بإجراء تحليل مالـي واستشاري شامل لديون الشركات والحركات ودليل الأسعار، وحدد أكثر الديون خطورة واقترح توصيات مالية للمحل.");
+    appendChatMessage("📊 جاري تحليل البيانات المالية والدليل بالكامل...", "user");
+    const reply = await askGemini("اعطني تقريراً تحليلياً واستشارياً موجزاً عن حالة الديون الحالية والمشترات، واقتراح نصائح مالية للحفاظ على السيولة.");
+    if (reply) appendChatMessage(reply, "bot");
+  }
+
+  // ---- 7. التصدير والنسخ الاحتياطي ----
+  function exportCsv(type) {
+    let csvContent = "\uFEFF";
+    if (type === "prices") {
+      csvContent += "اسم المادة,الكود,كلفة الباكيت,بيع الباكيت,كلفة الكارتون,بيع الكارتون\n";
+      Object.values(currentData.prices).forEach(p => {
+        csvContent += `"${p.name || ''}","${p.code || ''}",${p.packetCost || 0},${p.packetSell || 0},${p.cartonCost || 0},${p.cartonSell || 0}\n`;
+      });
+    } else if (type === "debts") {
+      csvContent += "اسم الشركة,الهاتف,الدين المطلوب (دينار)\n";
+      Object.values(currentData.debts).forEach(d => {
+        csvContent += `"${d.name || ''}","${d.phone || ''}",${d.amount || 0}\n`;
+      });
+    }
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `${type}_export_${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+  }
+
+  function exportBackup() {
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(currentData, null, 2));
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.setAttribute("href", dataStr);
+    downloadAnchor.setAttribute("download", `aldabbagh_pro_backup_${new Date().toISOString().split('T')[0]}.json`);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
   }
 </script>
 </body>
