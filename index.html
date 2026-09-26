@@ -2,14 +2,14 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>نظام إدارة الأسعار والديون والمشتريات - محل الدباغ Pro Ultra</title>
+  <title>نظام إدارة المخزن والديون - محلات الدباغ</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- مكتبات Firebase السحابية -->
+  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
-  <!-- مكتبة مسح الباركود عبر الكاميرا -->
+  <!-- Barcode Scanner Library -->
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
   <style>
@@ -25,16 +25,12 @@
       --border: #C9BE9C;
 
       --primary: #2C4368;
-      --primary-dark: #101B2C;
       --price: #24508C;
       --debt: #9B3A34;
-      --debt-hover: #7C2D28;
       --success: #3F6B4F;
       --reports: #5B3C6E;
       --ai-color: #0F7A7C;
-      --whatsapp: #1E7E34;
       --brass: #A9822E;
-      --brass-light: #C9A857;
 
       --bg: var(--paper);
       --card: var(--paper-card);
@@ -43,524 +39,285 @@
 
       --radius: 8px;
       --shadow-sm: 0 1px 3px rgba(40,28,10,0.12);
-      --shadow-md: 0 6px 18px -4px rgba(30,20,8,0.22);
-
       --font-display: 'Reem Kufi', sans-serif;
-      --font-body: 'IBM Plex Sans Arabic', 'Tajawal', system-ui, sans-serif;
-      --font-mono: 'IBM Plex Mono', 'Courier New', monospace;
+      --font-body: 'IBM Plex Sans Arabic', system-ui, sans-serif;
+      --font-mono: 'IBM Plex Mono', monospace;
+    }
+
+    body.dark-mode {
+      --paper: #0F172A;
+      --paper-card: #1E293B;
+      --paper-stripe: #182232;
+      --paper-line: rgba(255,255,255,0.03);
+      --ink: #F8FAFC;
+      --ink-soft: #94A3B8;
+      --border: #334155;
+      --bg: var(--paper);
+      --card: var(--paper-card);
+      --text-main: var(--ink);
+      --text-muted: var(--ink-soft);
     }
 
     * { box-sizing: border-box; }
 
     body {
       font-family: var(--font-body);
-      background: repeating-linear-gradient(to bottom, transparent 0px, transparent 31px, var(--paper-line) 32px), var(--paper);
+      background: repeating-linear-gradient(to bottom, transparent 0px, transparent 31px, var(--paper-line) 32px), var(--bg);
       color: var(--text-main);
       margin: 0; padding: 0;
       direction: rtl;
-      font-feature-settings: "tnum" 1, "lnum" 1;
     }
 
-    /* شاشة القفل بالرمز السري */
     #pinLockOverlay {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(16, 24, 38, 0.97); z-index: 9999;
+      background: rgba(15, 23, 42, 0.98); z-index: 9999;
       display: flex; align-items: center; justify-content: center; color: #F4EBD0;
     }
 
     .pin-box {
-      background: linear-gradient(160deg, #16233A, #1E2E45);
-      padding: 32px 28px; border-radius: 12px; text-align: center;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.55); width: 90%; max-width: 340px;
-      border: 1px solid var(--brass);
+      background: #1E293B; padding: 32px 28px; border-radius: 12px; text-align: center;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.55); width: 90%; max-width: 340px; border: 1px solid var(--brass);
     }
-    .pin-box h3 { margin-top: 0; margin-bottom: 22px; font-size: 19px; font-family: var(--font-display); color: #F4EBD0; }
     .pin-input {
-      width: 78%; padding: 11px; font-size: 24px; text-align: center;
-      border-radius: 6px; border: 1px solid #3C5170; background: #0F1B2A;
+      width: 80%; padding: 11px; font-size: 24px; text-align: center;
+      border-radius: 6px; border: 1px solid #334155; background: #0F172A;
       color: #F4EBD0; letter-spacing: 10px; outline: none; margin-bottom: 16px; font-family: var(--font-mono);
     }
-    .pin-btn { width: 85%; padding: 12px; background: var(--success); color: white; border: none; border-radius: 6px; font-size: 15px; font-weight: 700; cursor: pointer; }
-    .pin-error { color: #E88A83; font-size: 13px; margin-top: 12px; display: none; font-weight: 700; }
 
     header {
-      background: linear-gradient(160deg, #101B2C 0%, #1E2E45 55%, #223350 100%);
-      color: #F4EBD0; padding: 18px 26px; font-size: 21px; font-family: var(--font-display);
+      background: linear-gradient(160deg, #0F172A 0%, #1E293B 100%);
+      color: #F4EBD0; padding: 16px 24px; font-size: 20px; font-family: var(--font-display);
       border-bottom: 4px solid var(--brass); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
     }
 
     .container { max-width: 1400px; margin: 20px auto; padding: 0 15px; }
 
     #cloudStatus {
-      padding: 10px 16px; text-align: center; font-weight: 700; border-radius: var(--radius);
-      margin-bottom: 20px; background: var(--paper-card); color: var(--text-muted); font-size: 13px;
+      padding: 10px; text-align: center; font-weight: 700; border-radius: var(--radius);
+      margin-bottom: 18px; background: var(--card); color: var(--text-muted); font-size: 13px;
       border: 1px dashed var(--border); font-family: var(--font-mono);
     }
-
-    .rate-box {
-      background: rgba(244,235,208,0.08); padding: 6px 14px; border-radius: 6px; font-size: 13px;
-      display: flex; gap: 8px; align-items: center; border: 1px solid rgba(201,168,87,0.45); font-family: var(--font-mono); color: #F4EBD0;
-    }
-    .rate-box input { width: 90px; margin: 0; padding: 4px 8px; font-size: 13px; text-align: center; border-radius: 5px; font-family: var(--font-mono); }
 
     .dashboard-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 20px; }
     .dash-card {
       background: var(--card); border: 1px solid var(--border); border-inline-start: 4px solid var(--brass);
-      border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow-sm); display: flex; flex-direction: column; justify-content: center;
+      border-radius: var(--radius); padding: 14px; box-shadow: var(--shadow-sm);
     }
-    .dash-card .label { font-size: 12px; color: var(--text-muted); font-weight: 700; margin-bottom: 5px; }
-    .dash-card .value { font-size: 21px; font-weight: 600; font-family: var(--font-mono); }
+    .dash-card .label { font-size: 12px; color: var(--text-muted); font-weight: 700; margin-bottom: 4px; }
+    .dash-card .value { font-size: 20px; font-weight: 700; font-family: var(--font-mono); }
 
-    .tabs { display: flex; gap: 6px; margin-bottom: 20px; flex-wrap: wrap; align-items: flex-end; border-bottom: 3px solid var(--ink); }
+    .tabs { display: flex; gap: 6px; margin-bottom: 20px; flex-wrap: wrap; border-bottom: 3px solid var(--border); }
     .tab-btn {
-      flex: 1; min-width: 150px; padding: 13px 14px 11px; font-size: 14.5px; font-weight: 600;
-      background: #DCD0AA; color: var(--text-muted); border: none; border-radius: 8px 8px 0 0;
-      cursor: pointer; font-family: var(--font-display); text-align: center; transform: translateY(4px);
+      flex: 1; min-width: 140px; padding: 12px; font-size: 14px; font-weight: 700;
+      background: var(--card); color: var(--text-muted); border: 1px solid var(--border); border-bottom: none;
+      border-radius: 8px 8px 0 0; cursor: pointer; font-family: var(--font-display); text-align: center;
     }
-    .tab-btn.active { color: #F7F1DE; transform: translateY(0); }
-    .tab-btn.active[data-tab="prices"] { background: var(--price); }
-    .tab-btn.active[data-tab="debts"] { background: var(--debt); }
-    .tab-btn.active[data-tab="reports"] { background: var(--reports); }
-    .tab-btn.active[data-tab="ai"] { background: var(--ai-color); }
+    .tab-btn.active { color: #FFF; background: var(--primary); border-color: var(--primary); }
 
     .tab-content { display: none; }
     .tab-content.active { display: block; }
 
     .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
-    .grid-form { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow-sm); margin-bottom: 20px; }
+    
+    h2 { margin-top: 0; font-size: 16px; font-family: var(--font-display); border-bottom: 2px dashed var(--border); padding-bottom: 8px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; }
 
-    .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow-sm); margin-bottom: 20px; }
-    h2 { margin-top: 0; font-size: 17px; font-family: var(--font-display); border-bottom: 2px dashed var(--border); padding-bottom: 10px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
+    input, select, textarea {
+      width: 100%; padding: 9px 11px; margin-bottom: 10px; border: 1px solid var(--border);
+      border-radius: 6px; font-size: 13.5px; font-family: var(--font-body); background: var(--bg); color: var(--text-main);
+    }
 
-    input, select, textarea { width: 100%; padding: 10px 12px; margin-bottom: 12px; border: 1.5px solid var(--border); border-radius: 6px; font-size: 14px; font-family: var(--font-body); background-color: #FFFDF6; }
-    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--price); background: #fff; }
-
-    button { width: 100%; padding: 11px; border: none; border-radius: 6px; color: white; font-weight: 700; cursor: pointer; font-size: 14px; font-family: var(--font-body); }
-    .btn-price { background: var(--price); grid-column: span 2; }
+    button { width: 100%; padding: 10px; border: none; border-radius: 6px; color: white; font-weight: 700; cursor: pointer; font-size: 13.5px; font-family: var(--font-body); }
+    .btn-price { background: var(--price); }
     .btn-debt { background: var(--debt); }
     .btn-success { background: var(--success); }
+    .btn-reports { background: var(--reports); }
     .btn-ai { background: var(--ai-color); }
-    .btn-whatsapp { background: var(--whatsapp); color: white; width: auto; padding: 6px 12px; font-size: 12px; border-radius: 6px; }
-    .btn-secondary { background: var(--ink-soft); }
+    .btn-secondary { background: var(--text-muted); color: var(--bg); }
 
-    .table-wrapper { overflow-x: auto; margin-top: 10px; border-radius: 8px; border: 1px solid var(--border); }
-    table { width: 100%; border-collapse: collapse; font-size: 13px; background: var(--paper-card); }
-    th, td { padding: 10px 12px; text-align: center; border-bottom: 1px solid var(--border); }
-    th { background: var(--ink); color: #F4EBD0; font-weight: 600; }
+    .table-wrapper { overflow-x: auto; margin-top: 10px; border-radius: 6px; border: 1px solid var(--border); }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { padding: 9px; text-align: center; border-bottom: 1px solid var(--border); }
+    th { background: var(--primary); color: #FFF; font-weight: 600; }
     tbody tr:nth-child(even) { background: var(--paper-stripe); }
 
-    .btn-edit { background: var(--price); color: white; padding: 4px 8px; border-radius: 5px; border: none; cursor: pointer; font-size: 12px; width: auto; }
-    .btn-delete { background: var(--debt); color: white; padding: 4px 8px; border-radius: 5px; border: none; cursor: pointer; font-size: 12px; width: auto; }
+    .stock-badge { padding: 3px 8px; border-radius: 10px; font-size: 11px; font-weight: 700; }
+    .stock-low { background: #FEE2E2; color: #991B1B; }
+    .stock-ok { background: #DCFCE7; color: #166534; }
 
-    .badge-pay { background: #E1EAE2; color: var(--success); padding: 4px 8px; border-radius: 12px; font-weight: 700; font-size: 11px; }
-    .badge-bill { background: #F1DEDB; color: var(--debt); padding: 4px 8px; border-radius: 12px; font-weight: 700; font-size: 11px; }
-
-    .report-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
-    .report-card { background: var(--card); border: 1px solid var(--border); border-top: 3px solid var(--reports); padding: 15px; border-radius: var(--radius); text-align: center; }
-
-    .ai-chat-box { background: #101B2C; border: 1px solid var(--ink); border-radius: 8px; height: 340px; overflow-y: auto; padding: 15px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 10px; }
-    .ai-msg { max-width: 85%; padding: 10px 14px; border-radius: 10px; font-size: 13.5px; line-height: 1.6; font-family: var(--font-mono); }
-    .ai-msg.user { background: var(--ai-color); color: white; align-self: flex-start; }
-    .ai-msg.bot { background: #1B2C40; color: #BFE3E1; border: 1px solid #2A4155; align-self: flex-end; }
-
-    .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(16, 24, 38, 0.55); backdrop-filter: blur(4px); justify-content: center; align-items: center; }
-    .modal-content { background-color: var(--paper-card); padding: 22px; border-radius: var(--radius); width: 90%; max-width: 480px; border-top: 4px solid var(--brass); }
-
-    /* تنسيق الطباعة الحرارية (80mm Thermal Print) */
-    @media print {
-      body * { visibility: hidden; }
-      #printableArea, #printableArea *, #dailyReportPrint, #dailyReportPrint * { visibility: visible; }
-      #printableArea, #dailyReportPrint { position: absolute; left: 0; top: 0; width: 100%; font-size: 12px; }
-      .no-print { display: none !important; }
-    }
+    .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(3px); justify-content: center; align-items: center; }
+    .modal-content { background: var(--card); padding: 20px; border-radius: var(--radius); width: 90%; max-width: 480px; border-top: 4px solid var(--brass); }
   </style>
 </head>
 <body>
 
-<!-- 🔒 شاشة القفل بـ PIN Code -->
+<!-- Lock Overlay -->
 <div id="pinLockOverlay">
   <div class="pin-box">
     <h3>🔒 أدخل الرمز السري</h3>
     <input type="password" id="pinInput" maxlength="4" class="pin-input" placeholder="••••" autofocus onkeypress="if(event.key==='Enter') checkAppPin()">
-    <button onclick="checkAppPin()" class="pin-btn">فتح النظام</button>
-    <p id="pinError" class="pin-error">الرمز السري غير صحيح!</p>
+    <button onclick="checkAppPin()" class="btn-success">فتح النظام</button>
   </div>
 </div>
 
-<header class="no-print">
-  <div>📦 نظام الدباغ المحاسبي Pro Ultra</div>
+<header>
+  <div>📦 نظام إدارة الدباغ - المخزن والديون</div>
   <div style="display:flex; gap:10px; align-items:center;">
-    <button onclick="lockSystem()" style="background:rgba(244,235,208,0.1); color:#F4EBD0; border:1px solid var(--brass); padding:6px 12px; border-radius:6px; cursor:pointer; font-size:12px; width:auto;">🔒 قفل الشاشة</button>
-    <div class="rate-box">
-      <span>💵 $100 =</span>
-      <input type="number" id="usdExchangeRate" value="150000" onchange="updateAllViews()" title="سعر صرف 100 دولار" />
-      <span>د.ع</span>
+    <button onclick="toggleTheme()" class="btn-secondary" style="width:auto; padding:5px 10px; font-size:12px;">🌓 المظهر</button>
+    <button onclick="lockSystem()" class="btn-secondary" style="width:auto; padding:5px 10px; font-size:12px;">🔒 قفل</button>
+    <div style="font-size:12px; background:rgba(255,255,255,0.1); padding:4px 10px; border-radius:5px;">
+      💵 $100 = <input type="number" id="usdExchangeRate" value="150000" onchange="renderDebts()" style="width:85px; margin:0; padding:2px; font-size:12px; text-align:center;" /> د.ع
     </div>
   </div>
 </header>
 
 <div class="container">
-  <div id="cloudStatus" class="no-print">🔄 جاري الاتصال بالسحابة...</div>
+  <div id="cloudStatus">🔄 جاري مزامنة البيانات...</div>
 
-  <!-- Dashboard Stats -->
-  <div class="dashboard-summary no-print">
+  <!-- Dash Stats -->
+  <div class="dashboard-summary">
     <div class="dash-card">
-      <div class="label">💳 إجمالي ديون الشركات المطلوب دفعها</div>
+      <div class="label">💳 إجمالي الديون المطلوبة</div>
       <div class="value" id="dashTotalDebt" style="color:var(--debt);">0 د.ع</div>
-      <div style="font-size:11px; color:var(--text-muted);" id="dashTotalDebtUsd">$ 0.00</div>
     </div>
     <div class="dash-card">
-      <div class="label">🏢 عدد الشركات / المجهزين</div>
-      <div class="value" id="dashCompaniesCount" style="color:var(--primary);">0</div>
-    </div>
-    <div class="dash-card">
-      <div class="label">📦 عدد المواد في الدليل</div>
+      <div class="label">📦 إجمالي المواد بالدليل</div>
       <div class="value" id="dashPricesCount" style="color:var(--price);">0</div>
     </div>
     <div class="dash-card">
-      <div class="label">📅 حركات المشتريات اليوم</div>
-      <div class="value" id="dashTodayCount" style="color:var(--reports);">0</div>
+      <div class="label">⚠️ مواد أوشكت على النفاد</div>
+      <div class="value" id="dashLowStockCount" style="color:var(--debt);">0</div>
     </div>
   </div>
 
-  <!-- أزرار التنقل الرئيسية -->
-  <div class="tabs no-print">
-    <button class="tab-btn active" data-tab="prices">🔍 دليل الأسعار</button>
-    <button class="tab-btn" data-tab="debts">📒 ديون الشركات</button>
-    <button class="tab-btn" data-tab="reports">📊 تقارير المشتريات</button>
-    <button class="tab-btn" data-tab="ai">🤖 المساعد الذكي والأمان</button>
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('prices')">🔍 دليل المواد والمخزن</button>
+    <button class="tab-btn" onclick="switchTab('debts')">📒 ديون الشركات</button>
+    <button class="tab-btn" onclick="switchTab('ai')">🤖 المساعد الذكي</button>
   </div>
 
-  <!-- 1. قسم دليل الأسعار -->
+  <!-- 1. PRICES & INVENTORY SECTION -->
   <div id="pricesSection" class="tab-content active">
     <div class="grid">
       <div class="card">
-        <h2 style="color: var(--price);">➕ إضافة مادة جديدة للدليل</h2>
-        <form id="priceForm" class="grid-form">
-          <input type="text" id="pName" placeholder="اسم المادة" style="grid-column: span 2;" required />
-          <input type="text" id="pCode" placeholder="الباركود / الكود (اختياري)" style="grid-column: span 2;" />
+        <h2>➕ إضافة مادة جديدة</h2>
+        <form id="priceForm">
+          <input type="text" id="pName" placeholder="اسم المادة" required />
+          <div style="display:flex; gap:6px;">
+            <input type="text" id="pCode" placeholder="الباركود / الكود" />
+            <button type="button" onclick="startScanner()" class="btn-price" style="width:auto; padding:0 10px; margin-bottom:10px;">📷</button>
+          </div>
           
-          <div style="grid-column: span 2; font-weight:800; color:var(--price); font-size:12px;">📦 أسعار الباكيت:</div>
-          <input type="number" id="pPacketCost" placeholder="كلفة الباكيت (د.ع)" />
-          <input type="number" id="pPacketSell" placeholder="بيع الباكيت (د.ع)" />
-
-          <div style="grid-column: span 2; font-weight:800; color:var(--price); font-size:12px;">📦 أسعار الكارتون الكامل:</div>
-          <input type="number" id="pCartonCost" placeholder="كلفة الكارتون (د.ع)" />
-          <input type="number" id="pCartonSell" placeholder="بيع الكارتون (د.ع)" />
-
-          <button type="submit" class="btn-price">حفظ المادة في الدليل</button>
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
+            <div>
+              <label style="font-size:11px; font-weight:bold;">📦 الباكيت:</label>
+              <input type="number" id="pPacketCost" placeholder="كلفة الباكيت" />
+              <input type="number" id="pPacketSell" placeholder="بيع الباكيت" />
+              <input type="number" id="pPacketStock" placeholder="الكمية بالباكيت" />
+            </div>
+            <div>
+              <label style="font-size:11px; font-weight:bold;">📦 الكارتون:</label>
+              <input type="number" id="pCartonCost" placeholder="كلفة الكارتون" />
+              <input type="number" id="pCartonSell" placeholder="بيع الكارتون" />
+              <input type="number" id="pCartonStock" placeholder="الكمية بالكارتون" />
+            </div>
+          </div>
+          <button type="submit" class="btn-price">حفظ المادة</button>
         </form>
       </div>
 
       <div class="card">
-        <h2 style="color: var(--price);">
-          <span>🔍 الاستعلام السريع عن الأسعار</span>
-          <button type="button" class="btn-secondary" onclick="exportCsv('prices')" style="width:auto; padding:4px 10px; font-size:11px;">📥 تصدير Excel</button>
+        <h2>
+          <span>🔍 دليل المواد والأسعار والمخزون</span>
+          <button onclick="exportCsv()" class="btn-secondary" style="width:auto; font-size:11px; padding:3px 8px;">📥 تصدير Excel</button>
         </h2>
-
-        <!-- زر مسح الباركود بالكاميرا -->
-        <div style="display:flex; gap:8px; margin-bottom:12px;">
-          <input type="text" id="searchPrice" placeholder="🔍 اكتب اسم المادة أو امسح الباركود..." oninput="renderPrices()" autofocus style="font-size:15px; font-weight:700; margin:0;" />
-          <button type="button" onclick="startScanner()" class="btn-price" style="width:auto; padding:0 15px; white-space:nowrap;">📷 كاميرا</button>
-        </div>
-        
-        <div id="scannerModal" class="modal">
-          <div class="modal-content" style="text-align:center;">
-            <h3>📷 قراءة الباركود عبر الكاميرا</h3>
-            <div id="interactive" style="width:100%; height:250px; background:#000; margin-bottom:10px;"></div>
-            <button type="button" onclick="stopScanner()" class="btn-secondary">إغلاق الكاميرا</button>
-          </div>
-        </div>
-
+        <input type="text" id="searchPrice" placeholder="🔍 بحث عن مادة أو باركود..." oninput="renderPrices()" />
         <div class="table-wrapper">
           <table>
             <thead>
               <tr>
-                <th rowspan="2">#</th>
-                <th rowspan="2">اسم المادة</th>
-                <th rowspan="2">الكود</th>
-                <th colspan="2">📦 الباكيت</th>
-                <th colspan="2">📦 الكارتون</th>
-                <th rowspan="2" class="no-print">إجراءات</th>
-              </tr>
-              <tr>
-                <th>الكلفة</th>
-                <th>البيع</th>
-                <th>الكلفة</th>
-                <th>البيع</th>
+                <th>المادة</th>
+                <th>الباركود</th>
+                <th>بيع الباكيت</th>
+                <th>مخزون الباكيت</th>
+                <th>بيع الكارتون</th>
+                <th>مخزون الكارتون</th>
+                <th>إجراءات</th>
               </tr>
             </thead>
-            <tbody id="pricesTable"><tr><td colspan="8">جاري التحميل...</td></tr></tbody>
+            <tbody id="pricesTable"></tbody>
           </table>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- 2. قسم ديون الشركات -->
+  <!-- 2. DEBTS SECTION -->
   <div id="debtsSection" class="tab-content">
     <div class="grid">
-      <div>
-        <div class="card">
-          <h2 style="color: var(--debt);">➕ إضافة شركة أو مجهز جديد</h2>
-          <form id="companyForm">
-            <input type="text" id="cName" placeholder="اسم الشركة أو المجهز" required />
-            <input type="text" id="cPhone" placeholder="رقم الهاتف مع رمز الدولة (مثال: 9647700000000)" />
-            <input type="number" id="cInitialDebt" placeholder="الرصيد الأولي / الدين الحالي (دينار)" value="0" />
-            <button type="submit" class="btn-debt">حفظ الشركة</button>
-          </form>
-        </div>
-
-        <div class="card">
-          <h2 style="color: var(--success);">💸 تسجيل حركة (تسديد / فاتورة جديدة)</h2>
-          <form id="transForm">
-            <select id="tCompany" required>
-              <option value="">-- اختر الشركة --</option>
-            </select>
-            <select id="tType" required>
-              <option value="pay">تسديد (تنقيص من الدين المطلوب عليك)</option>
-              <option value="bill">قائمة جديدة (زيادة الدين المطلوب عليك)</option>
-            </select>
-            
-            <div style="display:flex; gap:8px;">
-              <input type="number" id="tAmount" placeholder="المبلغ (د.ع)" required style="flex:2;" />
-              <input type="number" id="tAmountUsd" placeholder="أو بالـ $" style="flex:1;" oninput="calcIqdFromUsd()" />
-            </div>
-
-            <input type="text" id="tNote" placeholder="ملاحظات / رقم القائمة (اختياري)" />
-            <button type="submit" class="btn-success">حفظ الحركة وتحديث الدين</button>
-          </form>
-        </div>
-
-        <div class="card">
-          <h2 style="color: var(--debt);">
-            <span>📒 ديون الشركات الحالية</span>
-            <button type="button" class="btn-secondary" onclick="exportCsv('debts')" style="width:auto; padding:4px 10px; font-size:11px;">📥 تصدير Excel</button>
-          </h2>
-          <input type="text" id="searchDebt" placeholder="ابحث باسم الشركة..." oninput="renderDebts()" />
-          <div class="table-wrapper">
-            <table>
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>الشركة</th>
-                  <th>الهاتف</th>
-                  <th>المطلوب (د.ع)</th>
-                  <th>المعادل ($)</th>
-                  <th class="no-print">إجراءات</th>
-                </tr>
-              </thead>
-              <tbody id="debtsTable"><tr><td colspan="6">جاري التحميل...</td></tr></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <div>
-        <div class="card" id="printableArea">
-          <h2 style="color: var(--ink);" class="no-print">📑 كشف حساب تفصيلي لشركة</h2>
-          <div class="no-print" style="margin-bottom: 12px;">
-            <select id="statementSelect" onchange="generateStatement()">
-              <option value="">-- اختر الشركة لرؤية كشف الحساب --</option>
-            </select>
-          </div>
-
-          <div id="statementContent">
-            <p style="text-align:center; color:var(--text-muted); margin: 20px 0;">اختر شركة من القائمة أعلاه لمشاهدة التفاصيل.</p>
-          </div>
-        </div>
-
-        <div class="card no-print">
-          <h2>📜 سجل آخر حركات التسديد والقوائم</h2>
-          <div class="table-wrapper">
-            <table>
-              <thead><tr><th>التاريخ</th><th>الشركة</th><th>نوع الحركة</th><th>المبلغ</th><th>ملاحظات</th><th class="no-print">إجراءات</th></tr></thead>
-              <tbody id="transTable"><tr><td colspan="6">لا توجد حركات مسجلة</td></tr></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- 3. قسم تقارير المشتريات اليومية -->
-  <div id="reportsSection" class="tab-content">
-    <div class="card" id="dailyReportPrint">
-      <h2 style="color: var(--reports);">📊 تقرير حركات ومشتريات اليوم</h2>
-      
-      <div class="no-print" style="display:flex; gap:10px; align-items:center; margin-bottom:20px; flex-wrap:wrap;">
-        <label style="font-weight:800;">حدد التاريخ:</label>
-        <input type="date" id="reportDate" onchange="renderDailyReport()" style="width:auto; margin:0;" />
-        <button type="button" onclick="setReportDateToday()" style="width:auto; background:var(--reports);">📅 اليوم</button>
-      </div>
-
-      <div class="report-cards">
-        <div class="report-card">
-          <div class="title">📦 إجمالي القوائم (المشتريات)</div>
-          <div class="val" id="repTotalBills" style="color:var(--debt);">0 د.ع</div>
-        </div>
-        <div class="report-card">
-          <div class="title">💸 إجمالي التسديدات (الواصل)</div>
-          <div class="val" id="repTotalPays" style="color:var(--success);">0 د.ع</div>
-        </div>
-        <div class="report-card">
-          <div class="title">⚖️ صافي الحركة اليومية</div>
-          <div class="val" id="repNetTotal" style="color:var(--price);">0 د.ع</div>
-        </div>
-        <div class="report-card">
-          <div class="title">🔢 عدد الحركات</div>
-          <div class="val" id="repCount" style="color:var(--text-main);">0</div>
-        </div>
-      </div>
-
-      <div class="table-wrapper">
-        <table>
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>الوقت</th>
-              <th>الشركة / المجهز</th>
-              <th>نوع الحركة</th>
-              <th>المبلغ (د.ع)</th>
-              <th>الملاحظات / رقم القائمة</th>
-              <th class="no-print">إجراءات</th>
-            </tr>
-          </thead>
-          <tbody id="dailyReportTable">
-            <tr><td colspan="7">اختر تاريخاً لفيض البيانات</td></tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="no-print" style="margin-top:15px; text-align:left;">
-        <button type="button" onclick="window.print()" class="btn-secondary" style="width:auto; padding:8px 16px;">🖨️ طباعة التقرير اليومي</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- 4. قسم المساعد الذكي والأمان -->
-  <div id="aiSection" class="tab-content">
-    <div class="grid">
-      <div>
-        <div class="card">
-          <h2 style="color: var(--ai-color);">🔑 إعدادات الذكاء الاصطناعي (Gemini)</h2>
-          <p style="font-size:12px; color:var(--text-muted);">أدخل مفتاح Gemini API الخاص بك لتفعيل المساعد الذكي وإجراء التحليلات:</p>
-          <input type="password" id="geminiApiKey" placeholder="أدخل مفتاح API هنا..." onchange="saveApiKey()" />
-          <button type="button" class="btn-ai" onclick="runAiAnalysis()">📊 إجراء تحليل مالـي واستشاري شامل</button>
-
-          <div style="margin-top:15px;">
-            <label style="font-size:12px; font-weight:800; color:var(--text-muted);">أسئلة سريعة مقترحة:</label>
-            <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;">
-              <button type="button" class="ai-quick-btn" onclick="askQuick('من هي أعلى 3 شركات أطلبها ديون حالياً؟')">🔝 أعلى 3 شركات ديوناً</button>
-              <button type="button" class="ai-quick-btn" onclick="askQuick('كم مجموع المشتريات المسجلة اليوم؟')">🛒 مجموع مشتريات اليوم</button>
-              <button type="button" class="ai-quick-btn" onclick="askQuick('اعطني ملخصاً لسجل أسعار المواد في الدليل')">📦 ملخص دليل الأسعار</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="card">
-          <h2 style="color: var(--success);">🛡️ أمان النظام والرمز السري</h2>
-          <p style="font-size:12px; color:var(--text-muted);">تغيير رمز القفل المكون من 4 أرقام لحماية التطبيق:</p>
-          <input type="password" id="newPinInput" maxlength="4" placeholder="الرمز السري الجديد (4 أرقام)" style="text-align:center; font-size:18px; letter-spacing:4px;" />
-          <button type="button" onclick="updateAppPin()" class="btn-success">حفظ الرمز السري الجديد</button>
-        </div>
+      <div class="card">
+        <h2>➕ إضافة شركة / مجهز</h2>
+        <form id="companyForm">
+          <input type="text" id="cName" placeholder="اسم الشركة" required />
+          <input type="text" id="cPhone" placeholder="رقم الهاتف" />
+          <input type="number" id="cInitialDebt" placeholder="المبلغ المطلوب (دينار)" value="0" />
+          <button type="submit" class="btn-debt">حفظ الشركة</button>
+        </form>
       </div>
 
       <div class="card">
-        <h2 style="color: var(--ai-color);">💬 المحادثة مع المساعد الذكي</h2>
-        <div class="ai-chat-box" id="aiChatBox">
-          <div class="ai-msg bot">مرحباً بك! أنا مساعدك الذكي لنظام المحل. أستطيع الإجابة عن كافة تفاصيل الديون والأسعار والحركات المالية المخزنة لديك. كيف يمكنني مساعدتك؟</div>
-        </div>
-        <div style="display:flex; gap:8px;">
-          <input type="text" id="aiPrompt" placeholder="اسأل المساعد الذكي..." onkeydown="if(event.key==='Enter') sendAiMessage()" style="margin:0;" />
-          <button type="button" class="btn-ai" onclick="sendAiMessage()" style="width: auto; padding: 10px 20px;">إرسال</button>
+        <h2>📒 قائمة الديون الحالية</h2>
+        <input type="text" id="searchDebt" placeholder="بحث باسم الشركة..." oninput="renderDebts()" />
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr><th>الشركة</th><th>الهاتف</th><th>الدين (د.ع)</th><th>المعادل ($)</th><th>إجراءات</th></tr>
+            </thead>
+            <tbody id="debtsTable"></tbody>
+          </table>
         </div>
       </div>
     </div>
   </div>
 
-  <div class="no-print" style="margin-top:20px; text-align:center;">
-    <button type="button" class="btn-secondary" style="width:auto; padding:10px 20px;" onclick="exportBackup()">📥 تصدير نسخة احتياطية كاملة (JSON)</button>
-  </div>
-</div>
-
-<!-- Modals تعديل البيانات -->
-<div id="editModal" class="modal">
-  <div class="modal-content">
-    <h3 style="margin-top:0; color:var(--price);">✏️ تعديل بيانات المادة</h3>
-    <input type="hidden" id="editKey" />
-    <label style="font-size: 12px; font-weight:800;">اسم المادة:</label>
-    <input type="text" id="editName" required />
-    <label style="font-size: 12px; font-weight:800;">الكود:</label>
-    <input type="text" id="editCode" />
-    
-    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
-      <div><label style="font-size: 11px;">كلفة الباكيت:</label><input type="number" id="editPacketCost" /></div>
-      <div><label style="font-size: 11px;">بيع الباكيت:</label><input type="number" id="editPacketSell" /></div>
-      <div><label style="font-size: 11px;">كلفة الكارتون:</label><input type="number" id="editCartonCost" /></div>
-      <div><label style="font-size: 11px;">بيع الكارتون:</label><input type="number" id="editCartonSell" /></div>
-    </div>
-
-    <div style="display:flex; gap:8px; margin-top:10px;">
-      <button type="button" onclick="savePriceEdit()" class="btn-price">حفظ</button>
-      <button type="button" onclick="closeEditModal()" class="btn-secondary">إلغاء</button>
+  <!-- 3. AI SECTION -->
+  <div id="aiSection" class="tab-content">
+    <div class="card">
+      <h2>🤖 المساعد المحاسبي الذكي (Gemini)</h2>
+      <input type="password" id="geminiApiKey" placeholder="أدخل مفتاح Gemini API..." onchange="saveApiKey()" />
+      <div id="aiChatBox" style="height:250px; overflow-y:auto; background:var(--paper-stripe); padding:10px; border-radius:6px; margin-bottom:10px; border:1px solid var(--border);"></div>
+      <div style="display:flex; gap:8px;">
+        <input type="text" id="aiPrompt" placeholder="اسأل المساعد عن ديون الشركات أو المخزون..." style="margin:0;" />
+        <button onclick="sendAiMessage()" class="btn-ai" style="width:auto;">إرسال</button>
+      </div>
     </div>
   </div>
 </div>
 
-<div id="editCompanyModal" class="modal">
-  <div class="modal-content">
-    <h3 style="margin-top:0; color:var(--debt);">✏️ تعديل حساب الشركة</h3>
-    <input type="hidden" id="editCompKey" />
-    <label style="font-size: 12px; font-weight:800;">اسم الشركة:</label>
-    <input type="text" id="editCompName" required />
-    <label style="font-size: 12px; font-weight:800;">رقم الهاتف:</label>
-    <input type="text" id="editCompPhone" />
-    <label style="font-size: 12px; font-weight:800;">الدين الحالي (دينار):</label>
-    <input type="number" id="editCompAmount" required />
-
-    <div style="display:flex; gap:8px; margin-top:10px;">
-      <button type="button" onclick="saveCompanyEdit()" class="btn-debt">حفظ</button>
-      <button type="button" onclick="closeCompanyEditModal()" class="btn-secondary">إلغاء</button>
-    </div>
+<!-- Camera Scanner Modal -->
+<div id="scannerModal" class="modal">
+  <div class="modal-content" style="text-align:center;">
+    <h3>📷 قراءة الباركود</h3>
+    <div id="interactive" style="width:100%; height:250px; background:#000; margin-bottom:10px;"></div>
+    <button onclick="stopScanner()" class="btn-secondary">إغلاق</button>
   </div>
 </div>
 
 <script>
-  // ---- 🔐 نظام القفل بالرمز السري ----
-  const DEFAULT_APP_PIN = "1234";
-
+  // PIN Security
+  const DEFAULT_PIN = "1234";
   function checkAppPin() {
-    const enteredPin = document.getElementById("pinInput").value;
-    const storedPin = localStorage.getItem("app_pin") || DEFAULT_APP_PIN;
-
-    if (enteredPin === storedPin) {
+    const input = document.getElementById("pinInput").value;
+    if (input === (localStorage.getItem("app_pin") || DEFAULT_PIN)) {
       document.getElementById("pinLockOverlay").style.display = "none";
-      document.getElementById("pinError").style.display = "none";
       document.getElementById("pinInput").value = "";
-    } else {
-      document.getElementById("pinError").style.display = "block";
-      document.getElementById("pinInput").value = "";
-    }
+    } else { alert("❌ الرمز السري غير صحيح!"); }
   }
+  function lockSystem() { document.getElementById("pinLockOverlay").style.display = "flex"; }
+  function toggleTheme() { document.body.classList.toggle("dark-mode"); }
 
-  function lockSystem() {
-    document.getElementById("pinLockOverlay").style.display = "flex";
-    document.getElementById("pinInput").focus();
-  }
-
-  function updateAppPin() {
-    const newPin = document.getElementById("newPinInput").value.trim();
-    if (newPin && newPin.length === 4 && !isNaN(newPin)) {
-      localStorage.setItem("app_pin", newPin);
-      alert("✅ تم تغيير الرمز السري بنجاح!");
-      document.getElementById("newPinInput").value = "";
-    } else {
-      alert("⚠️ يرجى إدخال رمز مكون من 4 أرقام فقط.");
-    }
-  }
-
-  // ---- 🌐 إعدادات Firebase السحابية ----
+  // Firebase Setup
   const firebaseConfig = {
     apiKey: "AIzaSyC-QqnQTbbyVFS8QFkf4CYZTcURcr9nBW0",
     authDomain: "gimi-fd7fe.firebaseapp.com",
@@ -572,673 +329,180 @@
   };
 
   let db;
-  let currentData = { prices: {}, debts: {}, transactions: {} };
-
-  function normalizeText(text) {
-    return text ? text.toString().trim().toLowerCase().replace(/\s+/g, ' ') : '';
-  }
-
-  function formatUSD(iqdAmount) {
-    const rate = parseFloat(document.getElementById("usdExchangeRate").value) || 150000;
-    const usd = (iqdAmount / rate) * 100;
-    return "$ " + usd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  }
-
-  function calcIqdFromUsd() {
-    const usd = parseFloat(document.getElementById("tAmountUsd").value) || 0;
-    const rate = parseFloat(document.getElementById("usdExchangeRate").value) || 150000;
-    if(usd > 0) {
-      document.getElementById("tAmount").value = Math.round((usd / 100) * rate);
-    }
-  }
-
-  function updateAllViews() {
-    renderDebts();
-    generateStatement();
-    renderDailyReport();
-    updateDashboard();
-  }
-
-  function setReportDateToday() {
-    const today = new Date().toISOString().split('T')[0];
-    document.getElementById("reportDate").value = today;
-    renderDailyReport();
-  }
+  let currentData = { prices: {}, debts: {} };
 
   try {
     firebase.initializeApp(firebaseConfig);
-    db = firebase.database().ref("simple_price_debts_v2");
+    db = firebase.database().ref("simple_price_debts_v3");
 
     db.on("value", (snapshot) => {
-      const status = document.getElementById("cloudStatus");
-      status.innerHTML = "🟢 متصل ومتزامن سحابياً مع البيانات";
-      status.style.background = "#E1EAE2"; status.style.color = "#3F6B4F";
-
+      document.getElementById("cloudStatus").innerText = "🟢 متصل بالسحابة ومتزامن تلقائياً";
       const val = snapshot.val() || {};
       currentData.prices = val.prices || {};
       currentData.debts = val.debts || {};
-      currentData.transactions = val.transactions || {};
 
       renderPrices();
       renderDebts();
-      renderCompanySelect();
-      renderTransactions();
-      generateStatement();
-      renderDailyReport();
       updateDashboard();
     });
-  } catch(e) {
-    document.getElementById("cloudStatus").innerHTML = "🔴 فشل الاتصال بالسحابة: " + e.message;
+  } catch(e) { document.getElementById("cloudStatus").innerText = "🔴 خطأ في الاتصال: " + e.message; }
+
+  function switchTab(tabName) {
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+    event.target.classList.add("active");
+    document.getElementById(tabName + "Section").classList.add("active");
   }
 
-  const savedKey = localStorage.getItem("gemini_key") || "";
-  document.getElementById("geminiApiKey").value = savedKey;
-  document.getElementById("reportDate").value = new Date().toISOString().split('T')[0];
-
-  function saveApiKey() {
-    const key = document.getElementById("geminiApiKey").value.trim();
-    localStorage.setItem("gemini_key", key);
-  }
-
-  document.querySelectorAll(".tab-btn").forEach(btn => {
-    btn.onclick = function() {
-      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
-      document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
-      this.classList.add("active");
-      document.getElementById(this.dataset.tab + "Section").classList.add("active");
-    };
-  });
-
+  // Dashboard
   function updateDashboard() {
-    let totalDebtIQD = 0;
-    const debtKeys = Object.keys(currentData.debts);
-    debtKeys.forEach(k => { totalDebtIQD += (Number(currentData.debts[k].amount) || 0); });
-
-    document.getElementById("dashTotalDebt").innerText = totalDebtIQD.toLocaleString() + " د.ع";
-    document.getElementById("dashTotalDebtUsd").innerText = formatUSD(totalDebtIQD);
-    document.getElementById("dashCompaniesCount").innerText = debtKeys.length;
-    document.getElementById("dashPricesCount").innerText = Object.keys(currentData.prices).length;
-
-    const todayStr = new Date().toISOString().split('T')[0];
-    let todayTxCount = 0;
-    Object.values(currentData.transactions).forEach(t => {
-      if (t.date && t.date.startsWith(todayStr)) todayTxCount++;
+    let totalDebt = 0, lowStock = 0;
+    Object.values(currentData.debts).forEach(d => totalDebt += Number(d.amount || 0));
+    Object.values(currentData.prices).forEach(p => {
+      if ((p.packetStock && p.packetStock < 5) || (p.cartonStock && p.cartonStock < 5)) lowStock++;
     });
-    document.getElementById("dashTodayCount").innerText = todayTxCount;
+
+    document.getElementById("dashTotalDebt").innerText = totalDebt.toLocaleString() + " د.ع";
+    document.getElementById("dashPricesCount").innerText = Object.keys(currentData.prices).length;
+    document.getElementById("dashLowStockCount").innerText = lowStock;
   }
 
-  // ---- 1. إدارة دليل الأسعار ----
+  // PRICES FORM
   document.getElementById("priceForm").onsubmit = function(e) {
     e.preventDefault();
-    const pName = document.getElementById("pName").value.trim();
-    if (!pName) return;
-
-    const newPrice = {
-      name: pName,
+    const item = {
+      name: document.getElementById("pName").value.trim(),
       code: document.getElementById("pCode").value.trim(),
       packetCost: Number(document.getElementById("pPacketCost").value) || 0,
       packetSell: Number(document.getElementById("pPacketSell").value) || 0,
+      packetStock: Number(document.getElementById("pPacketStock").value) || 0,
       cartonCost: Number(document.getElementById("pCartonCost").value) || 0,
       cartonSell: Number(document.getElementById("pCartonSell").value) || 0,
-      createdAt: new Date().toISOString()
+      cartonStock: Number(document.getElementById("pCartonStock").value) || 0,
     };
-
-    db.child("prices").push(newPrice, (err) => {
-      if (!err) {
-        document.getElementById("priceForm").reset();
-      } else {
-        alert("⚠️ حدث خطأ أثناء الحفظ: " + err.message);
-      }
-    });
+    db.child("prices").push(item, () => document.getElementById("priceForm").reset());
   };
 
   function renderPrices() {
     const tbody = document.getElementById("pricesTable");
-    const query = normalizeText(document.getElementById("searchPrice").value);
     tbody.innerHTML = "";
+    const q = document.getElementById("searchPrice").value.toLowerCase();
 
-    const keys = Object.keys(currentData.prices);
-    if (keys.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="8">لا توجد مواد مسجلة في الدليل.</td></tr>';
-      return;
-    }
-
-    let count = 0;
-    keys.forEach(k => {
-      const item = currentData.prices[k];
-      const matchName = normalizeText(item.name).includes(query);
-      const matchCode = normalizeText(item.code).includes(query);
-
-      if (matchName || matchCode) {
-        count++;
+    Object.keys(currentData.prices).forEach(k => {
+      const p = currentData.prices[k];
+      if (!q || p.name.toLowerCase().includes(q) || (p.code && p.code.includes(q))) {
         const tr = document.createElement("tr");
         tr.innerHTML = `
-          <td>${count}</td>
-          <td style="font-weight:700; text-align:right;">${item.name}</td>
-          <td><code>${item.code || '-'}</code></td>
-          <td>${(item.packetCost || 0).toLocaleString()}</td>
-          <td style="color:var(--price); font-weight:700;">${(item.packetSell || 0).toLocaleString()}</td>
-          <td>${(item.cartonCost || 0).toLocaleString()}</td>
-          <td style="color:var(--price); font-weight:700;">${(item.cartonSell || 0).toLocaleString()}</td>
-          <td class="no-print">
-            <button class="btn-edit" onclick="openEditPrice('${k}')">✏️</button>
-            <button class="btn-delete" onclick="deletePrice('${k}')">🗑️</button>
-          </td>
+          <td><b>${p.name}</b></td>
+          <td><code>${p.code||'-'}</code></td>
+          <td>${(p.packetSell||0).toLocaleString()}</td>
+          <td><span class="stock-badge ${p.packetStock<5?'stock-low':'stock-ok'}">${p.packetStock||0}</span></td>
+          <td>${(p.cartonSell||0).toLocaleString()}</td>
+          <td><span class="stock-badge ${p.cartonStock<5?'stock-low':'stock-ok'}">${p.cartonStock||0}</span></td>
+          <td><button onclick="deleteItem('prices', '${k}')" class="btn-debt" style="padding:2px 6px;">🗑️</button></td>
         `;
         tbody.appendChild(tr);
       }
     });
-
-    if (count === 0) {
-      tbody.innerHTML = '<tr><td colspan="8">لا توجد نتائج تطابق البحث.</td></tr>';
-    }
   }
 
-  function openEditPrice(key) {
-    const item = currentData.prices[key];
-    if (!item) return;
-    document.getElementById("editKey").value = key;
-    document.getElementById("editName").value = item.name || "";
-    document.getElementById("editCode").value = item.code || "";
-    document.getElementById("editPacketCost").value = item.packetCost || 0;
-    document.getElementById("editPacketSell").value = item.packetSell || 0;
-    document.getElementById("editCartonCost").value = item.cartonCost || 0;
-    document.getElementById("editCartonSell").value = item.cartonSell || 0;
-    document.getElementById("editModal").style.display = "flex";
-  }
-
-  function closeEditModal() { document.getElementById("editModal").style.display = "none"; }
-
-  function savePriceEdit() {
-    const key = document.getElementById("editKey").value;
-    if (!key) return;
-
-    const updated = {
-      name: document.getElementById("editName").value.trim(),
-      code: document.getElementById("editCode").value.trim(),
-      packetCost: Number(document.getElementById("editPacketCost").value) || 0,
-      packetSell: Number(document.getElementById("editPacketSell").value) || 0,
-      cartonCost: Number(document.getElementById("editCartonCost").value) || 0,
-      cartonSell: Number(document.getElementById("editCartonSell").value) || 0,
-      updatedAt: new Date().toISOString()
+  // DEBTS FORM
+  document.getElementById("companyForm").onsubmit = function(e) {
+    e.preventDefault();
+    const c = {
+      name: document.getElementById("cName").value.trim(),
+      phone: document.getElementById("cPhone").value.trim(),
+      amount: Number(document.getElementById("cInitialDebt").value) || 0
     };
+    db.child("debts").push(c, () => document.getElementById("companyForm").reset());
+  };
 
-    db.child("prices").child(key).update(updated, (err) => {
-      if (!err) closeEditModal();
-      else alert("⚠️ خطأ في التعديل: " + err.message);
+  function renderDebts() {
+    const tbody = document.getElementById("debtsTable");
+    tbody.innerHTML = "";
+    const q = document.getElementById("searchDebt").value.toLowerCase();
+    const rate = Number(document.getElementById("usdExchangeRate").value) || 150000;
+
+    Object.keys(currentData.debts).forEach(k => {
+      const d = currentData.debts[k];
+      if (!q || d.name.toLowerCase().includes(q)) {
+        const usd = ((d.amount || 0) / rate) * 100;
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td><b>${d.name}</b></td>
+          <td>${d.phone||'-'}</td>
+          <td style="color:var(--debt); font-weight:700;">${(d.amount||0).toLocaleString()} د.ع</td>
+          <td>$${usd.toFixed(2)}</td>
+          <td><button onclick="deleteItem('debts', '${k}')" class="btn-debt" style="padding:2px 6px;">🗑️</button></td>
+        `;
+        tbody.appendChild(tr);
+      }
     });
   }
 
-  function deletePrice(key) {
-    if (confirm("هل أنت تأكد من حذف هذه المادة من الدليل؟")) {
-      db.child("prices").child(key).remove();
-    }
+  function deleteItem(path, key) {
+    if (confirm("هل أنت تأكد من الحذف؟")) db.child(path).child(key).remove();
   }
 
-  // ---- 📷 قارئ الباركود بالكاميرا ----
+  // BARCODE SCANNER
   let html5QrcodeScanner = null;
-
   function startScanner() {
     document.getElementById("scannerModal").style.display = "flex";
     html5QrcodeScanner = new Html5Qrcode("interactive");
-    html5QrcodeScanner.start(
-      { facingMode: "environment" },
-      { fps: 10, qrbox: { width: 250, height: 150 } },
-      (decodedText) => {
-        document.getElementById("searchPrice").value = decodedText;
-        renderPrices();
-        stopScanner();
-      },
-      () => {}
-    ).catch(err => {
-      alert("⚠️ لم يتم العثور على كاميرا أو تعذر الحصول على الإذن: " + err);
+    html5QrcodeScanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (decodedText) => {
+      document.getElementById("pCode").value = decodedText;
       stopScanner();
-    });
+    }).catch(err => stopScanner());
   }
 
   function stopScanner() {
     if (html5QrcodeScanner) {
       html5QrcodeScanner.stop().then(() => {
-        html5QrcodeScanner.clear();
         document.getElementById("scannerModal").style.display = "none";
-      }).catch(() => {
-        document.getElementById("scannerModal").style.display = "none";
-      });
-    } else {
-      document.getElementById("scannerModal").style.display = "none";
-    }
+      }).catch(() => document.getElementById("scannerModal").style.display = "none");
+    } else { document.getElementById("scannerModal").style.display = "none"; }
   }
 
-  // ---- 2. إدارة ديون الشركات والمجهزين ----
-  document.getElementById("companyForm").onsubmit = function(e) {
-    e.preventDefault();
-    const cName = document.getElementById("cName").value.trim();
-    if (!cName) return;
-
-    const newCompany = {
-      name: cName,
-      phone: document.getElementById("cPhone").value.trim(),
-      amount: Number(document.getElementById("cInitialDebt").value) || 0,
-      createdAt: new Date().toISOString()
-    };
-
-    db.child("debts").push(newCompany, (err) => {
-      if (!err) document.getElementById("companyForm").reset();
-      else alert("⚠️ حدث خطأ أثناء الحفظ: " + err.message);
-    });
-  };
-
-  function renderDebts() {
-    const tbody = document.getElementById("debtsTable");
-    const query = normalizeText(document.getElementById("searchDebt").value);
-    tbody.innerHTML = "";
-
-    const keys = Object.keys(currentData.debts);
-    if (keys.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="6">لا توجد شركات أو مجهزين مضافين.</td></tr>';
-      return;
-    }
-
-    let count = 0;
-    keys.forEach(k => {
-      const comp = currentData.debts[k];
-      if (normalizeText(comp.name).includes(query)) {
-        count++;
-        const amount = Number(comp.amount) || 0;
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${count}</td>
-          <td style="font-weight:700; text-align:right;">${comp.name}</td>
-          <td>${comp.phone || '-'}</td>
-          <td style="font-weight:700; color:${amount > 0 ? 'var(--debt)' : 'var(--success)'}">${amount.toLocaleString()} د.ع</td>
-          <td style="font-weight:600;">${formatUSD(amount)}</td>
-          <td class="no-print">
-            <button class="btn-edit" onclick="openEditCompany('${k}')">✏️</button>
-            <button class="btn-delete" onclick="deleteCompany('${k}')">🗑️</button>
-          </td>
-        `;
-        tbody.appendChild(tr);
-      }
-    });
-
-    if (count === 0) {
-      tbody.innerHTML = '<tr><td colspan="6">لا توجد نتائج تطابق البحث.</td></tr>';
-    }
-  }
-
-  function renderCompanySelect() {
-    const selectT = document.getElementById("tCompany");
-    const selectS = document.getElementById("statementSelect");
-
-    const curT = selectT.value;
-    const curS = selectS.value;
-
-    selectT.innerHTML = '<option value="">-- اختر الشركة --</option>';
-    selectS.innerHTML = '<option value="">-- اختر الشركة لرؤية كشف الحساب --</option>';
-
-    Object.keys(currentData.debts).forEach(k => {
-      const comp = currentData.debts[k];
-      const opt1 = new Option(comp.name, k);
-      const opt2 = new Option(comp.name, k);
-      selectT.add(opt1);
-      selectS.add(opt2);
-    });
-
-    selectT.value = curT;
-    selectS.value = curS;
-  }
-
-  function openEditCompany(key) {
-    const comp = currentData.debts[key];
-    if (!comp) return;
-    document.getElementById("editCompKey").value = key;
-    document.getElementById("editCompName").value = comp.name || "";
-    document.getElementById("editCompPhone").value = comp.phone || "";
-    document.getElementById("editCompAmount").value = comp.amount || 0;
-    document.getElementById("editCompanyModal").style.display = "flex";
-  }
-
-  function closeCompanyEditModal() { document.getElementById("editCompanyModal").style.display = "none"; }
-
-  function saveCompanyEdit() {
-    const key = document.getElementById("editCompKey").value;
-    if (!key) return;
-
-    const updated = {
-      name: document.getElementById("editCompName").value.trim(),
-      phone: document.getElementById("editCompPhone").value.trim(),
-      amount: Number(document.getElementById("editCompAmount").value) || 0,
-      updatedAt: new Date().toISOString()
-    };
-
-    db.child("debts").child(key).update(updated, (err) => {
-      if (!err) closeCompanyEditModal();
-      else alert("⚠️ خطأ في التعديل: " + err.message);
-    });
-  }
-
-  function deleteCompany(key) {
-    if (confirm("هل أنت تأكد من حذف هذه الشركة وكل بياناتها؟")) {
-      db.child("debts").child(key).remove();
-    }
-  }
-
-  // ---- 3. تسجيل الحركات الماليّة (تسديد / فاتورة) ----
-  document.getElementById("transForm").onsubmit = function(e) {
-    e.preventDefault();
-    const companyKey = document.getElementById("tCompany").value;
-    const type = document.getElementById("tType").value;
-    const amount = Number(document.getElementById("tAmount").value);
-    const note = document.getElementById("tNote").value.trim();
-
-    if (!companyKey || !amount || amount <= 0) {
-      alert("⚠️ يرجى اختيار الشركة وإدخال مبلغ صحيح.");
-      return;
-    }
-
-    const company = currentData.debts[companyKey];
-    if (!company) return;
-
-    let currentDebt = Number(company.amount) || 0;
-    let newDebt = (type === "pay") ? (currentDebt - amount) : (currentDebt + amount);
-
-    const now = new Date();
-    const newTrans = {
-      companyKey: companyKey,
-      companyName: company.name,
-      type: type,
-      amount: amount,
-      note: note,
-      date: now.toISOString(),
-      displayDate: now.toLocaleDateString("ar-IQ") + " " + now.toLocaleTimeString("ar-IQ", {hour: '2-digit', minute:'2-digit'})
-    };
-
-    const updates = {};
-    const transKey = db.child("transactions").push().key;
-    updates["/transactions/" + transKey] = newTrans;
-    updates["/debts/" + companyKey + "/amount"] = newDebt;
-
-    db.update(updates, (err) => {
-      if (!err) {
-        document.getElementById("transForm").reset();
-        document.getElementById("tAmountUsd").value = "";
-      } else {
-        alert("⚠️ فشل تسجيل الحركة: " + err.message);
-      }
-    });
-  };
-
-  function renderTransactions() {
-    const tbody = document.getElementById("transTable");
-    tbody.innerHTML = "";
-
-    const keys = Object.keys(currentData.transactions).reverse();
-    if (keys.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="6">لا توجد حركات مسجلة.</td></tr>';
-      return;
-    }
-
-    keys.slice(0, 15).forEach(k => {
-      const t = currentData.transactions[k];
-      const isPay = t.type === "pay";
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td style="font-size:11px; color:var(--text-muted);">${t.displayDate || '-'}</td>
-        <td style="font-weight:700;">${t.companyName || '-'}</td>
-        <td><span class="${isPay ? 'badge-pay' : 'badge-bill'}">${isPay ? '💸 تسديد' : '📦 قائمة جديدة'}</span></td>
-        <td style="font-weight:700;">${(t.amount || 0).toLocaleString()} د.ع</td>
-        <td>${t.note || '-'}</td>
-        <td class="no-print"><button class="btn-delete" onclick="deleteTransaction('${k}')">🗑️</button></td>
-      `;
-      tbody.appendChild(tr);
-    });
-  }
-
-  function deleteTransaction(key) {
-    if (confirm("هل أنت تأكد من إلغاء وحذف هذه الحركة؟")) {
-      db.child("transactions").child(key).remove();
-    }
-  }
-
-  // ---- 4. كشف حساب تفصيلي وإرسال واتساب ----
-  function generateStatement() {
-    const companyKey = document.getElementById("statementSelect").value;
-    const container = document.getElementById("statementContent");
-
-    if (!companyKey || !currentData.debts[companyKey]) {
-      container.innerHTML = '<p style="text-align:center; color:var(--text-muted); margin: 20px 0;">اختر شركة من القائمة أعلاه لمشاهدة التفاصيل.</p>';
-      return;
-    }
-
-    const comp = currentData.debts[companyKey];
-    const compTrans = [];
-
-    Object.keys(currentData.transactions).forEach(k => {
-      const t = currentData.transactions[k];
-      if (t.companyKey === companyKey) {
-        compTrans.push({ ...t, id: k });
-      }
-    });
-
-    compTrans.sort((a, b) => new Date(a.date) - new Date(b.date));
-
-    let html = `
-      <div style="border-bottom: 2px dashed var(--border); padding-bottom: 12px; margin-bottom: 15px;">
-        <div style="display:flex; justify-style:space-between; align-items:center;">
-          <h3 style="margin:0; color:var(--primary); font-family:var(--font-display);">${comp.name}</h3>
-          ${comp.phone ? `<button class="btn-whatsapp no-print" onclick="sendWhatsApp('${comp.phone}', '${comp.name}',${comp.amount})">📲 إرسال كشف عبر WhatsApp</button>` : ''}
-        </div>
-        <div style="font-size:13px; color:var(--text-muted); margin-top:5px;">رقم الهاتف: <b>${comp.phone || 'غير مسجل'}</b></div>
-        <div style="font-size:18px; font-weight:700; margin-top:8px; color:var(--debt);">
-          الرصيد النهائي المطلوب: ${Number(comp.amount).toLocaleString()} د.ع
-          <span style="font-size:13px; color:var(--text-muted); font-weight:400;">(${formatUSD(comp.amount)})</span>
-        </div>
-      </div>
-
-      <div class="table-wrapper">
-        <table>
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>التاريخ والوقت</th>
-              <th>نوع الحركة</th>
-              <th>المبلغ (د.ع)</th>
-              <th>ملاحظات</th>
-            </tr>
-          </thead>
-          <tbody>
-    `;
-
-    if (compTrans.length === 0) {
-      html += '<tr><td colspan="5">لا توجد حركات مسجلة سابقاً لهذه الشركة.</td></tr>';
-    } else {
-      compTrans.forEach((t, i) => {
-        const isPay = t.type === "pay";
-        html += `
-          <tr>
-            <td>${i + 1}</td>
-            <td style="font-size:11px;">${t.displayDate || '-'}</td>
-            <td><span class="${isPay ? 'badge-pay' : 'badge-bill'}">${isPay ? '💸 تسديد' : '📦 قائمة'}</span></td>
-            <td style="font-weight:700;">${Number(t.amount).toLocaleString()}</td>
-            <td style="text-align:right;">${t.note || '-'}</td>
-          </tr>
-        `;
-      });
-    }
-
-    html += `
-          </tbody>
-        </table>
-      </div>
-      <div class="no-print" style="margin-top:15px; text-align:left;">
-        <button type="button" class="btn-secondary" onclick="window.print()" style="width:auto; padding:8px 16px;">🖨️ طباعة كشف الحساب</button>
-      </div>
-    `;
-
-    container.innerHTML = html;
-  }
-
-  // إرسال كشف عبر واتساب
-  function sendWhatsApp(phone, companyName, debtAmount) {
-    let cleanPhone = phone.replace(/[^0-9]/g, '');
-    const msg = `مرحباً ${companyName}،%0Aتحية طيبة من *محلات الدباغ*.%0Aيرجى العلم أن الرصيد الحالي المتبقي للساب هو: *${debtAmount.toLocaleString()} د.ع*.%0Aشكراً لتعاملكم معنا!`;
-    window.open(`https://wa.me/${cleanPhone}?text=${msg}`, '_blank');
-  }
-
-  // ---- 5. تقارير المشتريات اليومية ----
-  function renderDailyReport() {
-    const selectedDate = document.getElementById("reportDate").value;
-    const tbody = document.getElementById("dailyReportTable");
-    tbody.innerHTML = "";
-
-    if (!selectedDate) return;
-
-    let totalBills = 0;
-    let totalPays = 0;
-    let count = 0;
-
-    Object.keys(currentData.transactions).forEach(k => {
-      const t = currentData.transactions[k];
-      if (t.date && t.date.startsWith(selectedDate)) {
-        count++;
-        const isPay = t.type === "pay";
-        const amt = Number(t.amount) || 0;
-
-        if (isPay) totalPays += amt;
-        else totalBills += amt;
-
-        const timeStr = new Date(t.date).toLocaleTimeString("ar-IQ", { hour: '2-digit', minute: '2-digit' });
-
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${count}</td>
-          <td>${timeStr}</td>
-          <td style="font-weight:700;">${t.companyName || '-'}</td>
-          <td><span class="${isPay ? 'badge-pay' : 'badge-bill'}">${isPay ? '💸 تسديد' : '📦 قائمة جديدة'}</span></td>
-          <td style="font-weight:700;">${amt.toLocaleString()}</td>
-          <td>${t.note || '-'}</td>
-          <td class="no-print"><button class="btn-delete" onclick="deleteTransaction('${k}')">🗑️</button></td>
-        `;
-        tbody.appendChild(tr);
-      }
-    });
-
-    if (count === 0) {
-      tbody.innerHTML = '<tr><td colspan="7">لا توجد أي حركة مسجلة لهذا اليوم.</td></tr>';
-    }
-
-    document.getElementById("repTotalBills").innerText = totalBills.toLocaleString() + " د.ع";
-    document.getElementById("repTotalPays").innerText = totalPays.toLocaleString() + " د.ع";
-    
-    const net = totalBills - totalPays;
-    const netElem = document.getElementById("repNetTotal");
-    netElem.innerText = net.toLocaleString() + " د.ع";
-    netElem.style.color = net >= 0 ? "var(--debt)" : "var(--success)";
-
-    document.getElementById("repCount").innerText = count;
-  }
-
-  // ---- 6. المساعد الذكي Gemini ----
-  async function askGemini(promptText) {
-    const apiKey = localStorage.getItem("gemini_key") || "";
-    if (!apiKey) {
-      alert("⚠️ يرجى إدخال مفتاح Gemini API في قسم المساعد الذكي وحفظه أولاً.");
-      return null;
-    }
-
-    const contextData = {
-      storeName: "محلات الدباغ للمواد الغذائية بالجملة",
-      usdRate: document.getElementById("usdExchangeRate").value,
-      debtsSummary: currentData.debts,
-      pricesCount: Object.keys(currentData.prices).length,
-      samplePrices: Object.values(currentData.prices).slice(0, 25),
-      recentTransactions: Object.values(currentData.transactions).slice(-20)
-    };
-
-    const systemInstruction = `أنت مساعد محاسبي ومالي ذكي بنظام محلات الدباغ. أجوبتك دقيقة ومختصرة باللغة العربية. البيانات الحالية: ${JSON.stringify(contextData)}`;
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
-
-    try {
-      const response = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ contents: [{ parts: [{ text: `${systemInstruction}\n\nالسؤال: ${promptText}` }] }] })
-      });
-
-      const data = await response.json();
-      if (data.candidates && data.candidates[0].content.parts[0].text) {
-        return data.candidates[0].content.parts[0].text;
-      } else {
-        throw new Error(data.error ? data.error.message : "تعذر استلام رد من النموذج");
-      }
-    } catch (err) {
-      alert("⚠️ خطأ في الاتصال بالمساعد الذكي: " + err.message);
-      return null;
-    }
-  }
-
-  function appendChatMessage(msg, sender) {
-    const box = document.getElementById("aiChatBox");
-    const div = document.createElement("div");
-    div.className = `ai-msg ${sender}`;
-    div.innerText = msg;
-    box.appendChild(div);
-    box.scrollTop = box.scrollHeight;
-  }
+  // AI GEMINI INTEGRATION
+  function saveApiKey() { localStorage.setItem("gemini_key", document.getElementById("geminiApiKey").value.trim()); }
+  document.getElementById("geminiApiKey").value = localStorage.getItem("gemini_key") || "";
 
   async function sendAiMessage() {
     const input = document.getElementById("aiPrompt");
-    const text = input.value.trim();
-    if (!text) return;
+    const prompt = input.value.trim();
+    const apiKey = localStorage.getItem("gemini_key");
+    if (!prompt || !apiKey) { alert("⚠️ أدخل السؤال ومفتاح API!"); return; }
 
-    appendChatMessage(text, "user");
+    const box = document.getElementById("aiChatBox");
+    box.innerHTML += `<div><b>أنت:</b> ${prompt}</div>`;
     input.value = "";
 
-    const reply = await askGemini(text);
-    if (reply) appendChatMessage(reply, "bot");
-  }
+    const context = JSON.stringify({ debts: currentData.debts, pricesCount: Object.keys(currentData.prices).length });
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
 
-  function askQuick(qText) {
-    document.getElementById("aiPrompt").value = qText;
-    sendAiMessage();
-  }
-
-  async function runAiAnalysis() {
-    appendChatMessage("📊 جاري تحليل البيانات المالية والدليل بالكامل...", "user");
-    const reply = await askGemini("اعطني تقريراً تحليلياً واستشارياً موجزاً عن حالة الديون الحالية والمشترات، واقتراح نصائح مالية للحفاظ على السيولة.");
-    if (reply) appendChatMessage(reply, "bot");
-  }
-
-  // ---- 7. التصدير والنسخ الاحتياطي ----
-  function exportCsv(type) {
-    let csvContent = "\uFEFF";
-    if (type === "prices") {
-      csvContent += "اسم المادة,الكود,كلفة الباكيت,بيع الباكيت,كلفة الكارتون,بيع الكارتون\n";
-      Object.values(currentData.prices).forEach(p => {
-        csvContent += `"${p.name || ''}","${p.code || ''}",${p.packetCost || 0},${p.packetSell || 0},${p.cartonCost || 0},${p.cartonSell || 0}\n`;
+    try {
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contents: [{ parts: [{ text: `بيانات النظام: ${context}\n\nالسؤال: ${prompt}` }] }] })
       });
-    } else if (type === "debts") {
-      csvContent += "اسم الشركة,الهاتف,الدين المطلوب (دينار)\n";
-      Object.values(currentData.debts).forEach(d => {
-        csvContent += `"${d.name || ''}","${d.phone || ''}",${d.amount || 0}\n`;
-      });
-    }
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = `${type}_export_${new Date().toISOString().split('T')[0]}.csv`;
-    link.click();
+      const data = await res.json();
+      const reply = data.candidates[0].content.parts[0].text;
+      box.innerHTML += `<div style="color:var(--ai-color);"><b>المساعد:</b> ${reply}</div>`;
+      box.scrollTop = box.scrollHeight;
+    } catch(e) { box.innerHTML += `<div style="color:red;">خطأ: ${e.message}</div>`; }
   }
 
-  function exportBackup() {
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(currentData, null, 2));
-    const downloadAnchor = document.createElement('a');
-    downloadAnchor.setAttribute("href", dataStr);
-    downloadAnchor.setAttribute("download", `aldabbagh_pro_backup_${new Date().toISOString().split('T')[0]}.json`);
-    document.body.appendChild(downloadAnchor);
-    downloadAnchor.click();
-    downloadAnchor.remove();
+  function exportCsv() {
+    let csv = "\uFEFFاسم المادة,الباركود,بيع الباكيت,مخزون الباكيت,بيع الكارتون,مخزون الكارتون\n";
+    Object.values(currentData.prices).forEach(p => {
+      csv += `"${p.name}","${p.code||''}",${p.packetSell||0},${p.packetStock||0},${p.cartonSell||0},${p.cartonStock||0}\n`;
+    });
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `inventory_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
   }
 </script>
 </body>
