@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>نظام إدارة المخزن والديون - محلات الدباغ (إصدار حديث)</title>
+  <title>نظام إدارة المخزن والديون - محلات الدباغ (إصدار مطور)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <!-- Firebase SDKs -->
@@ -148,7 +148,7 @@
     .action-btn { padding: 4px 8px; font-size: 11px; margin: 2px; width: auto; display: inline-block; }
 
     .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(3px); justify-content: center; align-items: center; }
-    .modal-content { background: var(--card); padding: 20px; border-radius: var(--radius); width: 90%; max-width: 480px; border-top: 4px solid var(--brass); }
+    .modal-content { background: var(--card); padding: 20px; border-radius: var(--radius); width: 90%; max-width: 520px; border-top: 4px solid var(--brass); max-height: 85vh; overflow-y: auto; }
 
     @media print {
       body { background: #fff; color: #000; }
@@ -242,16 +242,20 @@
           <span>🔍 دليل المواد والأسعار والمخزون</span>
           <button onclick="exportCsv()" class="btn-secondary" style="width:auto; font-size:11px; padding:3px 8px;">📥 تصدير Excel</button>
         </h2>
-        <input type="text" id="searchPrice" placeholder="🔍 بحث عن مادة أو باركود..." oninput="renderPrices()" />
+        <div style="display:flex; gap:6px; margin-bottom:10px;">
+          <input type="text" id="searchPrice" placeholder="🔍 بحث عن مادة أو باركود..." oninput="renderPrices()" style="margin:0;" />
+          <button onclick="setFilter('all')" id="filterAllBtn" class="btn-price" style="width:auto; padding:5px 10px; font-size:11px;">الكل</button>
+          <button onclick="setFilter('low')" id="filterLowBtn" class="btn-secondary" style="width:auto; padding:5px 10px; font-size:11px;">الناقصة فقط</button>
+        </div>
         <div class="table-wrapper">
           <table>
             <thead>
               <tr>
-                <th>المادة</th>
+                <th>المادة / التاريخ</th>
                 <th>الباركود</th>
-                <th>بيع الباكيت</th>
+                <th>بيع الباكيت (الربح)</th>
                 <th>مخزون الباكيت</th>
-                <th>بيع الكارتون</th>
+                <th>بيع الكارتون (الربح)</th>
                 <th>مخزون الكارتون</th>
                 <th>إجراءات</th>
               </tr>
@@ -295,8 +299,16 @@
   <div id="aiSection" class="tab-content">
     <div class="card">
       <h2>🤖 المساعد المحاسبي الذكي (Gemini Pro)</h2>
-      <input type="password" id="geminiApiKey" placeholder="أدخل مفتاح Gemini API..." onchange="saveApiKey()" />
-      <div id="aiChatBox" style="height:280px; overflow-y:auto; background:var(--paper-stripe); padding:10px; border-radius:6px; margin-bottom:10px; border:1px solid var(--border);"></div>
+      <input type="password" id="geminiApiKey" placeholder="أدخل مفتاح Gemini API..." onchange="saveApiKey()" style="margin-bottom:8px;" />
+      
+      <!-- أزرار الاستعلام السريع -->
+      <div style="display:flex; gap:6px; margin-bottom:10px; flex-wrap:wrap;">
+        <button onclick="quickAsk('ما هي أكثر المواد التي أوشكت على النفاد؟')" class="btn-secondary" style="width:auto; font-size:11px; padding:4px 8px;">⚠️ المواد الناقصة</button>
+        <button onclick="quickAsk('كم إجمالي الديون المطلوبة للشركات بالدينار وبالدولار؟')" class="btn-secondary" style="width:auto; font-size:11px; padding:4px 8px;">💰 إجمالي الديون</button>
+        <button onclick="quickAsk('اعطني ملخصاً شاملاً عن حالة المخزن والديون')" class="btn-secondary" style="width:auto; font-size:11px; padding:4px 8px;">📊 ملخص عام</button>
+      </div>
+
+      <div id="aiChatBox" style="height:250px; overflow-y:auto; background:var(--paper-stripe); padding:10px; border-radius:6px; margin-bottom:10px; border:1px solid var(--border);"></div>
       <div style="display:flex; gap:8px;">
         <input type="text" id="aiPrompt" placeholder="اسأل المساعد عن ديون الشركات أو المخزون..." style="margin:0;" onkeypress="if(event.key==='Enter') sendAiMessage()" />
         <button onclick="sendAiMessage()" class="btn-ai" style="width:auto;">إرسال</button>
@@ -311,6 +323,20 @@
     <h3>📷 قراءة الباركود</h3>
     <div id="interactive" style="width:100%; height:250px; background:#000; margin-bottom:10px;"></div>
     <button onclick="stopScanner()" class="btn-secondary">إغلاق</button>
+  </div>
+</div>
+
+<!-- Debt History Modal -->
+<div id="historyModal" class="modal">
+  <div class="modal-content">
+    <h2 id="historyModalTitle">📜 سجل الحركات</h2>
+    <div class="table-wrapper" style="max-height:300px; margin-bottom:15px;">
+      <table>
+        <thead><tr><th>التاريخ</th><th>النوع</th><th>المبلغ (د.ع)</th></tr></thead>
+        <tbody id="historyTableBody"></tbody>
+      </table>
+    </div>
+    <button onclick="closeHistoryModal()" class="btn-secondary">إغلاق</button>
   </div>
 </div>
 
@@ -340,10 +366,11 @@
 
   let db;
   let currentData = { prices: {}, debts: {} };
+  let currentFilter = 'all';
 
   try {
     firebase.initializeApp(firebaseConfig);
-    db = firebase.database().ref("simple_price_debts_v3");
+    db = firebase.database().ref("simple_price_debts_v4");
 
     db.on("value", (snapshot) => {
       document.getElementById("cloudStatus").innerText = "🟢 متصل بالسحابة ومتزامن تلقائياً";
@@ -380,6 +407,7 @@
   // PRICES FORM
   document.getElementById("priceForm").onsubmit = function(e) {
     e.preventDefault();
+    const now = new Date().toISOString().split('T')[0];
     const item = {
       name: document.getElementById("pName").value.trim(),
       code: document.getElementById("pCode").value.trim(),
@@ -389,9 +417,23 @@
       cartonCost: Number(document.getElementById("pCartonCost").value) || 0,
       cartonSell: Number(document.getElementById("pCartonSell").value) || 0,
       cartonStock: Number(document.getElementById("pCartonStock").value) || 0,
+      updatedAt: now,
+      history: [{ date: now, type: "إضافة المادة", details: "إضافة أولية" }]
     };
     db.child("prices").push(item, () => document.getElementById("priceForm").reset());
   };
+
+  function setFilter(type) {
+    currentFilter = type;
+    if(type === 'all') {
+      document.getElementById("filterAllBtn").className = "btn-price";
+      document.getElementById("filterLowBtn").className = "btn-secondary";
+    } else {
+      document.getElementById("filterAllBtn").className = "btn-secondary";
+      document.getElementById("filterLowBtn").className = "btn-price";
+    }
+    renderPrices();
+  }
 
   function renderPrices() {
     const tbody = document.getElementById("pricesTable");
@@ -400,14 +442,31 @@
 
     Object.keys(currentData.prices).forEach(k => {
       const p = currentData.prices[k];
+      const isLow = (p.packetStock < 5 || p.cartonStock < 5);
+      
+      if (currentFilter === 'low' && !isLow) return;
+
       if (!q || p.name.toLowerCase().includes(q) || (p.code && p.code.includes(q))) {
+        // حساب هامش الربح
+        const packetProfit = (p.packetSell || 0) - (p.packetCost || 0);
+        const packetProfitPct = p.packetCost > 0 ? ((packetProfit / p.packetCost) * 100).toFixed(0) : 0;
+        
+        const cartonProfit = (p.cartonSell || 0) - (p.cartonCost || 0);
+        const cartonProfitPct = p.cartonCost > 0 ? ((cartonProfit / p.cartonCost) * 100).toFixed(0) : 0;
+
         const tr = document.createElement("tr");
         tr.innerHTML = `
-          <td><b>${p.name}</b></td>
+          <td><b>${p.name}</b><br><span style="font-size:10px; color:var(--text-muted);">${p.updatedAt || '-'}</span></td>
           <td><code>${p.code||'-'}</code></td>
-          <td>${(p.packetSell||0).toLocaleString()}</td>
+          <td>
+            ${(p.packetSell||0).toLocaleString()}<br>
+            <span style="font-size:11px; color:${packetProfit>=0?'var(--success)':'var(--debt)'};">ربح: ${packetProfit.toLocaleString()} (${packetProfitPct}%)</span>
+          </td>
           <td><span class="stock-badge ${p.packetStock<5?'stock-low':'stock-ok'}">${p.packetStock||0}</span></td>
-          <td>${(p.cartonSell||0).toLocaleString()}</td>
+          <td>
+            ${(p.cartonSell||0).toLocaleString()}<br>
+            <span style="font-size:11px; color:${cartonProfit>=0?'var(--success)':'var(--debt)'};">ربح: ${cartonProfit.toLocaleString()} (${cartonProfitPct}%)</span>
+          </td>
           <td><span class="stock-badge ${p.cartonStock<5?'stock-low':'stock-ok'}">${p.cartonStock||0}</span></td>
           <td>
             <button onclick="editStock('${k}')" class="btn-price action-btn">✏️ تعديل</button>
@@ -423,11 +482,17 @@
     const p = currentData.prices[key];
     const newPacketStock = prompt("تحديث مخزون الباكيت للمادة (" + p.name + "):", p.packetStock || 0);
     const newCartonStock = prompt("تحديث مخزون الكارتون للمادة (" + p.name + "):", p.cartonStock || 0);
+    const newPacketSell = prompt("تحديث سعر بيع الباكيت:", p.packetSell || 0);
+    const newCartonSell = prompt("تحديث سعر بيع الكارتون:", p.cartonSell || 0);
 
     if (newPacketStock !== null && newCartonStock !== null) {
+      const now = new Date().toISOString().split('T')[0];
       db.child("prices").child(key).update({
         packetStock: Number(newPacketStock),
-        cartonStock: Number(newCartonStock)
+        cartonStock: Number(newCartonStock),
+        packetSell: Number(newPacketSell),
+        cartonSell: Number(newCartonSell),
+        updatedAt: now
       });
     }
   }
@@ -435,10 +500,13 @@
   // DEBTS FORM
   document.getElementById("companyForm").onsubmit = function(e) {
     e.preventDefault();
+    const now = new Date().toISOString().split('T')[0];
+    const initialAmount = Number(document.getElementById("cInitialDebt").value) || 0;
     const c = {
       name: document.getElementById("cName").value.trim(),
       phone: document.getElementById("cPhone").value.trim(),
-      amount: Number(document.getElementById("cInitialDebt").value) || 0
+      amount: initialAmount,
+      history: [{ date: now, type: "فتح الحساب", amount: initialAmount }]
     };
     db.child("debts").push(c, () => document.getElementById("companyForm").reset());
   };
@@ -461,6 +529,8 @@
           <td>$${usd.toFixed(2)}</td>
           <td>
             <button onclick="payDebt('${k}')" class="btn-success action-btn">💵 تسديد</button>
+            <button onclick="addDebt('${k}')" class="btn-debt action-btn" style="background:#b91c1c;">➕ إضافة دين</button>
+            <button onclick="showDebtHistory('${k}')" class="btn-secondary action-btn">📜 السجل</button>
             <button onclick="deleteItem('debts', '${k}')" class="btn-debt action-btn">🗑️</button>
           </td>
         `;
@@ -476,12 +546,49 @@
     
     if (payVal > 0) {
       const remaining = Math.max(0, d.amount - payVal);
-      db.child("debts").child(key).update({ amount: remaining });
+      const now = new Date().toISOString().split('T')[0];
+      let history = d.history || [];
+      history.push({ date: now, type: "تسديد مبلغ", amount: -payVal });
+      db.child("debts").child(key).update({ amount: remaining, history: history });
     }
   }
 
+  function addDebt(key) {
+    const d = currentData.debts[key];
+    const amount = prompt(`إضافة دين جديد / بضاعة للشركة (${d.name}):`, "0");
+    const addVal = Number(amount);
+    
+    if (addVal > 0) {
+      const newTotal = d.amount + addVal;
+      const now = new Date().toISOString().split('T')[0];
+      let history = d.history || [];
+      history.push({ date: now, type: "إضافة بضاعة/دين", amount: addVal });
+      db.child("debts").child(key).update({ amount: newTotal, history: history });
+    }
+  }
+
+  function showDebtHistory(key) {
+    const d = currentData.debts[key];
+    document.getElementById("historyModalTitle").innerText = "📜 سجل حركة الديون: " + d.name;
+    const tbody = document.getElementById("historyTableBody");
+    tbody.innerHTML = "";
+    
+    if (d.history && d.history.length > 0) {
+      d.history.forEach(h => {
+        tbody.innerHTML += `<tr><td>${h.date}</td><td>${h.type}</td><td style="font-weight:700; color:${h.amount>=0?'var(--debt)':'var(--success)'};">${h.amount ? h.amount.toLocaleString() : 0} د.ع</td></tr>`;
+      });
+    } else {
+      tbody.innerHTML = `<tr><td colspan="3">لا توجد سجلات مسجلة</td></tr>`;
+    }
+    document.getElementById("historyModal").style.display = "flex";
+  }
+
+  function closeHistoryModal() {
+    document.getElementById("historyModal").style.display = "none";
+  }
+
   function deleteItem(path, key) {
-    if (confirm("هل أنت تأكد من الحذف؟")) db.child(path).child(key).remove();
+    if (confirm("هل أنت متأكد من الحذف؟")) db.child(path).child(key).remove();
   }
 
   // BARCODE SCANNER
@@ -503,47 +610,50 @@
     } else { document.getElementById("scannerModal").style.display = "none"; }
   }
 
-  // AI GEMINI INTEGRATION (إصدار محدث وشامل)
+  // AI GEMINI INTEGRATION
   function saveApiKey() { localStorage.setItem("gemini_key", document.getElementById("geminiApiKey").value.trim()); }
   document.getElementById("geminiApiKey").value = localStorage.getItem("gemini_key") || "";
+
+  function quickAsk(question) {
+    document.getElementById("aiPrompt").value = question;
+    sendAiMessage();
+  }
 
   async function sendAiMessage() {
     const input = document.getElementById("aiPrompt");
     const prompt = input.value.trim();
     const apiKey = localStorage.getItem("gemini_key");
-    if (!prompt || !apiKey) { alert("⚠️ أدخل السؤال ومفتاح API!"); return; }
+    if (!prompt || !apiKey) { alert("⚠️ أدخل السؤال ومفتاح API في الحقل المخصص!"); return; }
 
     const box = document.getElementById("aiChatBox");
-    box.innerHTML += `<div><b>أنت:</b> ${prompt}</div>`;
+    box.innerHTML += `<div style="margin-bottom:6px;"><b>أنت:</b> ${prompt}</div>`;
     input.value = "";
 
     const context = JSON.stringify({ debts: currentData.debts, pricesCount: Object.keys(currentData.prices).length, prices: currentData.prices });
-    
-    // استخدام نموذج gemini-2.5-flash الأحدث
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
 
     try {
       const res = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ contents: [{ parts: [{ text: `أنت مساعد محاسبي لمحلات الدباغ. استخدم بيانات المخزن والديون التالية للإجابة باختصار ودقة:\n${context}\n\nالسؤال: ${prompt}` }] }] })
+        body: JSON.stringify({ contents: [{ parts: [{ text: `أنت مساعد محاسبي محترف لمحلات الدباغ للمواد الغذائية بالجملة والمفرد. استخدم بيانات المخزن والديون التالية للإجابة باختصار ودقة باللغة العربية:\n${context}\n\nالسؤال: ${prompt}` }] }] })
       });
       const data = await res.json();
 
       if (data.error) {
-        box.innerHTML += `<div style="color:red;">خطأ من Google: ${data.error.message}</div>`;
+        box.innerHTML += `<div style="color:red; margin-bottom:6px;">خطأ من Google: ${data.error.message}</div>`;
       } else {
         const reply = data.candidates[0].content.parts[0].text;
-        box.innerHTML += `<div style="color:var(--ai-color);"><b>المساعد:</b> ${reply}</div>`;
+        box.innerHTML += `<div style="color:var(--ai-color); margin-bottom:6px;"><b>المساعد:</b> ${reply}</div>`;
       }
       box.scrollTop = box.scrollHeight;
-    } catch(e) { box.innerHTML += `<div style="color:red;">خطأ: ${e.message}</div>`; }
+    } catch(e) { box.innerHTML += `<div style="color:red; margin-bottom:6px;">خطأ في الاتصال: ${e.message}</div>`; }
   }
 
   function exportCsv() {
-    let csv = "\uFEFFاسم المادة,الباركود,بيع الباكيت,مخزون الباكيت,بيع الكارتون,مخزون الكارتون\n";
+    let csv = "\uFEFFاسم المادة,الباركود,كلفة الباكيت,بيع الباكيت,مخزون الباكيت,كلفة الكارتون,بيع الكارتون,مخزون الكارتون,آخر تحديث\n";
     Object.values(currentData.prices).forEach(p => {
-      csv += `"${p.name}","${p.code||''}",${p.packetSell||0},${p.packetStock||0},${p.cartonSell||0},${p.cartonStock||0}\n`;
+      csv += `"${p.name}","${p.code||''}",${p.packetCost||0},${p.packetSell||0},${p.packetStock||0},${p.cartonCost||0},${p.cartonSell||0},${p.cartonStock||0},"${p.updatedAt||''}"\n`;
     });
     const blob = new Blob([csv], { type: 'text/csv' });
     const a = document.createElement("a");
