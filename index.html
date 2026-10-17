@@ -610,7 +610,7 @@
     } else { document.getElementById("scannerModal").style.display = "none"; }
   }
 
-  // AI GEMINI INTEGRATION
+  // AI GEMINI INTEGRATION (محدث بـ gemini-1.5-flash)
   function saveApiKey() { localStorage.setItem("gemini_key", document.getElementById("geminiApiKey").value.trim()); }
   document.getElementById("geminiApiKey").value = localStorage.getItem("gemini_key") || "";
 
@@ -630,7 +630,9 @@
     input.value = "";
 
     const context = JSON.stringify({ debts: currentData.debts, pricesCount: Object.keys(currentData.prices).length, prices: currentData.prices });
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+    
+    // تم التحديث إلى الموديل المستقر والمتاح gemini-1.5-flash
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
     try {
       const res = await fetch(url, {
