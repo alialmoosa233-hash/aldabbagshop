@@ -103,13 +103,10 @@
     .tab-content { display: none; }
     .tab-content.active { display: block; }
 
-    .grid { display: grid; grid-template-columns: 360px 1fr; gap: 24px; transition: all 0.3s ease; }
-    .grid.view-only { grid-template-columns: 1fr; }
-    @media(max-width: 1024px) { .grid { grid-template-columns: 1fr; } }
-
-    /* إخفاء نموذج الإضافة للأعضاء */
-    .admin-only { display: none; }
-    body.is-admin .admin-only { display: block; }
+    /* التحكم برؤية العناصر بناءً على صلاحية الأدمن */
+    .admin-only { display: none !important; }
+    body.is-admin .admin-only { display: block !important; }
+    body.is-admin th.admin-only, body.is-admin td.admin-only { display: table-cell !important; }
 
     .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; box-shadow: var(--shadow-sm); margin-bottom: 20px; }
     
@@ -158,7 +155,6 @@
       header, .tabs, .btn-secondary, button, #cloudStatus { display: none !important; }
       .container { max-width: 100%; margin: 0; padding: 0; }
       .card { border: none; box-shadow: none; padding: 0; }
-      .grid { display: block; }
       .admin-only { display: none !important; }
     }
   </style>
@@ -191,76 +187,76 @@
 
   <!-- Tabs -->
   <div class="tabs">
-    <button class="tab-btn active" onclick="switchTab('prices')">🔍 دليل المواد وعرض الأسعار والمخزن</button>
+    <button class="tab-btn active" onclick="switchTab('prices')">🔍 عرض الأسعار والمخزون</button>
+    <button class="tab-btn admin-only" id="addTabBtn" onclick="switchTab('addProduct')">➕ إضافة مادة جديدة</button>
     <button class="tab-btn" onclick="switchTab('ai')">🤖 المساعد الذكي</button>
   </div>
 
-  <!-- 1. PRICES & INVENTORY SECTION -->
+  <!-- 1. DISPLAY & SEARCH PRICES SECTION -->
   <div id="pricesSection" class="tab-content active">
-    <div class="grid view-only" id="mainGrid">
-      
-      <!-- نموذج الإضافة خاص بالأدمن فقط -->
-      <div class="card admin-only">
-        <h2>➕ إضافة مادة جديدة</h2>
-        <form id="priceForm">
-          <label>اسم المادة</label>
-          <input type="text" id="pName" placeholder="أدخل اسم المادة..." required />
-          
-          <label>الباركود / الكود</label>
-          <div style="display:flex; gap:6px;">
-            <input type="text" id="pCode" placeholder="امسح أو أدخل الكود..." style="margin-bottom:12px;" />
-            <button type="button" onclick="startScanner()" class="btn-price" style="width:48px; height:43px; padding:0; display:flex; align-items:center; justify-content:center; font-size:18px;">📷</button>
-          </div>
-          
-          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; background:var(--paper-stripe); padding:10px; border-radius:8px; border:1px solid var(--border); margin-bottom:12px;">
-            <div>
-              <label style="color:var(--primary); font-weight:700;">📦 الباكيت</label>
-              <input type="number" id="pPacketCost" placeholder="الكلفة" />
-              <input type="number" id="pPacketSell" placeholder="سعر البيع" />
-              <input type="number" id="pPacketStock" placeholder="الكمية" style="margin-bottom:0;" />
-            </div>
-            <div>
-              <label style="color:var(--primary); font-weight:700;">📦 الكارتون</label>
-              <input type="number" id="pCartonCost" placeholder="الكلفة" />
-              <input type="number" id="pCartonSell" placeholder="سعر البيع" />
-              <input type="number" id="pCartonStock" placeholder="الكمية" style="margin-bottom:0;" />
-            </div>
-          </div>
-          <button type="submit" class="btn-price" style="padding:13px; font-size:16px;">حفظ المادة في الدليل</button>
-        </form>
+    <div class="card">
+      <h2>
+        <span>🔍 دليل المواد والأسعار والمخزون</span>
+        <button onclick="exportCsv()" class="btn-secondary" style="width:auto; font-size:12px; padding:6px 12px;">📥 تصدير Excel</button>
+      </h2>
+      <div style="display:flex; gap:8px; margin-bottom:14px;">
+        <input type="text" id="searchPrice" placeholder="🔍 بحث سريع عن مادة أو باركود..." oninput="renderPrices()" style="margin:0;" />
+        <button onclick="setFilter('all')" id="filterAllBtn" class="btn-price" style="width:auto; padding:8px 14px; font-size:13px;">الكل</button>
+        <button onclick="setFilter('low')" id="filterLowBtn" class="btn-secondary" style="width:auto; padding:8px 14px; font-size:13px;">الناقصة فقط</button>
       </div>
-
-      <div class="card">
-        <h2>
-          <span>🔍 دليل المواد والأسعار والمخزون</span>
-          <button onclick="exportCsv()" class="btn-secondary" style="width:auto; font-size:12px; padding:6px 12px;">📥 تصدير Excel</button>
-        </h2>
-        <div style="display:flex; gap:8px; margin-bottom:14px;">
-          <input type="text" id="searchPrice" placeholder="🔍 بحث سريع عن مادة أو باركود..." oninput="renderPrices()" style="margin:0;" />
-          <button onclick="setFilter('all')" id="filterAllBtn" class="btn-price" style="width:auto; padding:8px 14px; font-size:13px;">الكل</button>
-          <button onclick="setFilter('low')" id="filterLowBtn" class="btn-secondary" style="width:auto; padding:8px 14px; font-size:13px;">الناقصة فقط</button>
-        </div>
-        <div class="table-wrapper">
-          <table>
-            <thead>
-              <tr>
-                <th>المادة / التاريخ</th>
-                <th>الباركود</th>
-                <th>أسعار الباكيت (كلفة | بيع | ربح)</th>
-                <th>مخزون الباكيت</th>
-                <th>أسعار الكارتون (كلفة | بيع | ربح)</th>
-                <th>مخزون الكارتون</th>
-                <th class="admin-only">إجراءات</th>
-              </tr>
-            </thead>
-            <tbody id="pricesTable"></tbody>
-          </table>
-        </div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>المادة / التاريخ</th>
+              <th>الباركود</th>
+              <th>أسعار الباكيت (كلفة | بيع | ربح)</th>
+              <th>مخزون الباكيت</th>
+              <th>أسعار الكارتون (كلفة | بيع | ربح)</th>
+              <th>مخزون الكارتون</th>
+              <th class="admin-only">إجراءات</th>
+            </tr>
+          </thead>
+          <tbody id="pricesTable"></tbody>
+        </table>
       </div>
     </div>
   </div>
 
-  <!-- 2. AI SECTION -->
+  <!-- 2. ADD PRODUCT SECTION (SEPARATE TAB FOR ADMIN) -->
+  <div id="addProductSection" class="tab-content">
+    <div class="card" style="max-width: 650px; margin: 0 auto;">
+      <h2>➕ إضافة مادة جديدة إلى الدليل</h2>
+      <form id="priceForm">
+        <label>اسم المادة</label>
+        <input type="text" id="pName" placeholder="أدخل اسم المادة..." required />
+        
+        <label>الباركود / الكود</label>
+        <div style="display:flex; gap:6px;">
+          <input type="text" id="pCode" placeholder="امسح أو أدخل الكود..." style="margin-bottom:12px;" />
+          <button type="button" onclick="startScanner()" class="btn-price" style="width:48px; height:43px; padding:0; display:flex; align-items:center; justify-content:center; font-size:18px;">📷</button>
+        </div>
+        
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; background:var(--paper-stripe); padding:14px; border-radius:8px; border:1px solid var(--border); margin-bottom:16px;">
+          <div>
+            <label style="color:var(--primary); font-weight:700; font-size:14px;">📦 تفاصيل الباكيت</label>
+            <input type="number" id="pPacketCost" placeholder="الكلفة" />
+            <input type="number" id="pPacketSell" placeholder="سعر البيع" />
+            <input type="number" id="pPacketStock" placeholder="الكمية" style="margin-bottom:0;" />
+          </div>
+          <div>
+            <label style="color:var(--primary); font-weight:700; font-size:14px;">📦 تفاصيل الكارتون</label>
+            <input type="number" id="pCartonCost" placeholder="الكلفة" />
+            <input type="number" id="pCartonSell" placeholder="سعر البيع" />
+            <input type="number" id="pCartonStock" placeholder="الكمية" style="margin-bottom:0;" />
+          </div>
+        </div>
+        <button type="submit" class="btn-price" style="padding:14px; font-size:16px;">حفظ المادة في الدليل</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 3. AI SECTION -->
   <div id="aiSection" class="tab-content">
     <div class="card" style="max-width: 800px; margin: 0 auto;">
       <h2>🤖 المساعد المحاسبي الذكي (Gemini)</h2>
@@ -293,16 +289,16 @@
 
 <script>
   // Admin Mode Verification
-  const ADMIN_PIN = "1234"; // يمكنك تغيير هذا الرمز السري الخاص بك
+  const ADMIN_PIN = "1234"; // يمكنك تغيير الرمز السري الخاص بك هنا
   let isAdmin = false;
 
   function toggleAdminAuth() {
     if (isAdmin) {
       isAdmin = false;
       document.body.classList.remove("is-admin");
-      document.getElementById("mainGrid").classList.add("view-only");
       document.getElementById("adminToggleBtn").innerText = "🔒 وضع التعديل (للأدمن)";
       document.getElementById("adminToggleBtn").style.background = "#D97706";
+      switchTab('prices');
       renderPrices();
       alert("تم الخروج من وضع التعديل. التطبيق الآن للعرض فقط.");
     } else {
@@ -310,11 +306,10 @@
       if (pin === ADMIN_PIN) {
         isAdmin = true;
         document.body.classList.add("is-admin");
-        document.getElementById("mainGrid").classList.remove("view-only");
         document.getElementById("adminToggleBtn").innerText = "👑 وضع الأدمن (تعديل مفعل)";
         document.getElementById("adminToggleBtn").style.background = "#15803D";
         renderPrices();
-        alert("أهلاً بك! تم تفعيل وضع الأدمن ويمكنك الآن الإضافة والتعديل.");
+        alert("أهلاً بك! تم تفعيل وضع الأدمن وتم فتح تبويب إضافة مادة جديدة.");
       } else if (pin !== null) {
         alert("❌ الرمز السري غير صحيح!");
       }
@@ -355,8 +350,19 @@
   function switchTab(tabName) {
     document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
     document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
-    event.target.classList.add("active");
-    document.getElementById(tabName + "Section").classList.add("active");
+    
+    // تفعيل التبويب المحدد
+    if (tabName === 'prices') {
+      document.querySelectorAll(".tab-btn")[0].classList.add("active");
+      document.getElementById("pricesSection").classList.add("active");
+    } else if (tabName === 'addProduct') {
+      document.getElementById("addTabBtn").classList.add("active");
+      document.getElementById("addProductSection").classList.add("active");
+    } else if (tabName === 'ai') {
+      const aiBtn = document.querySelectorAll(".tab-btn")[isAdmin ? 2 : 1];
+      if (aiBtn) aiBtn.classList.add("active");
+      document.getElementById("aiSection").classList.add("active");
+    }
   }
 
   // لوحة التحكم
@@ -390,253 +396,4 @@
     const entries = Object.entries(currentData.prices || {}).filter(([id, p]) => {
       const matches = `${p.name || ""} ${p.code || ""}`.toLowerCase().includes(query);
       const low = (p.packetStock !== "" && p.packetStock != null && Number(p.packetStock) <= 5) ||
-                  (p.cartonStock !== "" && p.cartonStock != null && Number(p.cartonStock) <= 5);
-      return matches && (currentFilter === "all" || low);
-    });
-    if (!entries.length) {
-      tbody.innerHTML = '<tr><td colspan="7" style="padding:20px; color:var(--text-muted);">لا توجد مواد مطابقة للبحث.</td></tr>';
-    } else {
-      tbody.innerHTML = entries.map(([id, p]) => {
-        const packetCost = Number(p.packetCost) || 0;
-        const packetSell = Number(p.packetSell) || 0;
-        const packetProfit = packetSell - packetCost;
-
-        const cartonCost = Number(p.cartonCost) || 0;
-        const cartonSell = Number(p.cartonSell) || 0;
-        const cartonProfit = cartonSell - cartonCost;
-
-        const packetLow = Number(p.packetStock) <= 5;
-        const cartonLow = Number(p.cartonStock) <= 5;
-
-        const actionButtons = isAdmin ? `
-          <td class="admin-only">
-            <button class="action-btn btn-secondary" onclick="editPrice('${id}')">تعديل</button>
-            <button class="action-btn" style="background:#DC2626; color:#fff;" onclick="deletePrice('${id}')">حذف</button>
-          </td>
-        ` : '';
-
-        return `<tr>
-          <td>
-            <div class="product-name">${escapeHtml(p.name)}</div>
-            <small style="color:var(--text-muted);">${escapeHtml(p.updatedAt || p.createdAt || "")}</small>
-          </td>
-          <td style="font-family:var(--font-mono);">${escapeHtml(p.code || "—")}</td>
-          <td class="price-cell">
-            كلفة: ${formatIQD(packetCost)}<br>
-            بيع: ${formatIQD(packetSell)}<br>
-            <span style="color:var(--success); font-weight:600;">ربح: ${formatIQD(packetProfit)}</span>
-          </td>
-          <td><span class="stock-badge ${packetLow ? "stock-low" : "stock-ok"}">${Number(p.packetStock) || 0}</span></td>
-          <td class="price-cell">
-            كلفة: ${formatIQD(cartonCost)}<br>
-            بيع: ${formatIQD(cartonSell)}<br>
-            <span style="color:var(--success); font-weight:600;">ربح: ${formatIQD(cartonProfit)}</span>
-          </td>
-          <td><span class="stock-badge ${cartonLow ? "stock-low" : "stock-ok"}">${Number(p.cartonStock) || 0}</span></td>
-          ${actionButtons}
-        </tr>`;
-      }).join("");
-    }
-    document.getElementById("filterAllBtn")?.classList.toggle("btn-price", currentFilter === "all");
-    document.getElementById("filterLowBtn")?.classList.toggle("btn-price", currentFilter === "low");
-    updateDashboard();
-  }
-
-  function setFilter(filter) {
-    currentFilter = filter;
-    renderPrices();
-  }
-
-  // فلتر لمنع إضافة مادة مرتين (حسب الاسم أو الباركود)
-  document.getElementById("priceForm").addEventListener("submit", async function(e) {
-    e.preventDefault();
-    if (!isAdmin) return alert("عذراً، يجب تفعيل وضع الأدمن أولاً لإضافة مواد.");
-    if (!db) return alert("قاعدة البيانات غير متصلة.");
-    
-    const nameInput = document.getElementById("pName").value.trim();
-    const codeInput = document.getElementById("pCode").value.trim();
-
-    if (!nameInput) return alert("يرجى إدخال اسم المادة.");
-
-    const existingProducts = Object.values(currentData.prices || {});
-    const isDuplicate = existingProducts.some(p => {
-      const matchName = p.name && p.name.trim().toLowerCase() === nameInput.toLowerCase();
-      const matchCode = codeInput !== "" && p.code && p.code.trim() === codeInput;
-      return matchName || matchCode;
-    });
-
-    if (isDuplicate) {
-      return alert("⚠️ هذه المادة موجودة مسبقاً في الدليل (مطابقة بالاسم أو الباركود). لا يمكن إضافتها مرتين!");
-    }
-
-    const product = {
-      name: nameInput,
-      code: codeInput,
-      packetCost: safeNumber("pPacketCost"),
-      packetSell: safeNumber("pPacketSell"),
-      packetStock: safeNumber("pPacketStock"),
-      cartonCost: safeNumber("pCartonCost"),
-      cartonSell: safeNumber("pCartonSell"),
-      cartonStock: safeNumber("pCartonStock"),
-      createdAt: new Date().toLocaleString("ar-IQ"),
-      updatedAt: new Date().toLocaleString("ar-IQ")
-    };
-    try {
-      await db.child("prices").push().set(product);
-      this.reset();
-      alert("تم حفظ المادة بنجاح.");
-    } catch (err) {
-      alert("تعذر حفظ المادة: " + err.message);
-    }
-  });
-
-  async function editPrice(id) {
-    if (!isAdmin) return alert("عذراً، يجب تفعيل وضع الأدمن للتعديل.");
-    const p = currentData.prices[id];
-    if (!p) return;
-    const name = prompt("اسم المادة:", p.name || "");
-    if (name === null) return;
-    if (!name.trim()) return alert("اسم المادة لا يمكن أن يكون فارغًا.");
-    const code = prompt("الباركود / الكود:", p.code || "");
-    if (code === null) return;
-    const fields = [
-      ["packetCost", "كلفة الباكيت"], ["packetSell", "بيع الباكيت"],
-      ["packetStock", "مخزون الباكيت"], ["cartonCost", "كلفة الكارتون"],
-      ["cartonSell", "بيع الكارتون"], ["cartonStock", "مخزون الكارتون"]
-    ];
-    const updated = {...p, name: name.trim(), code: code.trim(), updatedAt: new Date().toLocaleString("ar-IQ")};
-    for (const [key, label] of fields) {
-      const value = prompt(label + ":", p[key] ?? 0);
-      if (value === null) return;
-      const parsed = Number(value);
-      if (!Number.isFinite(parsed) || parsed < 0) return alert("أدخل رقمًا صحيحًا غير سالب.");
-      updated[key] = parsed;
-    }
-    try { await db.child("prices").child(id).set(updated); }
-    catch (err) { alert("تعذر تعديل المادة: " + err.message); }
-  }
-
-  async function deletePrice(id) {
-    if (!isAdmin) return alert("عذراً، يجب تفعيل وضع الأدمن للحذف.");
-    if (!confirm("هل تريد حذف هذه المادة نهائيًا؟")) return;
-    try { await db.child("prices").child(id).remove(); }
-    catch (err) { alert("تعذر حذف المادة: " + err.message); }
-  }
-
-  function exportCsv() {
-    const rows = [["اسم المادة", "الباركود", "كلفة الباكيت", "بيع الباكيت", "مخزون الباكيت", "كلفة الكارتون", "بيع الكارتون", "مخزون الكارتون"]];
-    Object.values(currentData.prices || {}).forEach(p => rows.push([
-      p.name || "", p.code || "", p.packetCost || 0, p.packetSell || 0, p.packetStock || 0,
-      p.cartonCost || 0, p.cartonSell || 0, p.cartonStock || 0
-    ]));
-    const csv = "\uFEFF" + rows.map(row => row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\r\n");
-    const blob = new Blob([csv], {type: "text/csv;charset=utf-8;"});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url; a.download = "دليل_أسعار_الدباغ.csv";
-    document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
-  }
-
-  let html5QrCode = null;
-  async function startScanner() {
-    if (typeof Html5Qrcode === "undefined") return alert("تعذر تحميل مكتبة قارئ الباركود. تحقق من الاتصال بالإنترنت.");
-    document.getElementById("scannerModal").style.display = "flex";
-    try {
-      html5QrCode = new Html5Qrcode("interactive");
-      await html5QrCode.start(
-        {facingMode: "environment"},
-        {fps: 10, qrbox: {width: 250, height: 150}},
-        decodedText => {
-          document.getElementById("pCode").value = decodedText;
-          stopScanner();
-        },
-        () => {}
-      );
-    } catch (err) {
-      document.getElementById("scannerModal").style.display = "none";
-      alert("تعذر تشغيل الكاميرا. اسمح للموقع باستخدام الكاميرا وافتحه عبر HTTPS أو localhost.\n" + err);
-      html5QrCode = null;
-    }
-  }
-  async function stopScanner() {
-    if (html5QrCode) {
-      try { if (html5QrCode.isScanning) await html5QrCode.stop(); } catch (e) {}
-      try { await html5QrCode.clear(); } catch (e) {}
-      html5QrCode = null;
-    }
-    document.getElementById("scannerModal").style.display = "none";
-  }
-
-  // Gemini API
-  const GEMINI_MODEL = "gemini-3.8-flash";
-  function saveApiKey() {
-    const value = document.getElementById("geminiApiKey").value.trim();
-    if (value) localStorage.setItem("gemini_api_key", value);
-  }
-  document.getElementById("geminiApiKey").value = localStorage.getItem("gemini_api_key") || "";
-
-  function quickAsk(question) {
-    document.getElementById("aiPrompt").value = question;
-    sendAiMessage();
-  }
-  function appendChatMessage(role, text) {
-    const box = document.getElementById("aiChatBox");
-    const bubble = document.createElement("div");
-    bubble.style.cssText = "padding:10px 14px;margin:8px 0;border-radius:8px;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.7;";
-    bubble.style.background = role === "user" ? "rgba(29,78,216,0.12)" : "rgba(15,122,124,0.12)";
-    bubble.style.borderInlineStart = role === "user" ? "3px solid var(--price)" : "3px solid var(--ai-color)";
-    bubble.textContent = (role === "user" ? "أنت: " : "Gemini: ") + text;
-    box.appendChild(bubble);
-    box.scrollTop = box.scrollHeight;
-    return bubble;
-  }
-  function buildAccountingContext() {
-    const prices = Object.values(currentData.prices || {});
-    const low = prices.filter(p => Number(p.packetStock) <= 5 || Number(p.cartonStock) <= 5);
-    return {
-      currency: "IQD",
-      productsCount: prices.length,
-      lowStock: low.map(p => ({name: p.name, packetStock: p.packetStock, cartonStock: p.cartonStock})),
-      products: prices.map(p => ({
-        name: p.name, code: p.code, packetCost: p.packetCost, packetSell: p.packetSell,
-        packetStock: p.packetStock, cartonCost: p.cartonCost, cartonSell: p.cartonSell, cartonStock: p.cartonStock
-      }))
-    };
-  }
-
-  async function sendAiMessage() {
-    const input = document.getElementById("aiPrompt");
-    const question = input.value.trim();
-    if (!question) return;
-    const apiKey = localStorage.getItem("gemini_api_key");
-    if (!apiKey) return alert("يرجى إدخال مفتاح Gemini API أولاً.");
-
-    appendChatMessage("user", question);
-    input.value = "";
-    const loadingBubble = appendChatMessage("assistant", "جاري التحليل...");
-
-    const context = buildAccountingContext();
-    const systemPrompt = `أنت مساعد محاسبي ذكي لنظام إدارة المخزون وعرض الأسعار في محلات الدباغ. إليك بيانات المخزون الحالية بصيغة JSON:
-${JSON.stringify(context, null, 2)}
-أجب بوضوح واختصار واحترافية وباللغة العربية بناءً على البيانات أعلاه.`;
-
-    try {
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [
-            { role: "user", parts: [{ text: systemPrompt + "\n\nسؤال المستخدم: " + question }] }
-          ]
-        })
-      });
-      const data = await response.json();
-      const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "عذراً، لم أتمكن من الحصول على إجابة.";
-      loadingBubble.textContent = "Gemini: " + reply;
-    } catch (err) {
-      loadingBubble.textContent = "Gemini: حدث خطأ في الاتصال بالخدمة الذكية (" + err.message + ")";
-    }
-  }
-</script>
-</body>
-</html>
+                  (p.cartonStock !== ""
