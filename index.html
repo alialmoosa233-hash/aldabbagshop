@@ -103,7 +103,6 @@
     .tab-content { display: none; }
     .tab-content.active { display: block; }
 
-    /* التحكم برؤية العناصر بناءً على صلاحية الأدمن */
     .admin-only { display: none !important; }
     body.is-admin .admin-only { display: block !important; }
     body.is-admin th.admin-only, body.is-admin td.admin-only { display: table-cell !important; }
@@ -171,7 +170,7 @@
 </header>
 
 <div class="container">
-  <div id="cloudStatus">🔄 جاري مزامنة البيانات...</div>
+  <div id="cloudStatus">🔄 جاري تحضير البيانات...</div>
 
   <!-- Dash Stats -->
   <div class="dashboard-summary">
@@ -289,7 +288,7 @@
 
 <script>
   // Admin Mode Verification
-  const ADMIN_PIN = "1234"; // يمكنك تغيير الرمز السري الخاص بك هنا
+  const ADMIN_PIN = "1234";
   let isAdmin = false;
 
   function toggleAdminAuth() {
@@ -318,7 +317,7 @@
 
   function toggleTheme() { document.body.classList.toggle("dark-mode"); }
 
-  // Firebase Setup
+  // Firebase Setup with Fallback to LocalStorage
   const firebaseConfig = {
     apiKey: "AIzaSyC-QqnQTbbyVFS8QFkf4CYZTcURcr9nBW0",
     authDomain: "gimi-fd7fe.firebaseapp.com",
@@ -330,8 +329,14 @@
   };
 
   let db;
-  let currentData = { prices: {} };
+  let currentData = { prices: JSON.parse(localStorage.getItem("aldabbagh_prices_backup") || "{}") };
   let currentFilter = 'all';
+
+  // تحميل أولي فوري من النسخة المحلية
+  window.addEventListener("DOMContentLoaded", () => {
+    renderPrices();
+    updateDashboard();
+  });
 
   try {
     firebase.initializeApp(firebaseConfig);
@@ -340,18 +345,27 @@
     db.on("value", (snapshot) => {
       document.getElementById("cloudStatus").innerText = "🟢 متصل بالسحابة ومتزامن تلقائياً";
       const val = snapshot.val() || {};
-      currentData.prices = val.prices || {};
-
+      if (val.prices && Object.keys(val.prices).length > 0) {
+        currentData.prices = val.prices;
+        localStorage.setItem("aldabbagh_prices_backup", JSON.stringify(currentData.prices));
+      }
       renderPrices();
       updateDashboard();
+    }, (err) => {
+      document.getElementById("cloudStatus").innerText = "🟠 يعمل بالوضع المحلي (محفوظ بالهاتف)";
     });
-  } catch(e) { document.getElementById("cloudStatus").innerText = "🔴 خطأ في الاتصال: " + e.message; }
+  } catch(e) { 
+    document.getElementById("cloudStatus").innerText = "🟠 يعمل بالوضع المحلي (محفوظ بالهاتف)";
+  }
+
+  function saveToLocalBackup() {
+    localStorage.setItem("aldabbagh_prices_backup", JSON.stringify(currentData.prices));
+  }
 
   function switchTab(tabName) {
     document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
     document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
     
-    // تفعيل التبويب المحدد
     if (tabName === 'prices') {
       document.querySelectorAll(".tab-btn")[0].classList.add("active");
       document.getElementById("pricesSection").classList.add("active");
@@ -365,7 +379,6 @@
     }
   }
 
-  // لوحة التحكم
   function updateDashboard() {
     const prices = Object.values(currentData.prices || {});
     const lowStock = prices.filter(p =>
@@ -380,20 +393,3 @@
     return (Number(value) || 0).toLocaleString("en-US") + " د.ع";
   }
   function escapeHtml(value) {
-    return String(value ?? "").replace(/[&<>"']/g, ch => ({
-      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
-    })[ch]);
-  }
-  function safeNumber(id) {
-    const value = document.getElementById(id).value.trim();
-    return value === "" ? 0 : Number(value);
-  }
-
-  function renderPrices() {
-    const tbody = document.getElementById("pricesTable");
-    if (!tbody) return;
-    const query = (document.getElementById("searchPrice")?.value || "").trim().toLowerCase();
-    const entries = Object.entries(currentData.prices || {}).filter(([id, p]) => {
-      const matches = `${p.name || ""} ${p.code || ""}`.toLowerCase().includes(query);
-      const low = (p.packetStock !== "" && p.packetStock != null && Number(p.packetStock) <= 5) ||
-                  (p.cartonStock !== ""
