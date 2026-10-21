@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>نظام إدارة المخزن وعرض الأسعار - محلات الدباغ</title>
+  <title>نظام عرض الأسعار والمخزن - محلات الدباغ</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <!-- Firebase SDKs -->
@@ -300,7 +300,7 @@
   function lockSystem() { document.getElementById("pinLockOverlay").style.display = "flex"; }
   function toggleTheme() { document.body.classList.toggle("dark-mode"); }
 
-  // Firebase Setup
+  // Firebase Setup (Restored to v4 to keep existing data)
   const firebaseConfig = {
     apiKey: "AIzaSyC-QqnQTbbyVFS8QFkf4CYZTcURcr9nBW0",
     authDomain: "gimi-fd7fe.firebaseapp.com",
@@ -317,7 +317,7 @@
 
   try {
     firebase.initializeApp(firebaseConfig);
-    db = firebase.database().ref("simple_price_debts_v5");
+    db = firebase.database().ref("simple_price_debts_v4");
 
     db.on("value", (snapshot) => {
       document.getElementById("cloudStatus").innerText = "🟢 متصل بالسحابة ومتزامن تلقائياً";
