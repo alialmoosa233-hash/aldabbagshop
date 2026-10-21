@@ -300,7 +300,7 @@
   function lockSystem() { document.getElementById("pinLockOverlay").style.display = "flex"; }
   function toggleTheme() { document.body.classList.toggle("dark-mode"); }
 
-  // Firebase Setup (Restored to v4 to keep existing data)
+  // Firebase Setup
   const firebaseConfig = {
     apiKey: "AIzaSyC-QqnQTbbyVFS8QFkf4CYZTcURcr9nBW0",
     authDomain: "gimi-fd7fe.firebaseapp.com",
@@ -417,14 +417,31 @@
     renderPrices();
   }
 
+  // فلتر لمنع إضافة مادة مرتين (حسب الاسم أو الباركود)
   document.getElementById("priceForm").addEventListener("submit", async function(e) {
     e.preventDefault();
     if (!db) return alert("قاعدة البيانات غير متصلة.");
-    const name = document.getElementById("pName").value.trim();
-    if (!name) return alert("يرجى إدخال اسم المادة.");
+    
+    const nameInput = document.getElementById("pName").value.trim();
+    const codeInput = document.getElementById("pCode").value.trim();
+
+    if (!nameInput) return alert("يرجى إدخال اسم المادة.");
+
+    // التحقق مما إذا كانت المادة موجودة مسبقاً في الذاكرة
+    const existingProducts = Object.values(currentData.prices || {});
+    const isDuplicate = existingProducts.some(p => {
+      const matchName = p.name && p.name.trim().toLowerCase() === nameInput.toLowerCase();
+      const matchCode = codeInput !== "" && p.code && p.code.trim() === codeInput;
+      return matchName || matchCode;
+    });
+
+    if (isDuplicate) {
+      return alert("⚠️ هذه المادة موجودة مسبقاً في الدليل (مطابقة بالاسم أو الباركود). لا يمكن إضافتها مرتين!");
+    }
+
     const product = {
-      name,
-      code: document.getElementById("pCode").value.trim(),
+      name: nameInput,
+      code: codeInput,
       packetCost: safeNumber("pPacketCost"),
       packetSell: safeNumber("pPacketSell"),
       packetStock: safeNumber("pPacketStock"),
