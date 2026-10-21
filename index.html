@@ -68,25 +68,9 @@
       font-size: 15px;
     }
 
-    #pinLockOverlay {
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(11, 17, 32, 0.98); z-index: 9999;
-      display: flex; align-items: center; justify-content: center; color: #F4EBD0;
-    }
-
-    .pin-box {
-      background: #1E293B; padding: 36px 30px; border-radius: 14px; text-align: center;
-      box-shadow: 0 12px 45px rgba(0,0,0,0.6); width: 90%; max-width: 360px; border: 1px solid var(--brass);
-    }
-    .pin-input {
-      width: 85%; padding: 12px; font-size: 26px; text-align: center;
-      border-radius: 8px; border: 1px solid #475569; background: #0F172A;
-      color: #F4EBD0; letter-spacing: 12px; outline: none; margin-bottom: 20px; font-family: var(--font-mono);
-    }
-
     header {
       background: linear-gradient(160deg, #0F172A 0%, #1E293B 100%);
-      color: #F4EBD0; padding: 18px 28px; font-size: 22px; font-family: var(--font-display);
+      color: #F4EBD0; padding: 18px 28px; font-size: 20px; font-family: var(--font-display);
       border-bottom: 4px solid var(--brass); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     }
@@ -119,8 +103,13 @@
     .tab-content { display: none; }
     .tab-content.active { display: block; }
 
-    .grid { display: grid; grid-template-columns: 360px 1fr; gap: 24px; }
+    .grid { display: grid; grid-template-columns: 360px 1fr; gap: 24px; transition: all 0.3s ease; }
+    .grid.view-only { grid-template-columns: 1fr; }
     @media(max-width: 1024px) { .grid { grid-template-columns: 1fr; } }
+
+    /* إخفاء نموذج الإضافة للأعضاء */
+    .admin-only { display: none; }
+    body.is-admin .admin-only { display: block; }
 
     .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; box-shadow: var(--shadow-sm); margin-bottom: 20px; }
     
@@ -141,6 +130,7 @@
     .btn-price { background: var(--price); }
     .btn-success { background: var(--success); }
     .btn-secondary { background: var(--text-muted); color: var(--bg); }
+    .btn-admin { background: #D97706; color: #FFF; }
 
     .table-wrapper { overflow-x: auto; margin-top: 12px; border-radius: 8px; border: 1px solid var(--border); }
     table { width: 100%; border-collapse: collapse; font-size: 14px; }
@@ -165,31 +155,22 @@
 
     @media print {
       body { background: #fff; color: #000; font-size: 13px; }
-      header, .tabs, .btn-secondary, button, #cloudStatus, #pinLockOverlay { display: none !important; }
+      header, .tabs, .btn-secondary, button, #cloudStatus { display: none !important; }
       .container { max-width: 100%; margin: 0; padding: 0; }
       .card { border: none; box-shadow: none; padding: 0; }
       .grid { display: block; }
-      .card:first-child { display: none; }
+      .admin-only { display: none !important; }
     }
   </style>
 </head>
 <body>
 
-<!-- Lock Overlay -->
-<div id="pinLockOverlay">
-  <div class="pin-box">
-    <h3 style="font-family:var(--font-display); font-size:20px; margin-top:0;">🔒 أدخل الرمز السري</h3>
-    <input type="password" id="pinInput" maxlength="4" class="pin-input" placeholder="••••" autofocus onkeypress="if(event.key==='Enter') checkAppPin()">
-    <button onclick="checkAppPin()" class="btn-success">فتح النظام</button>
-  </div>
-</div>
-
 <header>
   <div>📦 نظام عرض الأسعار والمخزن - محلات الدباغ</div>
   <div style="display:flex; gap:10px; align-items:center;">
+    <button id="adminToggleBtn" onclick="toggleAdminAuth()" class="btn-admin" style="width:auto; padding:6px 12px; font-size:13px;">🔒 وضع التعديل (للأدمن)</button>
     <button onclick="window.print()" class="btn-secondary" style="width:auto; padding:6px 12px; font-size:13px;">🖨️ طباعة</button>
     <button onclick="toggleTheme()" class="btn-secondary" style="width:auto; padding:6px 12px; font-size:13px;">🌓 المظهر</button>
-    <button onclick="lockSystem()" class="btn-secondary" style="width:auto; padding:6px 12px; font-size:13px;">🔒 قفل</button>
   </div>
 </header>
 
@@ -216,8 +197,10 @@
 
   <!-- 1. PRICES & INVENTORY SECTION -->
   <div id="pricesSection" class="tab-content active">
-    <div class="grid">
-      <div class="card">
+    <div class="grid view-only" id="mainGrid">
+      
+      <!-- نموذج الإضافة خاص بالأدمن فقط -->
+      <div class="card admin-only">
         <h2>➕ إضافة مادة جديدة</h2>
         <form id="priceForm">
           <label>اسم المادة</label>
@@ -267,7 +250,7 @@
                 <th>مخزون الباكيت</th>
                 <th>أسعار الكارتون (كلفة | بيع | ربح)</th>
                 <th>مخزون الكارتون</th>
-                <th>إجراءات</th>
+                <th class="admin-only">إجراءات</th>
               </tr>
             </thead>
             <tbody id="pricesTable"></tbody>
@@ -281,8 +264,8 @@
   <div id="aiSection" class="tab-content">
     <div class="card" style="max-width: 800px; margin: 0 auto;">
       <h2>🤖 المساعد المحاسبي الذكي (Gemini)</h2>
-      <label>مفتاح الربط (API Key)</label>
-      <input type="password" id="geminiApiKey" placeholder="أدخل مفتاح Gemini API..." onchange="saveApiKey()" autocomplete="off" style="margin-bottom:12px;" />
+      <label class="admin-only">مفتاح الربط (API Key)</label>
+      <input type="password" id="geminiApiKey" class="admin-only" placeholder="أدخل مفتاح Gemini API..." onchange="saveApiKey()" autocomplete="off" style="margin-bottom:12px;" />
       
       <!-- أزرار الاستعلام السريع -->
       <div style="display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap;">
@@ -309,16 +292,35 @@
 </div>
 
 <script>
-  // PIN Security
-  const DEFAULT_PIN = "1234";
-  function checkAppPin() {
-    const input = document.getElementById("pinInput").value;
-    if (input === (localStorage.getItem("app_pin") || DEFAULT_PIN)) {
-      document.getElementById("pinLockOverlay").style.display = "none";
-      document.getElementById("pinInput").value = "";
-    } else { alert("❌ الرمز السري غير صحيح!"); }
+  // Admin Mode Verification
+  const ADMIN_PIN = "1234"; // يمكنك تغيير هذا الرمز السري الخاص بك
+  let isAdmin = false;
+
+  function toggleAdminAuth() {
+    if (isAdmin) {
+      isAdmin = false;
+      document.body.classList.remove("is-admin");
+      document.getElementById("mainGrid").classList.add("view-only");
+      document.getElementById("adminToggleBtn").innerText = "🔒 وضع التعديل (للأدمن)";
+      document.getElementById("adminToggleBtn").style.background = "#D97706";
+      renderPrices();
+      alert("تم الخروج من وضع التعديل. التطبيق الآن للعرض فقط.");
+    } else {
+      const pin = prompt("🔑 أدخل رمز الأدمن السري للتمكن من التعديل والإضافة:");
+      if (pin === ADMIN_PIN) {
+        isAdmin = true;
+        document.body.classList.add("is-admin");
+        document.getElementById("mainGrid").classList.remove("view-only");
+        document.getElementById("adminToggleBtn").innerText = "👑 وضع الأدمن (تعديل مفعل)";
+        document.getElementById("adminToggleBtn").style.background = "#15803D";
+        renderPrices();
+        alert("أهلاً بك! تم تفعيل وضع الأدمن ويمكنك الآن الإضافة والتعديل.");
+      } else if (pin !== null) {
+        alert("❌ الرمز السري غير صحيح!");
+      }
+    }
   }
-  function lockSystem() { document.getElementById("pinLockOverlay").style.display = "flex"; }
+
   function toggleTheme() { document.body.classList.toggle("dark-mode"); }
 
   // Firebase Setup
@@ -406,6 +408,13 @@
         const packetLow = Number(p.packetStock) <= 5;
         const cartonLow = Number(p.cartonStock) <= 5;
 
+        const actionButtons = isAdmin ? `
+          <td class="admin-only">
+            <button class="action-btn btn-secondary" onclick="editPrice('${id}')">تعديل</button>
+            <button class="action-btn" style="background:#DC2626; color:#fff;" onclick="deletePrice('${id}')">حذف</button>
+          </td>
+        ` : '';
+
         return `<tr>
           <td>
             <div class="product-name">${escapeHtml(p.name)}</div>
@@ -424,10 +433,7 @@
             <span style="color:var(--success); font-weight:600;">ربح: ${formatIQD(cartonProfit)}</span>
           </td>
           <td><span class="stock-badge ${cartonLow ? "stock-low" : "stock-ok"}">${Number(p.cartonStock) || 0}</span></td>
-          <td>
-            <button class="action-btn btn-secondary" onclick="editPrice('${id}')">تعديل</button>
-            <button class="action-btn" style="background:#DC2626; color:#fff;" onclick="deletePrice('${id}')">حذف</button>
-          </td>
+          ${actionButtons}
         </tr>`;
       }).join("");
     }
@@ -444,6 +450,7 @@
   // فلتر لمنع إضافة مادة مرتين (حسب الاسم أو الباركود)
   document.getElementById("priceForm").addEventListener("submit", async function(e) {
     e.preventDefault();
+    if (!isAdmin) return alert("عذراً، يجب تفعيل وضع الأدمن أولاً لإضافة مواد.");
     if (!db) return alert("قاعدة البيانات غير متصلة.");
     
     const nameInput = document.getElementById("pName").value.trim();
@@ -484,6 +491,7 @@
   });
 
   async function editPrice(id) {
+    if (!isAdmin) return alert("عذراً، يجب تفعيل وضع الأدمن للتعديل.");
     const p = currentData.prices[id];
     if (!p) return;
     const name = prompt("اسم المادة:", p.name || "");
@@ -509,6 +517,7 @@
   }
 
   async function deletePrice(id) {
+    if (!isAdmin) return alert("عذراً، يجب تفعيل وضع الأدمن للحذف.");
     if (!confirm("هل تريد حذف هذه المادة نهائيًا؟")) return;
     try { await db.child("prices").child(id).remove(); }
     catch (err) { alert("تعذر حذف المادة: " + err.message); }
