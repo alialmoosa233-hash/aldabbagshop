@@ -103,13 +103,10 @@
     .tab-content { display: none; }
     .tab-content.active { display: block; }
 
-    .grid { display: grid; grid-template-columns: 360px 1fr; gap: 24px; transition: all 0.3s ease; }
-    .grid.view-only { grid-template-columns: 1fr; }
-    @media(max-width: 1024px) { .grid { grid-template-columns: 1fr; } }
-
-    /* إخفاء نموذج الإضافة للأعضاء */
-    .admin-only { display: none; }
-    body.is-admin .admin-only { display: block; }
+    /* التحكم برؤية العناصر بناءً على صلاحية الأدمن */
+    .admin-only { display: none !important; }
+    body.is-admin .admin-only { display: block !important; }
+    body.is-admin th.admin-only, body.is-admin td.admin-only { display: table-cell !important; }
 
     .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; box-shadow: var(--shadow-sm); margin-bottom: 20px; }
     
@@ -158,7 +155,6 @@
       header, .tabs, .btn-secondary, button, #cloudStatus { display: none !important; }
       .container { max-width: 100%; margin: 0; padding: 0; }
       .card { border: none; box-shadow: none; padding: 0; }
-      .grid { display: block; }
       .admin-only { display: none !important; }
     }
   </style>
@@ -191,76 +187,76 @@
 
   <!-- Tabs -->
   <div class="tabs">
-    <button class="tab-btn active" onclick="switchTab('prices')">🔍 دليل المواد وعرض الأسعار والمخزن</button>
+    <button class="tab-btn active" onclick="switchTab('prices')">🔍 عرض الأسعار والمخزون</button>
+    <button class="tab-btn admin-only" id="addTabBtn" onclick="switchTab('addProduct')">➕ إضافة مادة جديدة</button>
     <button class="tab-btn" onclick="switchTab('ai')">🤖 المساعد الذكي</button>
   </div>
 
-  <!-- 1. PRICES & INVENTORY SECTION -->
+  <!-- 1. DISPLAY & SEARCH PRICES SECTION -->
   <div id="pricesSection" class="tab-content active">
-    <div class="grid view-only" id="mainGrid">
-      
-      <!-- نموذج الإضافة خاص بالأدمن فقط -->
-      <div class="card admin-only">
-        <h2>➕ إضافة مادة جديدة</h2>
-        <form id="priceForm">
-          <label>اسم المادة</label>
-          <input type="text" id="pName" placeholder="أدخل اسم المادة..." required />
-          
-          <label>الباركود / الكود</label>
-          <div style="display:flex; gap:6px;">
-            <input type="text" id="pCode" placeholder="امسح أو أدخل الكود..." style="margin-bottom:12px;" />
-            <button type="button" onclick="startScanner()" class="btn-price" style="width:48px; height:43px; padding:0; display:flex; align-items:center; justify-content:center; font-size:18px;">📷</button>
-          </div>
-          
-          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; background:var(--paper-stripe); padding:10px; border-radius:8px; border:1px solid var(--border); margin-bottom:12px;">
-            <div>
-              <label style="color:var(--primary); font-weight:700;">📦 الباكيت</label>
-              <input type="number" id="pPacketCost" placeholder="الكلفة" />
-              <input type="number" id="pPacketSell" placeholder="سعر البيع" />
-              <input type="number" id="pPacketStock" placeholder="الكمية" style="margin-bottom:0;" />
-            </div>
-            <div>
-              <label style="color:var(--primary); font-weight:700;">📦 الكارتون</label>
-              <input type="number" id="pCartonCost" placeholder="الكلفة" />
-              <input type="number" id="pCartonSell" placeholder="سعر البيع" />
-              <input type="number" id="pCartonStock" placeholder="الكمية" style="margin-bottom:0;" />
-            </div>
-          </div>
-          <button type="submit" class="btn-price" style="padding:13px; font-size:16px;">حفظ المادة في الدليل</button>
-        </form>
+    <div class="card">
+      <h2>
+        <span>🔍 دليل المواد والأسعار والمخزون</span>
+        <button onclick="exportCsv()" class="btn-secondary" style="width:auto; font-size:12px; padding:6px 12px;">📥 تصدير Excel</button>
+      </h2>
+      <div style="display:flex; gap:8px; margin-bottom:14px;">
+        <input type="text" id="searchPrice" placeholder="🔍 بحث سريع عن مادة أو باركود..." oninput="renderPrices()" style="margin:0;" />
+        <button onclick="setFilter('all')" id="filterAllBtn" class="btn-price" style="width:auto; padding:8px 14px; font-size:13px;">الكل</button>
+        <button onclick="setFilter('low')" id="filterLowBtn" class="btn-secondary" style="width:auto; padding:8px 14px; font-size:13px;">الناقصة فقط</button>
       </div>
-
-      <div class="card">
-        <h2>
-          <span>🔍 دليل المواد والأسعار والمخزون</span>
-          <button onclick="exportCsv()" class="btn-secondary" style="width:auto; font-size:12px; padding:6px 12px;">📥 تصدير Excel</button>
-        </h2>
-        <div style="display:flex; gap:8px; margin-bottom:14px;">
-          <input type="text" id="searchPrice" placeholder="🔍 بحث سريع عن مادة أو باركود..." oninput="renderPrices()" style="margin:0;" />
-          <button onclick="setFilter('all')" id="filterAllBtn" class="btn-price" style="width:auto; padding:8px 14px; font-size:13px;">الكل</button>
-          <button onclick="setFilter('low')" id="filterLowBtn" class="btn-secondary" style="width:auto; padding:8px 14px; font-size:13px;">الناقصة فقط</button>
-        </div>
-        <div class="table-wrapper">
-          <table>
-            <thead>
-              <tr>
-                <th>المادة / التاريخ</th>
-                <th>الباركود</th>
-                <th>أسعار الباكيت (كلفة | بيع | ربح)</th>
-                <th>مخزون الباكيت</th>
-                <th>أسعار الكارتون (كلفة | بيع | ربح)</th>
-                <th>مخزون الكارتون</th>
-                <th class="admin-only">إجراءات</th>
-              </tr>
-            </thead>
-            <tbody id="pricesTable"></tbody>
-          </table>
-        </div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>المادة / التاريخ</th>
+              <th>الباركود</th>
+              <th>أسعار الباكيت (كلفة | بيع | ربح)</th>
+              <th>مخزون الباكيت</th>
+              <th>أسعار الكارتون (كلفة | بيع | ربح)</th>
+              <th>مخزون الكارتون</th>
+              <th class="admin-only">إجراءات</th>
+            </tr>
+          </thead>
+          <tbody id="pricesTable"></tbody>
+        </table>
       </div>
     </div>
   </div>
 
-  <!-- 2. AI SECTION -->
+  <!-- 2. ADD PRODUCT SECTION (SEPARATE TAB FOR ADMIN) -->
+  <div id="addProductSection" class="tab-content">
+    <div class="card" style="max-width: 650px; margin: 0 auto;">
+      <h2>➕ إضافة مادة جديدة إلى الدليل</h2>
+      <form id="priceForm">
+        <label>اسم المادة</label>
+        <input type="text" id="pName" placeholder="أدخل اسم المادة..." required />
+        
+        <label>الباركود / الكود</label>
+        <div style="display:flex; gap:6px;">
+          <input type="text" id="pCode" placeholder="امسح أو أدخل الكود..." style="margin-bottom:12px;" />
+          <button type="button" onclick="startScanner()" class="btn-price" style="width:48px; height:43px; padding:0; display:flex; align-items:center; justify-content:center; font-size:18px;">📷</button>
+        </div>
+        
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; background:var(--paper-stripe); padding:14px; border-radius:8px; border:1px solid var(--border); margin-bottom:16px;">
+          <div>
+            <label style="color:var(--primary); font-weight:700; font-size:14px;">📦 تفاصيل الباكيت</label>
+            <input type="number" id="pPacketCost" placeholder="الكلفة" />
+            <input type="number" id="pPacketSell" placeholder="سعر البيع" />
+            <input type="number" id="pPacketStock" placeholder="الكمية" style="margin-bottom:0;" />
+          </div>
+          <div>
+            <label style="color:var(--primary); font-weight:700; font-size:14px;">📦 تفاصيل الكارتون</label>
+            <input type="number" id="pCartonCost" placeholder="الكلفة" />
+            <input type="number" id="pCartonSell" placeholder="سعر البيع" />
+            <input type="number" id="pCartonStock" placeholder="الكمية" style="margin-bottom:0;" />
+          </div>
+        </div>
+        <button type="submit" class="btn-price" style="padding:14px; font-size:16px;">حفظ المادة في الدليل</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 3. AI SECTION -->
   <div id="aiSection" class="tab-content">
     <div class="card" style="max-width: 800px; margin: 0 auto;">
       <h2>🤖 المساعد المحاسبي الذكي (Gemini)</h2>
@@ -293,16 +289,16 @@
 
 <script>
   // Admin Mode Verification
-  const ADMIN_PIN = "1234"; // يمكنك تغيير هذا الرمز السري الخاص بك
+  const ADMIN_PIN = "1234"; // يمكنك تغيير الرمز السري الخاص بك هنا
   let isAdmin = false;
 
   function toggleAdminAuth() {
     if (isAdmin) {
       isAdmin = false;
       document.body.classList.remove("is-admin");
-      document.getElementById("mainGrid").classList.add("view-only");
       document.getElementById("adminToggleBtn").innerText = "🔒 وضع التعديل (للأدمن)";
       document.getElementById("adminToggleBtn").style.background = "#D97706";
+      switchTab('prices');
       renderPrices();
       alert("تم الخروج من وضع التعديل. التطبيق الآن للعرض فقط.");
     } else {
@@ -310,11 +306,10 @@
       if (pin === ADMIN_PIN) {
         isAdmin = true;
         document.body.classList.add("is-admin");
-        document.getElementById("mainGrid").classList.remove("view-only");
         document.getElementById("adminToggleBtn").innerText = "👑 وضع الأدمن (تعديل مفعل)";
         document.getElementById("adminToggleBtn").style.background = "#15803D";
         renderPrices();
-        alert("أهلاً بك! تم تفعيل وضع الأدمن ويمكنك الآن الإضافة والتعديل.");
+        alert("أهلاً بك! تم تفعيل وضع الأدمن وتم فتح تبويب إضافة مادة جديدة.");
       } else if (pin !== null) {
         alert("❌ الرمز السري غير صحيح!");
       }
@@ -355,8 +350,19 @@
   function switchTab(tabName) {
     document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
     document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
-    event.target.classList.add("active");
-    document.getElementById(tabName + "Section").classList.add("active");
+    
+    // تفعيل التبويب المحدد
+    if (tabName === 'prices') {
+      document.querySelectorAll(".tab-btn")[0].classList.add("active");
+      document.getElementById("pricesSection").classList.add("active");
+    } else if (tabName === 'addProduct') {
+      document.getElementById("addTabBtn").classList.add("active");
+      document.getElementById("addProductSection").classList.add("active");
+    } else if (tabName === 'ai') {
+      const aiBtn = document.querySelectorAll(".tab-btn")[isAdmin ? 2 : 1];
+      if (aiBtn) aiBtn.classList.add("active");
+      document.getElementById("aiSection").classList.add("active");
+    }
   }
 
   // لوحة التحكم
@@ -485,6 +491,7 @@
       await db.child("prices").push().set(product);
       this.reset();
       alert("تم حفظ المادة بنجاح.");
+      switchTab('prices'); // الانتقال تلقائياً لجدول العرض بعد الحفظ
     } catch (err) {
       alert("تعذر حفظ المادة: " + err.message);
     }
