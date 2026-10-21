@@ -13,7 +13,7 @@
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Reem+Kufi:wght@400..700&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Reem+Kufi:wght@500;700&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
 
     :root {
       --paper: #E7DEC4;
@@ -21,12 +21,12 @@
       --paper-stripe: #F3EBD5;
       --paper-line: rgba(30,46,69,0.06);
       --ink: #1E2E45;
-      --ink-soft: #6B6152;
-      --border: #C9BE9C;
+      --ink-soft: #5A5142;
+      --border: #C2B38B;
 
-      --primary: #2C4368;
-      --price: #24508C;
-      --success: #3F6B4F;
+      --primary: #22385D;
+      --price: #1D4ED8;
+      --success: #15803D;
       --reports: #5B3C6E;
       --ai-color: #0F7A7C;
       --brass: #A9822E;
@@ -36,19 +36,19 @@
       --text-main: var(--ink);
       --text-muted: var(--ink-soft);
 
-      --radius: 8px;
-      --shadow-sm: 0 1px 3px rgba(40,28,10,0.12);
+      --radius: 10px;
+      --shadow-sm: 0 2px 6px rgba(40,28,10,0.08);
       --font-display: 'Reem Kufi', sans-serif;
       --font-body: 'IBM Plex Sans Arabic', system-ui, sans-serif;
       --font-mono: 'IBM Plex Mono', monospace;
     }
 
     body.dark-mode {
-      --paper: #0F172A;
-      --paper-card: #1E293B;
-      --paper-stripe: #182232;
+      --paper: #0B1120;
+      --paper-card: #151E32;
+      --paper-stripe: #111827;
       --paper-line: rgba(255,255,255,0.03);
-      --ink: #F8FAFC;
+      --ink: #F1F5F9;
       --ink-soft: #94A3B8;
       --border: #334155;
       --bg: var(--paper);
@@ -65,94 +65,111 @@
       color: var(--text-main);
       margin: 0; padding: 0;
       direction: rtl;
+      font-size: 15px;
     }
 
     #pinLockOverlay {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(15, 23, 42, 0.98); z-index: 9999;
+      background: rgba(11, 17, 32, 0.98); z-index: 9999;
       display: flex; align-items: center; justify-content: center; color: #F4EBD0;
     }
 
     .pin-box {
-      background: #1E293B; padding: 32px 28px; border-radius: 12px; text-align: center;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.55); width: 90%; max-width: 340px; border: 1px solid var(--brass);
+      background: #1E293B; padding: 36px 30px; border-radius: 14px; text-align: center;
+      box-shadow: 0 12px 45px rgba(0,0,0,0.6); width: 90%; max-width: 360px; border: 1px solid var(--brass);
     }
     .pin-input {
-      width: 80%; padding: 11px; font-size: 24px; text-align: center;
-      border-radius: 6px; border: 1px solid #334155; background: #0F172A;
-      color: #F4EBD0; letter-spacing: 10px; outline: none; margin-bottom: 16px; font-family: var(--font-mono);
+      width: 85%; padding: 12px; font-size: 26px; text-align: center;
+      border-radius: 8px; border: 1px solid #475569; background: #0F172A;
+      color: #F4EBD0; letter-spacing: 12px; outline: none; margin-bottom: 20px; font-family: var(--font-mono);
     }
 
     header {
       background: linear-gradient(160deg, #0F172A 0%, #1E293B 100%);
-      color: #F4EBD0; padding: 16px 24px; font-size: 20px; font-family: var(--font-display);
-      border-bottom: 4px solid var(--brass); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
+      color: #F4EBD0; padding: 18px 28px; font-size: 22px; font-family: var(--font-display);
+      border-bottom: 4px solid var(--brass); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     }
 
-    .container { max-width: 1400px; margin: 20px auto; padding: 0 15px; }
+    .container { max-width: 1450px; margin: 24px auto; padding: 0 18px; }
 
     #cloudStatus {
-      padding: 10px; text-align: center; font-weight: 700; border-radius: var(--radius);
-      margin-bottom: 18px; background: var(--card); color: var(--text-muted); font-size: 13px;
+      padding: 12px; text-align: center; font-weight: 600; border-radius: var(--radius);
+      margin-bottom: 22px; background: var(--card); color: var(--text-muted); font-size: 14px;
       border: 1px dashed var(--border); font-family: var(--font-mono);
     }
 
-    .dashboard-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 20px; }
+    .dashboard-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px; margin-bottom: 24px; }
     .dash-card {
-      background: var(--card); border: 1px solid var(--border); border-inline-start: 4px solid var(--brass);
-      border-radius: var(--radius); padding: 14px; box-shadow: var(--shadow-sm);
+      background: var(--card); border: 1px solid var(--border); border-inline-start: 5px solid var(--brass);
+      border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow-sm);
     }
-    .dash-card .label { font-size: 12px; color: var(--text-muted); font-weight: 700; margin-bottom: 4px; }
-    .dash-card .value { font-size: 20px; font-weight: 700; font-family: var(--font-mono); }
+    .dash-card .label { font-size: 13px; color: var(--text-muted); font-weight: 700; margin-bottom: 6px; }
+    .dash-card .value { font-size: 24px; font-weight: 700; font-family: var(--font-mono); }
 
-    .tabs { display: flex; gap: 6px; margin-bottom: 20px; flex-wrap: wrap; border-bottom: 3px solid var(--border); }
+    .tabs { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; border-bottom: 3px solid var(--border); }
     .tab-btn {
-      flex: 1; min-width: 140px; padding: 12px; font-size: 14px; font-weight: 700;
+      flex: 1; min-width: 160px; padding: 14px; font-size: 16px; font-weight: 700;
       background: var(--card); color: var(--text-muted); border: 1px solid var(--border); border-bottom: none;
-      border-radius: 8px 8px 0 0; cursor: pointer; font-family: var(--font-display); text-align: center;
+      border-radius: 10px 10px 0 0; cursor: pointer; font-family: var(--font-display); text-align: center;
+      transition: all 0.2s ease;
     }
     .tab-btn.active { color: #FFF; background: var(--primary); border-color: var(--primary); }
 
     .tab-content { display: none; }
     .tab-content.active { display: block; }
 
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
-    .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow-sm); margin-bottom: 20px; }
+    .grid { display: grid; grid-template-columns: 360px 1fr; gap: 24px; }
+    @media(max-width: 1024px) { .grid { grid-template-columns: 1fr; } }
+
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; box-shadow: var(--shadow-sm); margin-bottom: 20px; }
     
-    h2 { margin-top: 0; font-size: 16px; font-family: var(--font-display); border-bottom: 2px dashed var(--border); padding-bottom: 8px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; }
+    h2 { margin-top: 0; font-size: 18px; font-family: var(--font-display); border-bottom: 2px dashed var(--border); padding-bottom: 10px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; color: var(--primary); }
+    body.dark-mode h2 { color: #93C5FD; }
+
+    label { font-size: 13px; font-weight: 600; display: block; margin-bottom: 5px; color: var(--text-muted); }
 
     input, select, textarea {
-      width: 100%; padding: 9px 11px; margin-bottom: 10px; border: 1px solid var(--border);
-      border-radius: 6px; font-size: 13.5px; font-family: var(--font-body); background: var(--bg); color: var(--text-main);
+      width: 100%; padding: 11px 14px; margin-bottom: 12px; border: 1px solid var(--border);
+      border-radius: 8px; font-size: 14.5px; font-family: var(--font-body); background: var(--bg); color: var(--text-main);
+      outline: none; transition: border-color 0.2s;
     }
+    input:focus, select:focus { border-color: var(--price); box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.15); }
 
-    button { width: 100%; padding: 10px; border: none; border-radius: 6px; color: white; font-weight: 700; cursor: pointer; font-size: 13.5px; font-family: var(--font-body); }
+    button { width: 100%; padding: 12px; border: none; border-radius: 8px; color: white; font-weight: 700; cursor: pointer; font-size: 15px; font-family: var(--font-body); transition: opacity 0.2s; }
+    button:hover { opacity: 0.92; }
     .btn-price { background: var(--price); }
     .btn-success { background: var(--success); }
-    .btn-reports { background: var(--reports); }
-    .btn-ai { background: var(--ai-color); }
     .btn-secondary { background: var(--text-muted); color: var(--bg); }
 
-    .table-wrapper { overflow-x: auto; margin-top: 10px; border-radius: 6px; border: 1px solid var(--border); }
-    table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    th, td { padding: 9px; text-align: center; border-bottom: 1px solid var(--border); }
-    th { background: var(--primary); color: #FFF; font-weight: 600; }
+    .table-wrapper { overflow-x: auto; margin-top: 12px; border-radius: 8px; border: 1px solid var(--border); }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { padding: 12px 14px; text-align: center; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    th { background: var(--primary); color: #FFF; font-weight: 600; font-family: var(--font-display); font-size: 15px; }
     tbody tr:nth-child(even) { background: var(--paper-stripe); }
+    tbody tr:hover { background: rgba(0,0,0,0.02); }
+    body.dark-mode tbody tr:hover { background: rgba(255,255,255,0.02); }
 
-    .stock-badge { padding: 3px 8px; border-radius: 10px; font-size: 11px; font-weight: 700; }
+    .price-cell { font-family: var(--font-mono); font-size: 13.5px; line-height: 1.6; }
+    .product-name { font-weight: 700; font-size: 16px; color: var(--primary); }
+    body.dark-mode .product-name { color: #93C5FD; }
+
+    .stock-badge { padding: 4px 10px; border-radius: 12px; font-size: 13px; font-weight: 700; font-family: var(--font-mono); display: inline-block; }
     .stock-low { background: #FEE2E2; color: #991B1B; }
     .stock-ok { background: #DCFCE7; color: #166534; }
 
-    .action-btn { padding: 4px 8px; font-size: 11px; margin: 2px; width: auto; display: inline-block; }
+    .action-btn { padding: 6px 12px; font-size: 13px; margin: 2px; width: auto; display: inline-block; border-radius: 6px; }
 
-    .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(3px); justify-content: center; align-items: center; }
-    .modal-content { background: var(--card); padding: 20px; border-radius: var(--radius); width: 90%; max-width: 520px; border-top: 4px solid var(--brass); max-height: 85vh; overflow-y: auto; }
+    .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); justify-content: center; align-items: center; }
+    .modal-content { background: var(--card); padding: 24px; border-radius: var(--radius); width: 90%; max-width: 520px; border-top: 4px solid var(--brass); max-height: 85vh; overflow-y: auto; }
 
     @media print {
-      body { background: #fff; color: #000; }
+      body { background: #fff; color: #000; font-size: 13px; }
       header, .tabs, .btn-secondary, button, #cloudStatus, #pinLockOverlay { display: none !important; }
       .container { max-width: 100%; margin: 0; padding: 0; }
-      .card { border: none; box-shadow: none; }
+      .card { border: none; box-shadow: none; padding: 0; }
+      .grid { display: block; }
+      .card:first-child { display: none; }
     }
   </style>
 </head>
@@ -161,7 +178,7 @@
 <!-- Lock Overlay -->
 <div id="pinLockOverlay">
   <div class="pin-box">
-    <h3>🔒 أدخل الرمز السري</h3>
+    <h3 style="font-family:var(--font-display); font-size:20px; margin-top:0;">🔒 أدخل الرمز السري</h3>
     <input type="password" id="pinInput" maxlength="4" class="pin-input" placeholder="••••" autofocus onkeypress="if(event.key==='Enter') checkAppPin()">
     <button onclick="checkAppPin()" class="btn-success">فتح النظام</button>
   </div>
@@ -170,9 +187,9 @@
 <header>
   <div>📦 نظام عرض الأسعار والمخزن - محلات الدباغ</div>
   <div style="display:flex; gap:10px; align-items:center;">
-    <button onclick="window.print()" class="btn-secondary" style="width:auto; padding:5px 10px; font-size:12px;">🖨️ طباعة</button>
-    <button onclick="toggleTheme()" class="btn-secondary" style="width:auto; padding:5px 10px; font-size:12px;">🌓 المظهر</button>
-    <button onclick="lockSystem()" class="btn-secondary" style="width:auto; padding:5px 10px; font-size:12px;">🔒 قفل</button>
+    <button onclick="window.print()" class="btn-secondary" style="width:auto; padding:6px 12px; font-size:13px;">🖨️ طباعة</button>
+    <button onclick="toggleTheme()" class="btn-secondary" style="width:auto; padding:6px 12px; font-size:13px;">🌓 المظهر</button>
+    <button onclick="lockSystem()" class="btn-secondary" style="width:auto; padding:6px 12px; font-size:13px;">🔒 قفل</button>
   </div>
 </header>
 
@@ -187,7 +204,7 @@
     </div>
     <div class="dash-card">
       <div class="label">⚠️ مواد أوشكت على النفاد</div>
-      <div class="value" id="dashLowStockCount" style="color:#b91c1c;">0</div>
+      <div class="value" id="dashLowStockCount" style="color:#DC2626;">0</div>
     </div>
   </div>
 
@@ -203,39 +220,42 @@
       <div class="card">
         <h2>➕ إضافة مادة جديدة</h2>
         <form id="priceForm">
-          <input type="text" id="pName" placeholder="اسم المادة" required />
+          <label>اسم المادة</label>
+          <input type="text" id="pName" placeholder="أدخل اسم المادة..." required />
+          
+          <label>الباركود / الكود</label>
           <div style="display:flex; gap:6px;">
-            <input type="text" id="pCode" placeholder="الباركود / الكود" />
-            <button type="button" onclick="startScanner()" class="btn-price" style="width:auto; padding:0 10px; margin-bottom:10px;">📷</button>
+            <input type="text" id="pCode" placeholder="امسح أو أدخل الكود..." style="margin-bottom:12px;" />
+            <button type="button" onclick="startScanner()" class="btn-price" style="width:48px; height:43px; padding:0; display:flex; align-items:center; justify-content:center; font-size:18px;">📷</button>
           </div>
           
-          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; background:var(--paper-stripe); padding:10px; border-radius:8px; border:1px solid var(--border); margin-bottom:12px;">
             <div>
-              <label style="font-size:11px; font-weight:bold;">📦 الباكيت:</label>
-              <input type="number" id="pPacketCost" placeholder="كلفة الباكيت" />
-              <input type="number" id="pPacketSell" placeholder="بيع الباكيت" />
-              <input type="number" id="pPacketStock" placeholder="الكمية بالباكيت" />
+              <label style="color:var(--primary); font-weight:700;">📦 الباكيت</label>
+              <input type="number" id="pPacketCost" placeholder="الكلفة" />
+              <input type="number" id="pPacketSell" placeholder="سعر البيع" />
+              <input type="number" id="pPacketStock" placeholder="الكمية" style="margin-bottom:0;" />
             </div>
             <div>
-              <label style="font-size:11px; font-weight:bold;">📦 الكارتون:</label>
-              <input type="number" id="pCartonCost" placeholder="كلفة الكارتون" />
-              <input type="number" id="pCartonSell" placeholder="بيع الكارتون" />
-              <input type="number" id="pCartonStock" placeholder="الكمية بالكارتون" />
+              <label style="color:var(--primary); font-weight:700;">📦 الكارتون</label>
+              <input type="number" id="pCartonCost" placeholder="الكلفة" />
+              <input type="number" id="pCartonSell" placeholder="سعر البيع" />
+              <input type="number" id="pCartonStock" placeholder="الكمية" style="margin-bottom:0;" />
             </div>
           </div>
-          <button type="submit" class="btn-price">حفظ المادة</button>
+          <button type="submit" class="btn-price" style="padding:13px; font-size:16px;">حفظ المادة في الدليل</button>
         </form>
       </div>
 
       <div class="card">
         <h2>
           <span>🔍 دليل المواد والأسعار والمخزون</span>
-          <button onclick="exportCsv()" class="btn-secondary" style="width:auto; font-size:11px; padding:3px 8px;">📥 تصدير Excel</button>
+          <button onclick="exportCsv()" class="btn-secondary" style="width:auto; font-size:12px; padding:6px 12px;">📥 تصدير Excel</button>
         </h2>
-        <div style="display:flex; gap:6px; margin-bottom:10px;">
-          <input type="text" id="searchPrice" placeholder="🔍 بحث عن مادة أو باركود..." oninput="renderPrices()" style="margin:0;" />
-          <button onclick="setFilter('all')" id="filterAllBtn" class="btn-price" style="width:auto; padding:5px 10px; font-size:11px;">الكل</button>
-          <button onclick="setFilter('low')" id="filterLowBtn" class="btn-secondary" style="width:auto; padding:5px 10px; font-size:11px;">الناقصة فقط</button>
+        <div style="display:flex; gap:8px; margin-bottom:14px;">
+          <input type="text" id="searchPrice" placeholder="🔍 بحث سريع عن مادة أو باركود..." oninput="renderPrices()" style="margin:0;" />
+          <button onclick="setFilter('all')" id="filterAllBtn" class="btn-price" style="width:auto; padding:8px 14px; font-size:13px;">الكل</button>
+          <button onclick="setFilter('low')" id="filterLowBtn" class="btn-secondary" style="width:auto; padding:8px 14px; font-size:13px;">الناقصة فقط</button>
         </div>
         <div class="table-wrapper">
           <table>
@@ -259,20 +279,21 @@
 
   <!-- 2. AI SECTION -->
   <div id="aiSection" class="tab-content">
-    <div class="card">
+    <div class="card" style="max-width: 800px; margin: 0 auto;">
       <h2>🤖 المساعد المحاسبي الذكي (Gemini)</h2>
-      <input type="password" id="geminiApiKey" placeholder="أدخل مفتاح Gemini API..." onchange="saveApiKey()" autocomplete="off" style="margin-bottom:8px;" />
+      <label>مفتاح الربط (API Key)</label>
+      <input type="password" id="geminiApiKey" placeholder="أدخل مفتاح Gemini API..." onchange="saveApiKey()" autocomplete="off" style="margin-bottom:12px;" />
       
       <!-- أزرار الاستعلام السريع -->
-      <div style="display:flex; gap:6px; margin-bottom:10px; flex-wrap:wrap;">
-        <button onclick="quickAsk('ما هي أكثر المواد التي أوشكت على النفاد؟')" class="btn-secondary" style="width:auto; font-size:11px; padding:4px 8px;">⚠️ المواد الناقصة</button>
-        <button onclick="quickAsk('اعطني ملخصاً شاملاً عن حالة المخزن والأسعار')" class="btn-secondary" style="width:auto; font-size:11px; padding:4px 8px;">📊 ملخص عام</button>
+      <div style="display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap;">
+        <button onclick="quickAsk('ما هي أكثر المواد التي أوشكت على النفاد؟')" class="btn-secondary" style="width:auto; font-size:12px; padding:6px 12px;">⚠️ المواد الناقصة</button>
+        <button onclick="quickAsk('اعطني ملخصاً شاملاً عن حالة المخزن والأسعار')" class="btn-secondary" style="width:auto; font-size:12px; padding:6px 12px;">📊 ملخص عام للمخزن</button>
       </div>
 
-      <div id="aiChatBox" style="height:250px; overflow-y:auto; background:var(--paper-stripe); padding:10px; border-radius:6px; margin-bottom:10px; border:1px solid var(--border);"></div>
-      <div style="display:flex; gap:8px;">
-        <input type="text" id="aiPrompt" placeholder="اسأل المساعد عن المخزون والأسعار..." style="margin:0;" onkeypress="if(event.key==='Enter') sendAiMessage()" />
-        <button onclick="sendAiMessage()" class="btn-ai" style="width:auto;">إرسال</button>
+      <div id="aiChatBox" style="height:300px; overflow-y:auto; background:var(--paper-stripe); padding:14px; border-radius:8px; margin-bottom:14px; border:1px solid var(--border); font-size:14.5px;"></div>
+      <div style="display:flex; gap:10px;">
+        <input type="text" id="aiPrompt" placeholder="اسأل المساعد عن تفاصيل المخزون والأسعار..." style="margin:0;" onkeypress="if(event.key==='Enter') sendAiMessage()" />
+        <button onclick="sendAiMessage()" class="btn-price" style="width:auto; padding:0 22px;">إرسال</button>
       </div>
     </div>
   </div>
@@ -281,9 +302,9 @@
 <!-- Camera Scanner Modal -->
 <div id="scannerModal" class="modal">
   <div class="modal-content" style="text-align:center;">
-    <h3>📷 قراءة الباركود</h3>
-    <div id="interactive" style="width:100%; height:250px; background:#000; margin-bottom:10px;"></div>
-    <button onclick="stopScanner()" class="btn-secondary">إغلاق</button>
+    <h3 style="font-family:var(--font-display);">📷 قراءة الباركود</h3>
+    <div id="interactive" style="width:100%; height:260px; background:#000; margin-bottom:14px; border-radius:8px;"></div>
+    <button onclick="stopScanner()" class="btn-secondary">إغلاق الكاميرا</button>
   </div>
 </div>
 
@@ -371,7 +392,7 @@
       return matches && (currentFilter === "all" || low);
     });
     if (!entries.length) {
-      tbody.innerHTML = '<tr><td colspan="7">لا توجد مواد مطابقة للبحث.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7" style="padding:20px; color:var(--text-muted);">لا توجد مواد مطابقة للبحث.</td></tr>';
     } else {
       tbody.innerHTML = entries.map(([id, p]) => {
         const packetCost = Number(p.packetCost) || 0;
@@ -386,23 +407,26 @@
         const cartonLow = Number(p.cartonStock) <= 5;
 
         return `<tr>
-          <td>${escapeHtml(p.name)}<br><small>${escapeHtml(p.updatedAt || p.createdAt || "")}</small></td>
-          <td>${escapeHtml(p.code || "—")}</td>
           <td>
+            <div class="product-name">${escapeHtml(p.name)}</div>
+            <small style="color:var(--text-muted);">${escapeHtml(p.updatedAt || p.createdAt || "")}</small>
+          </td>
+          <td style="font-family:var(--font-mono);">${escapeHtml(p.code || "—")}</td>
+          <td class="price-cell">
             كلفة: ${formatIQD(packetCost)}<br>
             بيع: ${formatIQD(packetSell)}<br>
-            <small style="color:var(--success);">ربح: ${formatIQD(packetProfit)}</small>
+            <span style="color:var(--success); font-weight:600;">ربح: ${formatIQD(packetProfit)}</span>
           </td>
           <td><span class="stock-badge ${packetLow ? "stock-low" : "stock-ok"}">${Number(p.packetStock) || 0}</span></td>
-          <td>
+          <td class="price-cell">
             كلفة: ${formatIQD(cartonCost)}<br>
             بيع: ${formatIQD(cartonSell)}<br>
-            <small style="color:var(--success);">ربح: ${formatIQD(cartonProfit)}</small>
+            <span style="color:var(--success); font-weight:600;">ربح: ${formatIQD(cartonProfit)}</span>
           </td>
           <td><span class="stock-badge ${cartonLow ? "stock-low" : "stock-ok"}">${Number(p.cartonStock) || 0}</span></td>
           <td>
             <button class="action-btn btn-secondary" onclick="editPrice('${id}')">تعديل</button>
-            <button class="action-btn" style="background:#b91c1c; color:#fff;" onclick="deletePrice('${id}')">حذف</button>
+            <button class="action-btn" style="background:#DC2626; color:#fff;" onclick="deletePrice('${id}')">حذف</button>
           </td>
         </tr>`;
       }).join("");
@@ -427,7 +451,6 @@
 
     if (!nameInput) return alert("يرجى إدخال اسم المادة.");
 
-    // التحقق مما إذا كانت المادة موجودة مسبقاً في الذاكرة
     const existingProducts = Object.values(currentData.prices || {});
     const isDuplicate = existingProducts.some(p => {
       const matchName = p.name && p.name.trim().toLowerCase() === nameInput.toLowerCase();
@@ -513,7 +536,7 @@
       html5QrCode = new Html5Qrcode("interactive");
       await html5QrCode.start(
         {facingMode: "environment"},
-        {fps: 10, qrbox: {width: 240, height: 140}},
+        {fps: 10, qrbox: {width: 250, height: 150}},
         decodedText => {
           document.getElementById("pCode").value = decodedText;
           stopScanner();
@@ -550,8 +573,8 @@
   function appendChatMessage(role, text) {
     const box = document.getElementById("aiChatBox");
     const bubble = document.createElement("div");
-    bubble.style.cssText = "padding:9px 11px;margin:7px 0;border-radius:7px;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.7;";
-    bubble.style.background = role === "user" ? "rgba(36,80,140,.13)" : "rgba(15,122,124,.12)";
+    bubble.style.cssText = "padding:10px 14px;margin:8px 0;border-radius:8px;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.7;";
+    bubble.style.background = role === "user" ? "rgba(29,78,216,0.12)" : "rgba(15,122,124,0.12)";
     bubble.style.borderInlineStart = role === "user" ? "3px solid var(--price)" : "3px solid var(--ai-color)";
     bubble.textContent = (role === "user" ? "أنت: " : "Gemini: ") + text;
     box.appendChild(bubble);
