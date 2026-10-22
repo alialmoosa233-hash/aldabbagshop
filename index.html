@@ -12,21 +12,19 @@
   <!-- Barcode Scanner Library -->
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&family=IBM+Plex+Mono:wght@600;700&display=swap');
+  <!-- Google Fonts for Customization -->
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Tajawal:wght@400;500;700;900&family=Almarai:wght@400;700;800&family=IBM+Plex+Mono:wght@600;700&display=swap" rel="stylesheet">
 
+  <style>
     :root {
-      /* ألوان المحل العصرية */
+      /* الألوان الافتراضية (أزرق ملكي) */
       --bg-main: #F1F5F9;
       --card-bg: #FFFFFF;
       --stripe-bg: #F8FAFC;
       --border-color: #E2E8F0;
-
       --text-main: #0F172A;
       --text-muted: #64748B;
-
       --primary: #1E3A8A;
-      --primary-hover: #1E40AF;
       --price-blue: #2563EB;
       --cost-color: #475569;
       --success: #059669;
@@ -34,14 +32,11 @@
       --danger: #DC2626;
       --danger-bg: #FEF2F2;
       --brass: #D97706;
-      --ai-teal: #0D9488;
 
       --radius: 12px;
       --shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.05);
-      --shadow-md: 0 8px 24px rgba(15, 23, 42, 0.08);
-
-      --font-body: 'Tajawal', system-ui, sans-serif;
-      --font-mono: 'IBM Plex Mono', monospace;
+      --font-body: 'Tajawal', sans-serif;
+      --font-size-base: 15px;
     }
 
     body.dark-mode {
@@ -49,10 +44,8 @@
       --card-bg: #1E293B;
       --stripe-bg: #182232;
       --border-color: #334155;
-
       --text-main: #F8FAFC;
       --text-muted: #94A3B8;
-
       --primary: #3B82F6;
       --price-blue: #60A5FA;
       --cost-color: #CBD5E1;
@@ -70,9 +63,9 @@
       color: var(--text-main);
       margin: 0; padding: 0;
       direction: rtl;
-      font-size: 15.5px;
+      font-size: var(--font-size-base);
       line-height: 1.5;
-      -webkit-font-smoothing: antialiased;
+      transition: font-size 0.2s ease, font-family 0.2s ease;
     }
 
     header {
@@ -86,105 +79,97 @@
 
     #cloudStatus {
       padding: 12px 18px; text-align: center; font-weight: 700; border-radius: var(--radius);
-      margin-bottom: 20px; background: var(--card-bg); color: var(--text-muted); font-size: 14px;
-      border: 1px dashed var(--border-color); font-family: var(--font-mono);
+      margin-bottom: 20px; background: var(--card-bg); color: var(--text-muted); font-size: 0.95em;
+      border: 1px dashed var(--border-color); font-family: 'IBM Plex Mono', monospace;
       box-shadow: var(--shadow-sm);
     }
 
-    /* كروت الإحصائيات */
     .dashboard-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 18px; margin-bottom: 24px; }
     .dash-card {
       background: var(--card-bg); border: 1px solid var(--border-color); border-inline-start: 5px solid var(--brass);
       border-radius: var(--radius); padding: 18px 22px; box-shadow: var(--shadow-sm);
     }
-    .dash-card .label { font-size: 13.5px; color: var(--text-muted); font-weight: 700; margin-bottom: 4px; }
-    .dash-card .value { font-size: 24px; font-weight: 900; font-family: var(--font-mono); letter-spacing: -0.5px; }
+    .dash-card .label { font-size: 0.9em; color: var(--text-muted); font-weight: 700; margin-bottom: 4px; }
+    .dash-card .value { font-size: 1.5em; font-weight: 900; font-family: 'IBM Plex Mono', monospace; }
 
-    /* التبويبات */
-    .tabs { display: flex; gap: 8px; margin-bottom: 24px; border-bottom: 3px solid var(--border-color); }
+    .tabs { display: flex; gap: 8px; margin-bottom: 24px; border-bottom: 3px solid var(--border-color); flex-wrap: wrap; }
     .tab-btn {
-      flex: 1; min-width: 160px; padding: 14px; font-size: 16.5px; font-weight: 800;
+      flex: 1; min-width: 140px; padding: 14px; font-size: 1.05em; font-weight: 800;
       background: var(--card-bg); color: var(--text-muted); border: 1px solid var(--border-color); border-bottom: none;
       border-radius: 12px 12px 0 0; cursor: pointer; text-align: center;
       transition: all 0.2s ease;
     }
-    .tab-btn.active { color: #FFF; background: var(--primary); border-color: var(--primary); box-shadow: 0 -4px 12px rgba(0,0,0,0.08); }
+    .tab-btn.active { color: #FFF; background: var(--primary); border-color: var(--primary); }
 
     .tab-content { display: none; }
     .tab-content.active { display: block; }
 
-    /* الصلاحيات */
     .admin-only { display: none !important; }
     body.is-admin .admin-only { display: block !important; }
     body.is-admin th.admin-only, body.is-admin td.admin-only { display: table-cell !important; }
 
     .card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow-sm); margin-bottom: 20px; }
     
-    h2 { margin-top: 0; font-size: 19px; font-weight: 800; border-bottom: 2px dashed var(--border-color); padding-bottom: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; color: var(--primary); }
+    h2 { margin-top: 0; font-size: 1.25em; font-weight: 800; border-bottom: 2px dashed var(--border-color); padding-bottom: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; color: var(--primary); }
 
-    label { font-size: 13.5px; font-weight: 700; display: block; margin-bottom: 6px; color: var(--text-muted); }
+    label { font-size: 0.9em; font-weight: 700; display: block; margin-bottom: 6px; color: var(--text-muted); }
 
     input, select, textarea {
       width: 100%; padding: 12px 16px; margin-bottom: 14px; border: 1.5px solid var(--border-color);
-      border-radius: 8px; font-size: 15px; font-family: var(--font-body); background: var(--bg-main); color: var(--text-main);
+      border-radius: 8px; font-size: 1em; font-family: var(--font-body); background: var(--bg-main); color: var(--text-main);
       outline: none; transition: all 0.2s; font-weight: 500;
     }
     input:focus, select:focus { border-color: var(--price-blue); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12); }
 
-    button { width: 100%; padding: 12px 18px; border: none; border-radius: 8px; color: white; font-weight: 800; cursor: pointer; font-size: 15px; font-family: var(--font-body); transition: all 0.2s; }
+    button { width: 100%; padding: 12px 18px; border: none; border-radius: 8px; color: white; font-weight: 800; cursor: pointer; font-size: 1em; font-family: var(--font-body); transition: all 0.2s; }
     button:hover { opacity: 0.93; transform: translateY(-1px); }
-    button:active { transform: translateY(0); }
     
     .btn-price { background: var(--price-blue); }
     .btn-success { background: var(--success); }
     .btn-secondary { background: var(--text-muted); color: var(--bg-main); }
     .btn-admin { background: var(--brass); color: #FFF; }
 
-    /* جدول الأسعار الجديد الفاخر */
     .table-wrapper { overflow-x: auto; margin-top: 12px; border-radius: 10px; border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); }
-    table { width: 100%; border-collapse: collapse; font-size: 14.5px; }
+    table { width: 100%; border-collapse: collapse; }
     th, td { padding: 14px 16px; text-align: center; border-bottom: 1px solid var(--border-color); vertical-align: middle; }
-    th { background: #1E293B; color: #F8FAFC; font-weight: 800; font-size: 15px; letter-spacing: 0.3px; }
+    th { background: #1E293B; color: #F8FAFC; font-weight: 800; font-size: 1em; }
     tbody tr:nth-child(even) { background: var(--stripe-bg); }
     tbody tr:hover { background: rgba(37, 99, 235, 0.03); }
 
-    .product-name { font-weight: 800; font-size: 17px; color: var(--text-main); }
+    .product-name { font-weight: 800; font-size: 1.1em; color: var(--text-main); }
     
-    /* تنسيق كشوفات الأسعار داخل الجدول */
     .price-box {
       background: rgba(241, 245, 249, 0.6);
       border: 1px solid var(--border-color);
       border-radius: 8px;
       padding: 8px 12px;
       text-align: center;
-      font-family: var(--font-mono);
-      font-size: 14px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.95em;
       line-height: 1.6;
     }
     body.dark-mode .price-box { background: rgba(15, 23, 42, 0.4); }
 
-    .price-cost { color: var(--cost-color); font-weight: 600; font-size: 13px; }
-    .price-sell { color: var(--price-blue); font-weight: 700; font-size: 14.5px; }
-    .price-profit { color: var(--success); font-weight: 800; font-size: 13.5px; background: var(--success-bg); padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 2px; }
+    .price-cost { color: var(--cost-color); font-weight: 600; font-size: 0.9em; }
+    .price-sell { color: var(--price-blue); font-weight: 700; font-size: 1em; }
+    .price-profit { color: var(--success); font-weight: 800; font-size: 0.9em; background: var(--success-bg); padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 2px; }
 
-    /* مخزون المواد */
-    .stock-badge { padding: 5px 12px; border-radius: 20px; font-size: 14px; font-weight: 800; font-family: var(--font-mono); display: inline-block; }
+    .stock-badge { padding: 5px 12px; border-radius: 20px; font-size: 0.9em; font-weight: 800; font-family: 'IBM Plex Mono', monospace; display: inline-block; }
     .stock-low { background: var(--danger-bg); color: var(--danger); border: 1px solid rgba(220, 38, 38, 0.3); }
     .stock-ok { background: var(--success-bg); color: var(--success); border: 1px solid rgba(5, 150, 105, 0.3); }
 
     .quick-qty-btn {
       width: 28px; height: 28px; padding: 0; display: inline-flex; align-items: center; justify-content: center;
-      border-radius: 6px; font-size: 15px; background: var(--border-color); color: var(--text-main); margin: 4px 2px 0 2px;
+      border-radius: 6px; font-size: 1em; background: var(--border-color); color: var(--text-main); margin: 4px 2px 0 2px;
       font-weight: 800;
     }
 
-    .action-btn { padding: 7px 14px; font-size: 13px; margin: 2px; width: auto; display: inline-block; border-radius: 6px; font-weight: 700; }
+    .action-btn { padding: 7px 14px; font-size: 0.9em; margin: 2px; width: auto; display: inline-block; border-radius: 6px; font-weight: 700; }
 
-    /* التنبيهات */
     #toastContainer { position: fixed; bottom: 20px; left: 20px; z-index: 10000; display: flex; flex-direction: column; gap: 10px; }
     .toast {
-      background: #1E293B; color: #FFF; padding: 14px 24px; border-radius: 8px; font-size: 14.5px; font-weight: 700;
-      box-shadow: var(--shadow-md); animation: fadeIn 0.3s ease, fadeOut 0.3s ease 2.7s forwards; border-inline-start: 4px solid var(--price-blue);
+      background: #1E293B; color: #FFF; padding: 14px 24px; border-radius: 8px; font-size: 0.95em; font-weight: 700;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08); animation: fadeIn 0.3s ease, fadeOut 0.3s ease 2.7s forwards; border-inline-start: 4px solid var(--price-blue);
     }
 
     @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
@@ -192,14 +177,6 @@
 
     .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); justify-content: center; align-items: center; }
     .modal-content { background: var(--card-bg); padding: 24px; border-radius: var(--radius); width: 90%; max-width: 520px; border-top: 4px solid var(--brass); }
-
-    @media print {
-      body { background: #fff; color: #000; font-size: 13px; }
-      header, .tabs, .btn-secondary, button, #cloudStatus { display: none !important; }
-      .container { max-width: 100%; margin: 0; padding: 0; }
-      .card { border: none; box-shadow: none; padding: 0; }
-      .admin-only { display: none !important; }
-    }
   </style>
 </head>
 <body>
@@ -209,9 +186,8 @@
 <header>
   <div>📦 نظام إدارة المخزن وعرض الأسعار - محلات الدباغ</div>
   <div style="display:flex; gap:10px; align-items:center;">
-    <button id="adminToggleBtn" onclick="toggleAdminAuth()" class="btn-admin" style="width:auto; padding:8px 16px; font-size:13.5px;">🔒 وضع التعديل (للأدمن)</button>
-    <button onclick="window.print()" class="btn-secondary" style="width:auto; padding:8px 16px; font-size:13.5px;">🖨️ طباعة</button>
-    <button onclick="toggleTheme()" class="btn-secondary" style="width:auto; padding:8px 16px; font-size:13.5px;">🌓 المظهر</button>
+    <button id="adminToggleBtn" onclick="toggleAdminAuth()" class="btn-admin" style="width:auto; padding:8px 16px; font-size:0.9em;">🔒 وضع التعديل</button>
+    <button onclick="window.print()" class="btn-secondary" style="width:auto; padding:8px 16px; font-size:0.9em;">🖨️ طباعة</button>
   </div>
 </header>
 
@@ -238,20 +214,21 @@
   <div class="tabs">
     <button class="tab-btn active" onclick="switchTab('prices')">🔍 عرض الأسعار والمخزون</button>
     <button class="tab-btn admin-only" id="addTabBtn" onclick="switchTab('addProduct')">➕ إضافة مادة جديدة</button>
+    <button class="tab-btn" onclick="switchTab('settings')">⚙️ الضبط والمظهر</button>
     <button class="tab-btn" onclick="switchTab('ai')">🤖 المساعد الذكي</button>
   </div>
 
-  <!-- 1. DISPLAY & SEARCH PRICES SECTION -->
+  <!-- 1. DISPLAY PRICES SECTION -->
   <div id="pricesSection" class="tab-content active">
     <div class="card">
       <h2>
         <span>🔍 دليل المواد والأسعار والمخزون</span>
-        <button onclick="exportCsv()" class="btn-secondary" style="width:auto; font-size:13px; padding:6px 14px;">📥 تصدير Excel</button>
+        <button onclick="exportCsv()" class="btn-secondary" style="width:auto; font-size:0.85em; padding:6px 14px;">📥 تصدير Excel</button>
       </h2>
       <div style="display:flex; gap:10px; margin-bottom:18px;">
         <input type="text" id="searchPrice" placeholder="🔍 بحث سريع عن مادة أو باركود..." oninput="renderPrices()" style="margin:0;" />
-        <button onclick="setFilter('all')" id="filterAllBtn" class="btn-price" style="width:auto; padding:8px 18px; font-size:14px;">الكل</button>
-        <button onclick="setFilter('low')" id="filterLowBtn" class="btn-secondary" style="width:auto; padding:8px 18px; font-size:14px;">الناقصة فقط</button>
+        <button onclick="setFilter('all')" id="filterAllBtn" class="btn-price" style="width:auto; padding:8px 18px; font-size:0.95em;">الكل</button>
+        <button onclick="setFilter('low')" id="filterLowBtn" class="btn-secondary" style="width:auto; padding:8px 18px; font-size:0.95em;">الناقصة فقط</button>
       </div>
       
       <div class="table-wrapper">
@@ -284,42 +261,89 @@
         <label>الباركود / الكود</label>
         <div style="display:flex; gap:8px;">
           <input type="text" id="pCode" placeholder="امسح أو أدخل الكود..." style="margin-bottom:14px;" />
-          <button type="button" onclick="startScanner()" class="btn-price" style="width:50px; height:46px; padding:0; display:flex; align-items:center; justify-content:center; font-size:20px;">📷</button>
+          <button type="button" onclick="startScanner()" class="btn-price" style="width:50px; height:46px; padding:0; display:flex; align-items:center; justify-content:center; font-size:1.2em;">📷</button>
         </div>
         
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; background:var(--stripe-bg); padding:16px; border-radius:10px; border:1px solid var(--border-color); margin-bottom:18px;">
           <div>
-            <label style="color:var(--primary); font-weight:800; font-size:14.5px;">📦 تفاصيل الباكيت</label>
+            <label style="color:var(--primary); font-weight:800;">📦 تفاصيل الباكيت</label>
             <input type="number" id="pPacketCost" placeholder="الكلفة" />
             <input type="number" id="pPacketSell" placeholder="سعر البيع" />
             <input type="number" id="pPacketStock" placeholder="الكمية الحالية" style="margin-bottom:0;" />
           </div>
           <div>
-            <label style="color:var(--primary); font-weight:800; font-size:14.5px;">📦 تفاصيل الكارتون</label>
+            <label style="color:var(--primary); font-weight:800;">📦 تفاصيل الكارتون</label>
             <input type="number" id="pCartonCost" placeholder="الكلفة" />
             <input type="number" id="pCartonSell" placeholder="سعر البيع" />
             <input type="number" id="pCartonStock" placeholder="الكمية الحالية" style="margin-bottom:0;" />
           </div>
         </div>
-        <button type="submit" class="btn-price" style="padding:14px; font-size:16.5px;">حفظ المادة في الدليل</button>
+        <button type="submit" class="btn-price" style="padding:14px; font-size:1.05em;">حفظ المادة في الدليل</button>
       </form>
     </div>
   </div>
 
-  <!-- 3. AI SECTION -->
+  <!-- 3. SETTINGS & APPEARANCE SECTION -->
+  <div id="settingsSection" class="tab-content">
+    <div class="card" style="max-width: 700px; margin: 0 auto;">
+      <h2>⚙️ إعدادات المظهر والخطوط</h2>
+      
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+        <div>
+          <label>🌙 وضع المظهر (ليلي / نهاري)</label>
+          <select id="themeSelect" onchange="changeThemeSetting(this.value)">
+            <option value="light">وضع النهار (فاتح)</option>
+            <option value="dark">وضع الليل (داكن)</option>
+          </select>
+        </div>
+
+        <div>
+          <label>🎨 لون الهوية البصرية</label>
+          <select id="colorSelect" onchange="changeColorSetting(this.value)">
+            <option value="blue">أزرق ملكي (افتراضي)</option>
+            <option value="emerald">أخضر زمردي</option>
+            <option value="burgundy">عنابي فاخر</option>
+            <option value="slate">رمادي فحمي</option>
+          </select>
+        </div>
+
+        <div>
+          <label>🔤 نوع الخط الأساسي</label>
+          <select id="fontSelect" onchange="changeFontSetting(this.value)">
+            <option value="Tajawal">خط تجوال (Tajawal)</option>
+            <option value="Cairo">خط كايرو (Cairo)</option>
+            <option value="Almarai">خط المراعى (Almarai)</option>
+          </select>
+        </div>
+
+        <div>
+          <label>🔍 حجم الخط العام</label>
+          <select id="fontSizeSelect" onchange="changeFontSizeSetting(this.value)">
+            <option value="14px">صغير</option>
+            <option value="15.5px" selected>عادي (مناسب)</option>
+            <option value="17px">كبير</option>
+            <option value="19px">كبير جداً</option>
+          </select>
+        </div>
+      </div>
+
+      <button onclick="resetSettings()" class="btn-secondary" style="margin-top:20px;">استعادة الإعدادات الافتراضية</button>
+    </div>
+  </div>
+
+  <!-- 4. AI SECTION -->
   <div id="aiSection" class="tab-content">
     <div class="card" style="max-width: 800px; margin: 0 auto;">
       <h2>🤖 المساعد المحاسبي الذكي (Gemini)</h2>
       <label class="admin-only">مفتاح الربط (API Key)</label>
       <input type="password" id="geminiApiKey" class="admin-only" placeholder="أدخل مفتاح Gemini API..." onchange="saveApiKey()" autocomplete="off" style="margin-bottom:14px;" />
       
-      <!-- أزرار الاستعلام السريع -->
       <div style="display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap;">
-        <button onclick="quickAsk('ما هي أكثر المواد التي أوشكت على النفاد؟')" class="btn-secondary" style="width:auto; font-size:12.5px; padding:6px 12px;">⚠️ المواد الناقصة</button>
-        <button onclick="quickAsk('اعطني ملخصاً شاملاً عن حالة المخزن والأسعار')" class="btn-secondary" style="width:auto; font-size:12.5px; padding:6px 12px;">📊 ملخص عام للمخزن</button>
+        <button onclick="quickAsk('ما هي أكثر المواد التي أوشكت على النفاد؟')" class="btn-secondary" style="width:auto; font-size:0.85em; padding:6px 12px;">⚠️ المواد الناقصة</button>
+        <button onclick="quickAsk('اعطني ملخصاً شاملاً عن حالة المخزن والأسعار')" class="btn-secondary" style="width:auto; font-size:0.85em; padding:6px 12px;">📊 ملخص عام للمخزن</button>
       </div>
 
-      <div id="aiChatBox" style="height:320px; overflow-y:auto; background:var(--stripe-bg); padding:16px; border-radius:10px; margin-bottom:14px; border:1px solid var(--border-color); font-size:15px;"></div>
+      <div id="aiChatBox" style="height:320px; overflow-y:auto; background:var(--stripe-bg); padding:16px; border-radius:10px; margin-bottom:14px; border:1px solid var(--border-color);"></div>
       <div style="display:flex; gap:10px;">
         <input type="text" id="aiPrompt" placeholder="اسأل المساعد عن تفاصيل المخزون والأسعار..." style="margin:0;" onkeypress="if(event.key==='Enter') sendAiMessage()" />
         <button onclick="sendAiMessage()" class="btn-price" style="width:auto; padding:0 24px;">إرسال</button>
@@ -338,7 +362,84 @@
 </div>
 
 <script>
-  // Notification Toast System
+  // نظام الإعدادات والمظهر
+  function loadSettings() {
+    const theme = localStorage.getItem('app_theme') || 'light';
+    const color = localStorage.getItem('app_color') || 'blue';
+    const font = localStorage.getItem('app_font') || 'Tajawal';
+    const fontSize = localStorage.getItem('app_fontsize') || '15.5px';
+
+    if (theme === 'dark') {
+      document.body.classList.add('dark-mode');
+      document.getElementById('themeSelect').value = 'dark';
+    }
+    applyColorTheme(color);
+    document.getElementById('colorSelect').value = color;
+
+    document.body.style.fontFamily = `'${font}', sans-serif`;
+    document.getElementById('fontSelect').value = font;
+
+    document.documentElement.style.setProperty('--font-size-base', fontSize);
+    document.getElementById('fontSizeSelect').value = fontSize;
+  }
+
+  function changeThemeSetting(val) {
+    if (val === 'dark') {
+      document.body.classList.add('dark-mode');
+      localStorage.setItem('app_theme', 'dark');
+    } else {
+      document.body.classList.remove('dark-mode');
+      localStorage.setItem('app_theme', 'light');
+    }
+    showToast("تم تحديث وضع المظهر بنجاح");
+  }
+
+  function changeColorSetting(color) {
+    applyColorTheme(color);
+    localStorage.setItem('app_color', color);
+    showToast("تم تحديث لون الهوية البصرية");
+  }
+
+  function applyColorTheme(color) {
+    const root = document.documentElement;
+    if (color === 'emerald') {
+      root.style.setProperty('--primary', '#065F46');
+      root.style.setProperty('--price-blue', '#059669');
+      root.style.setProperty('--brass', '#B45309');
+    } else if (color === 'burgundy') {
+      root.style.setProperty('--primary', '#831843');
+      root.style.setProperty('--price-blue', '#BE185D');
+      root.style.setProperty('--brass', '#9A3412');
+    } else if (color === 'slate') {
+      root.style.setProperty('--primary', '#334155');
+      root.style.setProperty('--price-blue', '#475569');
+      root.style.setProperty('--brass', '#64748B');
+    } else {
+      // الأزرق الافتراضي
+      root.style.setProperty('--primary', '#1E3A8A');
+      root.style.setProperty('--price-blue', '#2563EB');
+      root.style.setProperty('--brass', '#D97706');
+    }
+  }
+
+  function changeFontSetting(font) {
+    document.body.style.fontFamily = `'${font}', sans-serif`;
+    localStorage.setItem('app_font', font);
+    showToast("تم تغيير خط النظام");
+  }
+
+  function changeFontSizeSetting(size) {
+    document.documentElement.style.setProperty('--font-size-base', size);
+    localStorage.setItem('app_fontsize', size);
+    showToast("تم تغيير حجم الخط");
+  }
+
+  function resetSettings() {
+    localStorage.clear();
+    location.reload();
+  }
+
+  // Toast System
   function showToast(message) {
     const container = document.getElementById("toastContainer");
     const toast = document.createElement("div");
@@ -348,7 +449,7 @@
     setTimeout(() => toast.remove(), 3000);
   }
 
-  // Admin Mode Verification
+  // Admin Authentication
   const ADMIN_PIN = "1234";
   let isAdmin = false;
 
@@ -356,17 +457,17 @@
     if (isAdmin) {
       isAdmin = false;
       document.body.classList.remove("is-admin");
-      document.getElementById("adminToggleBtn").innerText = "🔒 وضع التعديل (للأدمن)";
+      document.getElementById("adminToggleBtn").innerText = "🔒 وضع التعديل";
       document.getElementById("adminToggleBtn").style.background = "var(--brass)";
       switchTab('prices');
       renderPrices();
-      showToast("تم الخروج من وضع التعديل. التطبيق للعرض فقط.");
+      showToast("تم الخروج من وضع التعديل.");
     } else {
       const pin = prompt("🔑 أدخل رمز الأدمن السري للتمكن من التعديل والإضافة:");
       if (pin === ADMIN_PIN) {
         isAdmin = true;
         document.body.classList.add("is-admin");
-        document.getElementById("adminToggleBtn").innerText = "👑 وضع الأدمن (تعديل مفعل)";
+        document.getElementById("adminToggleBtn").innerText = "👑 وضع الأدمن (نشط)";
         document.getElementById("adminToggleBtn").style.background = "var(--success)";
         renderPrices();
         showToast("تم تفعيل وضع الأدمن بنجاح!");
@@ -375,8 +476,6 @@
       }
     }
   }
-
-  function toggleTheme() { document.body.classList.toggle("dark-mode"); }
 
   // Firebase Setup
   const firebaseConfig = {
@@ -417,9 +516,11 @@
     } else if (tabName === 'addProduct') {
       document.getElementById("addTabBtn").classList.add("active");
       document.getElementById("addProductSection").classList.add("active");
+    } else if (tabName === 'settings') {
+      document.querySelectorAll(".tab-btn")[isAdmin ? 2 : 1].classList.add("active");
+      document.getElementById("settingsSection").classList.add("active");
     } else if (tabName === 'ai') {
-      const aiBtn = document.querySelectorAll(".tab-btn")[isAdmin ? 2 : 1];
-      if (aiBtn) aiBtn.classList.add("active");
+      document.querySelectorAll(".tab-btn")[isAdmin ? 3 : 2].classList.add("active");
       document.getElementById("aiSection").classList.add("active");
     }
   }
@@ -496,9 +597,9 @@
         return `<tr>
           <td>
             <div class="product-name">${escapeHtml(p.name)}</div>
-            <small style="color:var(--text-muted); font-size:12px;">${escapeHtml(p.updatedAt || p.createdAt || "")}</small>
+            <small style="color:var(--text-muted); font-size:0.85em;">${escapeHtml(p.updatedAt || p.createdAt || "")}</small>
           </td>
-          <td style="font-family:var(--font-mono); font-weight:700;">${escapeHtml(p.code || "—")}</td>
+          <td style="font-family:'IBM Plex Mono', monospace; font-weight:700;">${escapeHtml(p.code || "—")}</td>
           <td>
             <div class="price-box">
               <span class="price-cost">كلفة: ${formatIQD(packetCost)}</span><br>
@@ -692,7 +793,7 @@
     const bubble = document.createElement("div");
     bubble.style.cssText = "padding:10px 14px;margin:8px 0;border-radius:8px;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.7;";
     bubble.style.background = role === "user" ? "rgba(37,99,235,0.12)" : "rgba(13,148,136,0.12)";
-    bubble.style.borderInlineStart = role === "user" ? "3px solid var(--price-blue)" : "3px solid var(--ai-teal)";
+    bubble.style.borderInlineStart = role === "user" ? "3px solid var(--price-blue)" : "3px solid var(--brass)";
     bubble.textContent = (role === "user" ? "أنت: " : "Gemini: ") + text;
     box.appendChild(bubble);
     box.scrollTop = box.scrollHeight;
@@ -745,6 +846,11 @@ ${JSON.stringify(context, null, 2)}
       loadingBubble.textContent = "Gemini: حدث خطأ في الاتصال بالخدمة الذكية (" + err.message + ")";
     }
   }
+
+  // تحميل الإعدادات عند تشغيل الصفحة
+  window.onload = function() {
+    loadSettings();
+  };
 </script>
 </body>
 </html>
