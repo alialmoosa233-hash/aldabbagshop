@@ -13,165 +13,185 @@
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Reem+Kufi:wght@500;700&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&family=IBM+Plex+Mono:wght@600;700&display=swap');
 
     :root {
-      --paper: #E7DEC4;
-      --paper-card: #FBF6E8;
-      --paper-stripe: #F3EBD5;
-      --paper-line: rgba(30,46,69,0.06);
-      --ink: #1E2E45;
-      --ink-soft: #5A5142;
-      --border: #C2B38B;
+      /* ألوان المحل العصرية */
+      --bg-main: #F1F5F9;
+      --card-bg: #FFFFFF;
+      --stripe-bg: #F8FAFC;
+      --border-color: #E2E8F0;
+
+      --text-main: #0F172A;
+      --text-muted: #64748B;
 
       --primary: #1E3A8A;
-      --price: #2563EB;
-      --success: #166534;
+      --primary-hover: #1E40AF;
+      --price-blue: #2563EB;
+      --cost-color: #475569;
+      --success: #059669;
+      --success-bg: #ECFDF5;
       --danger: #DC2626;
-      --ai-color: #0D9488;
-      --brass: #B45309;
-
-      --bg: var(--paper);
-      --card: var(--paper-card);
-      --text-main: var(--ink);
-      --text-muted: var(--ink-soft);
+      --danger-bg: #FEF2F2;
+      --brass: #D97706;
+      --ai-teal: #0D9488;
 
       --radius: 12px;
-      --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.05);
-      --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.08);
-      --font-display: 'Reem Kufi', sans-serif;
-      --font-body: 'IBM Plex Sans Arabic', system-ui, sans-serif;
+      --shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.05);
+      --shadow-md: 0 8px 24px rgba(15, 23, 42, 0.08);
+
+      --font-body: 'Tajawal', system-ui, sans-serif;
       --font-mono: 'IBM Plex Mono', monospace;
     }
 
     body.dark-mode {
-      --paper: #0F172A;
-      --paper-card: #1E293B;
-      --paper-stripe: #182232;
-      --paper-line: rgba(255,255,255,0.03);
-      --ink: #F8FAFC;
-      --ink-soft: #94A3B8;
-      --border: #334155;
-      --bg: var(--paper);
-      --card: var(--paper-card);
-      --text-main: var(--ink);
-      --text-muted: var(--ink-soft);
+      --bg-main: #0B1120;
+      --card-bg: #1E293B;
+      --stripe-bg: #182232;
+      --border-color: #334155;
+
+      --text-main: #F8FAFC;
+      --text-muted: #94A3B8;
+
+      --primary: #3B82F6;
+      --price-blue: #60A5FA;
+      --cost-color: #CBD5E1;
+      --success: #34D399;
+      --success-bg: rgba(5, 150, 105, 0.15);
+      --danger: #F87171;
+      --danger-bg: rgba(220, 38, 38, 0.15);
     }
 
     * { box-sizing: border-box; }
 
     body {
       font-family: var(--font-body);
-      background: repeating-linear-gradient(to bottom, transparent 0px, transparent 31px, var(--paper-line) 32px), var(--bg);
+      background-color: var(--bg-main);
       color: var(--text-main);
       margin: 0; padding: 0;
       direction: rtl;
-      font-size: 15px;
-      line-height: 1.6;
+      font-size: 15.5px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
     }
 
     header {
       background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
-      color: #F8FAFC; padding: 18px 28px; font-size: 20px; font-family: var(--font-display);
+      color: #F8FAFC; padding: 18px 30px; font-size: 21px; font-weight: 800;
       border-bottom: 4px solid var(--brass); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
     }
 
-    .container { max-width: 1450px; margin: 24px auto; padding: 0 18px; }
+    .container { max-width: 1480px; margin: 24px auto; padding: 0 20px; }
 
     #cloudStatus {
-      padding: 12px; text-align: center; font-weight: 600; border-radius: var(--radius);
-      margin-bottom: 20px; background: var(--card); color: var(--text-muted); font-size: 14px;
-      border: 1px dashed var(--border); font-family: var(--font-mono);
-      transition: all 0.3s ease;
+      padding: 12px 18px; text-align: center; font-weight: 700; border-radius: var(--radius);
+      margin-bottom: 20px; background: var(--card-bg); color: var(--text-muted); font-size: 14px;
+      border: 1px dashed var(--border-color); font-family: var(--font-mono);
+      box-shadow: var(--shadow-sm);
     }
 
-    .dashboard-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    /* كروت الإحصائيات */
+    .dashboard-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 18px; margin-bottom: 24px; }
     .dash-card {
-      background: var(--card); border: 1px solid var(--border); border-inline-start: 5px solid var(--brass);
-      border-radius: var(--radius); padding: 16px 20px; box-shadow: var(--shadow-sm);
+      background: var(--card-bg); border: 1px solid var(--border-color); border-inline-start: 5px solid var(--brass);
+      border-radius: var(--radius); padding: 18px 22px; box-shadow: var(--shadow-sm);
     }
-    .dash-card .label { font-size: 13px; color: var(--text-muted); font-weight: 700; margin-bottom: 4px; }
-    .dash-card .value { font-size: 22px; font-weight: 700; font-family: var(--font-mono); }
+    .dash-card .label { font-size: 13.5px; color: var(--text-muted); font-weight: 700; margin-bottom: 4px; }
+    .dash-card .value { font-size: 24px; font-weight: 900; font-family: var(--font-mono); letter-spacing: -0.5px; }
 
-    .tabs { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; border-bottom: 3px solid var(--border); }
+    /* التبويبات */
+    .tabs { display: flex; gap: 8px; margin-bottom: 24px; border-bottom: 3px solid var(--border-color); }
     .tab-btn {
-      flex: 1; min-width: 160px; padding: 14px; font-size: 16px; font-weight: 700;
-      background: var(--card); color: var(--text-muted); border: 1px solid var(--border); border-bottom: none;
-      border-radius: 12px 12px 0 0; cursor: pointer; font-family: var(--font-display); text-align: center;
+      flex: 1; min-width: 160px; padding: 14px; font-size: 16.5px; font-weight: 800;
+      background: var(--card-bg); color: var(--text-muted); border: 1px solid var(--border-color); border-bottom: none;
+      border-radius: 12px 12px 0 0; cursor: pointer; text-align: center;
       transition: all 0.2s ease;
     }
-    .tab-btn.active { color: #FFF; background: var(--primary); border-color: var(--primary); box-shadow: 0 -4px 12px rgba(0,0,0,0.1); }
+    .tab-btn.active { color: #FFF; background: var(--primary); border-color: var(--primary); box-shadow: 0 -4px 12px rgba(0,0,0,0.08); }
 
     .tab-content { display: none; }
     .tab-content.active { display: block; }
 
-    /* التحكم بالصلاحيات */
+    /* الصلاحيات */
     .admin-only { display: none !important; }
     body.is-admin .admin-only { display: block !important; }
     body.is-admin th.admin-only, body.is-admin td.admin-only { display: table-cell !important; }
 
-    .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow-sm); margin-bottom: 20px; }
+    .card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow-sm); margin-bottom: 20px; }
     
-    h2 { margin-top: 0; font-size: 18px; font-family: var(--font-display); border-bottom: 2px dashed var(--border); padding-bottom: 12px; margin-bottom: 18px; display: flex; justify-content: space-between; align-items: center; color: var(--primary); }
-    body.dark-mode h2 { color: #93C5FD; }
+    h2 { margin-top: 0; font-size: 19px; font-weight: 800; border-bottom: 2px dashed var(--border-color); padding-bottom: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; color: var(--primary); }
 
-    label { font-size: 13px; font-weight: 600; display: block; margin-bottom: 6px; color: var(--text-muted); }
+    label { font-size: 13.5px; font-weight: 700; display: block; margin-bottom: 6px; color: var(--text-muted); }
 
     input, select, textarea {
-      width: 100%; padding: 12px 14px; margin-bottom: 14px; border: 1px solid var(--border);
-      border-radius: 8px; font-size: 14.5px; font-family: var(--font-body); background: var(--bg); color: var(--text-main);
-      outline: none; transition: all 0.2s;
+      width: 100%; padding: 12px 16px; margin-bottom: 14px; border: 1.5px solid var(--border-color);
+      border-radius: 8px; font-size: 15px; font-family: var(--font-body); background: var(--bg-main); color: var(--text-main);
+      outline: none; transition: all 0.2s; font-weight: 500;
     }
-    input:focus, select:focus { border-color: var(--price); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15); }
+    input:focus, select:focus { border-color: var(--price-blue); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12); }
 
-    button { width: 100%; padding: 12px; border: none; border-radius: 8px; color: white; font-weight: 700; cursor: pointer; font-size: 15px; font-family: var(--font-body); transition: all 0.2s; }
-    button:hover { opacity: 0.92; transform: translateY(-1px); }
+    button { width: 100%; padding: 12px 18px; border: none; border-radius: 8px; color: white; font-weight: 800; cursor: pointer; font-size: 15px; font-family: var(--font-body); transition: all 0.2s; }
+    button:hover { opacity: 0.93; transform: translateY(-1px); }
     button:active { transform: translateY(0); }
     
-    .btn-price { background: var(--price); }
+    .btn-price { background: var(--price-blue); }
     .btn-success { background: var(--success); }
-    .btn-secondary { background: var(--text-muted); color: var(--bg); }
-    .btn-admin { background: #D97706; color: #FFF; }
+    .btn-secondary { background: var(--text-muted); color: var(--bg-main); }
+    .btn-admin { background: var(--brass); color: #FFF; }
 
-    /* تنسيقات الجدول والبطاقات */
-    .table-wrapper { overflow-x: auto; margin-top: 12px; border-radius: 10px; border: 1px solid var(--border); }
-    table { width: 100%; border-collapse: collapse; font-size: 14px; }
-    th, td { padding: 14px 16px; text-align: center; border-bottom: 1px solid var(--border); vertical-align: middle; }
-    th { background: var(--primary); color: #FFF; font-weight: 600; font-family: var(--font-display); font-size: 15px; }
-    tbody tr:nth-child(even) { background: var(--paper-stripe); }
-    tbody tr:hover { background: rgba(0,0,0,0.02); }
-    body.dark-mode tbody tr:hover { background: rgba(255,255,255,0.02); }
+    /* جدول الأسعار الجديد الفاخر */
+    .table-wrapper { overflow-x: auto; margin-top: 12px; border-radius: 10px; border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); }
+    table { width: 100%; border-collapse: collapse; font-size: 14.5px; }
+    th, td { padding: 14px 16px; text-align: center; border-bottom: 1px solid var(--border-color); vertical-align: middle; }
+    th { background: #1E293B; color: #F8FAFC; font-weight: 800; font-size: 15px; letter-spacing: 0.3px; }
+    tbody tr:nth-child(even) { background: var(--stripe-bg); }
+    tbody tr:hover { background: rgba(37, 99, 235, 0.03); }
 
-    .price-cell { font-family: var(--font-mono); font-size: 13.5px; line-height: 1.6; }
-    .product-name { font-weight: 700; font-size: 16px; color: var(--primary); }
-    body.dark-mode .product-name { color: #93C5FD; }
+    .product-name { font-weight: 800; font-size: 17px; color: var(--text-main); }
+    
+    /* تنسيق كشوفات الأسعار داخل الجدول */
+    .price-box {
+      background: rgba(241, 245, 249, 0.6);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 8px 12px;
+      text-align: center;
+      font-family: var(--font-mono);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    body.dark-mode .price-box { background: rgba(15, 23, 42, 0.4); }
 
-    .stock-badge { padding: 4px 10px; border-radius: 12px; font-size: 13px; font-weight: 700; font-family: var(--font-mono); display: inline-block; }
-    .stock-low { background: #FEE2E2; color: #991B1B; }
-    .stock-ok { background: #DCFCE7; color: #166534; }
+    .price-cost { color: var(--cost-color); font-weight: 600; font-size: 13px; }
+    .price-sell { color: var(--price-blue); font-weight: 700; font-size: 14.5px; }
+    .price-profit { color: var(--success); font-weight: 800; font-size: 13.5px; background: var(--success-bg); padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 2px; }
+
+    /* مخزون المواد */
+    .stock-badge { padding: 5px 12px; border-radius: 20px; font-size: 14px; font-weight: 800; font-family: var(--font-mono); display: inline-block; }
+    .stock-low { background: var(--danger-bg); color: var(--danger); border: 1px solid rgba(220, 38, 38, 0.3); }
+    .stock-ok { background: var(--success-bg); color: var(--success); border: 1px solid rgba(5, 150, 105, 0.3); }
 
     .quick-qty-btn {
-      width: 26px; height: 26px; padding: 0; display: inline-flex; align-items: center; justify-content: center;
-      border-radius: 50%; font-size: 14px; background: var(--border); color: var(--text-main); margin: 0 3px;
+      width: 28px; height: 28px; padding: 0; display: inline-flex; align-items: center; justify-content: center;
+      border-radius: 6px; font-size: 15px; background: var(--border-color); color: var(--text-main); margin: 4px 2px 0 2px;
+      font-weight: 800;
     }
 
-    .action-btn { padding: 6px 12px; font-size: 13px; margin: 2px; width: auto; display: inline-block; border-radius: 6px; }
+    .action-btn { padding: 7px 14px; font-size: 13px; margin: 2px; width: auto; display: inline-block; border-radius: 6px; font-weight: 700; }
 
-    /* نظام التنبيهات الذكي Toast */
-    #toastContainer {
-      position: fixed; bottom: 20px; left: 20px; z-index: 10000; display: flex; flex-direction: column; gap: 10px;
-    }
+    /* التنبيهات */
+    #toastContainer { position: fixed; bottom: 20px; left: 20px; z-index: 10000; display: flex; flex-direction: column; gap: 10px; }
     .toast {
-      background: var(--primary); color: #FFF; padding: 12px 20px; border-radius: 8px; font-size: 14px;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.2); animation: fadeIn 0.3s ease, fadeOut 0.3s ease 2.7s forwards;
+      background: #1E293B; color: #FFF; padding: 14px 24px; border-radius: 8px; font-size: 14.5px; font-weight: 700;
+      box-shadow: var(--shadow-md); animation: fadeIn 0.3s ease, fadeOut 0.3s ease 2.7s forwards; border-inline-start: 4px solid var(--price-blue);
     }
 
     @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes fadeOut { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(20px); } }
 
     .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); justify-content: center; align-items: center; }
-    .modal-content { background: var(--card); padding: 24px; border-radius: var(--radius); width: 90%; max-width: 520px; border-top: 4px solid var(--brass); max-height: 85vh; overflow-y: auto; }
+    .modal-content { background: var(--card-bg); padding: 24px; border-radius: var(--radius); width: 90%; max-width: 520px; border-top: 4px solid var(--brass); }
 
     @media print {
       body { background: #fff; color: #000; font-size: 13px; }
@@ -189,9 +209,9 @@
 <header>
   <div>📦 نظام إدارة المخزن وعرض الأسعار - محلات الدباغ</div>
   <div style="display:flex; gap:10px; align-items:center;">
-    <button id="adminToggleBtn" onclick="toggleAdminAuth()" class="btn-admin" style="width:auto; padding:7px 14px; font-size:13px;">🔒 وضع التعديل (للأدمن)</button>
-    <button onclick="window.print()" class="btn-secondary" style="width:auto; padding:7px 14px; font-size:13px;">🖨️ طباعة</button>
-    <button onclick="toggleTheme()" class="btn-secondary" style="width:auto; padding:7px 14px; font-size:13px;">🌓 المظهر</button>
+    <button id="adminToggleBtn" onclick="toggleAdminAuth()" class="btn-admin" style="width:auto; padding:8px 16px; font-size:13.5px;">🔒 وضع التعديل (للأدمن)</button>
+    <button onclick="window.print()" class="btn-secondary" style="width:auto; padding:8px 16px; font-size:13.5px;">🖨️ طباعة</button>
+    <button onclick="toggleTheme()" class="btn-secondary" style="width:auto; padding:8px 16px; font-size:13.5px;">🌓 المظهر</button>
   </div>
 </header>
 
@@ -202,7 +222,7 @@
   <div class="dashboard-summary">
     <div class="dash-card">
       <div class="label">📦 إجمالي المواد بالدليل</div>
-      <div class="value" id="dashPricesCount" style="color:var(--price);">0</div>
+      <div class="value" id="dashPricesCount" style="color:var(--price-blue);">0</div>
     </div>
     <div class="dash-card">
       <div class="label">⚠️ مواد أوشكت على النفاد</div>
@@ -226,12 +246,12 @@
     <div class="card">
       <h2>
         <span>🔍 دليل المواد والأسعار والمخزون</span>
-        <button onclick="exportCsv()" class="btn-secondary" style="width:auto; font-size:12px; padding:6px 12px;">📥 تصدير Excel</button>
+        <button onclick="exportCsv()" class="btn-secondary" style="width:auto; font-size:13px; padding:6px 14px;">📥 تصدير Excel</button>
       </h2>
-      <div style="display:flex; gap:8px; margin-bottom:16px;">
+      <div style="display:flex; gap:10px; margin-bottom:18px;">
         <input type="text" id="searchPrice" placeholder="🔍 بحث سريع عن مادة أو باركود..." oninput="renderPrices()" style="margin:0;" />
-        <button onclick="setFilter('all')" id="filterAllBtn" class="btn-price" style="width:auto; padding:8px 16px; font-size:13px;">الكل</button>
-        <button onclick="setFilter('low')" id="filterLowBtn" class="btn-secondary" style="width:auto; padding:8px 16px; font-size:13px;">الناقصة فقط</button>
+        <button onclick="setFilter('all')" id="filterAllBtn" class="btn-price" style="width:auto; padding:8px 18px; font-size:14px;">الكل</button>
+        <button onclick="setFilter('low')" id="filterLowBtn" class="btn-secondary" style="width:auto; padding:8px 18px; font-size:14px;">الناقصة فقط</button>
       </div>
       
       <div class="table-wrapper">
@@ -262,26 +282,26 @@
         <input type="text" id="pName" placeholder="أدخل اسم المادة..." required />
         
         <label>الباركود / الكود</label>
-        <div style="display:flex; gap:6px;">
+        <div style="display:flex; gap:8px;">
           <input type="text" id="pCode" placeholder="امسح أو أدخل الكود..." style="margin-bottom:14px;" />
-          <button type="button" onclick="startScanner()" class="btn-price" style="width:48px; height:45px; padding:0; display:flex; align-items:center; justify-content:center; font-size:18px;">📷</button>
+          <button type="button" onclick="startScanner()" class="btn-price" style="width:50px; height:46px; padding:0; display:flex; align-items:center; justify-content:center; font-size:20px;">📷</button>
         </div>
         
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:14px; background:var(--paper-stripe); padding:16px; border-radius:10px; border:1px solid var(--border); margin-bottom:18px;">
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; background:var(--stripe-bg); padding:16px; border-radius:10px; border:1px solid var(--border-color); margin-bottom:18px;">
           <div>
-            <label style="color:var(--primary); font-weight:700; font-size:14px;">📦 تفاصيل الباكيت</label>
+            <label style="color:var(--primary); font-weight:800; font-size:14.5px;">📦 تفاصيل الباكيت</label>
             <input type="number" id="pPacketCost" placeholder="الكلفة" />
             <input type="number" id="pPacketSell" placeholder="سعر البيع" />
             <input type="number" id="pPacketStock" placeholder="الكمية الحالية" style="margin-bottom:0;" />
           </div>
           <div>
-            <label style="color:var(--primary); font-weight:700; font-size:14px;">📦 تفاصيل الكارتون</label>
+            <label style="color:var(--primary); font-weight:800; font-size:14.5px;">📦 تفاصيل الكارتون</label>
             <input type="number" id="pCartonCost" placeholder="الكلفة" />
             <input type="number" id="pCartonSell" placeholder="سعر البيع" />
             <input type="number" id="pCartonStock" placeholder="الكمية الحالية" style="margin-bottom:0;" />
           </div>
         </div>
-        <button type="submit" class="btn-price" style="padding:14px; font-size:16px;">حفظ المادة في الدليل</button>
+        <button type="submit" class="btn-price" style="padding:14px; font-size:16.5px;">حفظ المادة في الدليل</button>
       </form>
     </div>
   </div>
@@ -295,11 +315,11 @@
       
       <!-- أزرار الاستعلام السريع -->
       <div style="display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap;">
-        <button onclick="quickAsk('ما هي أكثر المواد التي أوشكت على النفاد؟')" class="btn-secondary" style="width:auto; font-size:12px; padding:6px 12px;">⚠️ المواد الناقصة</button>
-        <button onclick="quickAsk('اعطني ملخصاً شاملاً عن حالة المخزن والأسعار')" class="btn-secondary" style="width:auto; font-size:12px; padding:6px 12px;">📊 ملخص عام للمخزن</button>
+        <button onclick="quickAsk('ما هي أكثر المواد التي أوشكت على النفاد؟')" class="btn-secondary" style="width:auto; font-size:12.5px; padding:6px 12px;">⚠️ المواد الناقصة</button>
+        <button onclick="quickAsk('اعطني ملخصاً شاملاً عن حالة المخزن والأسعار')" class="btn-secondary" style="width:auto; font-size:12.5px; padding:6px 12px;">📊 ملخص عام للمخزن</button>
       </div>
 
-      <div id="aiChatBox" style="height:320px; overflow-y:auto; background:var(--paper-stripe); padding:16px; border-radius:10px; margin-bottom:14px; border:1px solid var(--border); font-size:14.5px;"></div>
+      <div id="aiChatBox" style="height:320px; overflow-y:auto; background:var(--stripe-bg); padding:16px; border-radius:10px; margin-bottom:14px; border:1px solid var(--border-color); font-size:15px;"></div>
       <div style="display:flex; gap:10px;">
         <input type="text" id="aiPrompt" placeholder="اسأل المساعد عن تفاصيل المخزون والأسعار..." style="margin:0;" onkeypress="if(event.key==='Enter') sendAiMessage()" />
         <button onclick="sendAiMessage()" class="btn-price" style="width:auto; padding:0 24px;">إرسال</button>
@@ -311,7 +331,7 @@
 <!-- Camera Scanner Modal -->
 <div id="scannerModal" class="modal">
   <div class="modal-content" style="text-align:center;">
-    <h3 style="font-family:var(--font-display);">📷 قراءة الباركود</h3>
+    <h3 style="margin-top:0;">📷 قراءة الباركود</h3>
     <div id="interactive" style="width:100%; height:260px; background:#000; margin-bottom:14px; border-radius:8px;"></div>
     <button onclick="stopScanner()" class="btn-secondary">إغلاق الكاميرا</button>
   </div>
@@ -329,7 +349,7 @@
   }
 
   // Admin Mode Verification
-  const ADMIN_PIN = "1234"; // رمز الأدمن
+  const ADMIN_PIN = "1234";
   let isAdmin = false;
 
   function toggleAdminAuth() {
@@ -337,7 +357,7 @@
       isAdmin = false;
       document.body.classList.remove("is-admin");
       document.getElementById("adminToggleBtn").innerText = "🔒 وضع التعديل (للأدمن)";
-      document.getElementById("adminToggleBtn").style.background = "#D97706";
+      document.getElementById("adminToggleBtn").style.background = "var(--brass)";
       switchTab('prices');
       renderPrices();
       showToast("تم الخروج من وضع التعديل. التطبيق للعرض فقط.");
@@ -347,7 +367,7 @@
         isAdmin = true;
         document.body.classList.add("is-admin");
         document.getElementById("adminToggleBtn").innerText = "👑 وضع الأدمن (تعديل مفعل)";
-        document.getElementById("adminToggleBtn").style.background = "#166534";
+        document.getElementById("adminToggleBtn").style.background = "var(--success)";
         renderPrices();
         showToast("تم تفعيل وضع الأدمن بنجاح!");
       } else if (pin !== null) {
@@ -404,7 +424,6 @@
     }
   }
 
-  // تحديث الإحصائيات والقيمة المادية
   function updateDashboard() {
     const prices = Object.values(currentData.prices || {});
     const lowStock = prices.filter(p =>
@@ -448,7 +467,7 @@
     });
 
     if (!entries.length) {
-      tbody.innerHTML = '<tr><td colspan="7" style="padding:20px; color:var(--text-muted);">لا توجد مواد مطابقة للبحث.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7" style="padding:24px; color:var(--text-muted); font-weight:700;">لا توجد مواد مطابقة للبحث.</td></tr>';
     } else {
       tbody.innerHTML = entries.map(([id, p]) => {
         const packetCost = Number(p.packetCost) || 0;
@@ -477,22 +496,26 @@
         return `<tr>
           <td>
             <div class="product-name">${escapeHtml(p.name)}</div>
-            <small style="color:var(--text-muted);">${escapeHtml(p.updatedAt || p.createdAt || "")}</small>
+            <small style="color:var(--text-muted); font-size:12px;">${escapeHtml(p.updatedAt || p.createdAt || "")}</small>
           </td>
-          <td style="font-family:var(--font-mono);">${escapeHtml(p.code || "—")}</td>
-          <td class="price-cell">
-            كلفة: ${formatIQD(packetCost)}<br>
-            بيع: ${formatIQD(packetSell)}<br>
-            <span style="color:var(--success); font-weight:600;">ربح: ${formatIQD(packetProfit)}</span>
+          <td style="font-family:var(--font-mono); font-weight:700;">${escapeHtml(p.code || "—")}</td>
+          <td>
+            <div class="price-box">
+              <span class="price-cost">كلفة: ${formatIQD(packetCost)}</span><br>
+              <span class="price-sell">بيع: ${formatIQD(packetSell)}</span><br>
+              <span class="price-profit">ربح: ${formatIQD(packetProfit)}</span>
+            </div>
           </td>
           <td>
             <span class="stock-badge ${packetLow ? "stock-low" : "stock-ok"}">${Number(p.packetStock) || 0}</span>
             <br>${quickControls('packet')}
           </td>
-          <td class="price-cell">
-            كلفة: ${formatIQD(cartonCost)}<br>
-            بيع: ${formatIQD(cartonSell)}<br>
-            <span style="color:var(--success); font-weight:600;">ربح: ${formatIQD(cartonProfit)}</span>
+          <td>
+            <div class="price-box">
+              <span class="price-cost">كلفة: ${formatIQD(cartonCost)}</span><br>
+              <span class="price-sell">بيع: ${formatIQD(cartonSell)}</span><br>
+              <span class="price-profit">ربح: ${formatIQD(cartonProfit)}</span>
+            </div>
           </td>
           <td>
             <span class="stock-badge ${cartonLow ? "stock-low" : "stock-ok"}">${Number(p.cartonStock) || 0}</span>
@@ -507,7 +530,6 @@
     updateDashboard();
   }
 
-  // زيادة ونقصان الكمية السريعة
   async function adjustQty(id, type, amount) {
     if (!isAdmin) return;
     const p = currentData.prices[id];
@@ -529,7 +551,6 @@
     renderPrices();
   }
 
-  // حفظ المادة وتأكيد عدم التكرار
   document.getElementById("priceForm").addEventListener("submit", async function(e) {
     e.preventDefault();
     if (!isAdmin) return alert("عذراً، يجب تفعيل وضع الأدمن أولاً لإضافة مواد.");
@@ -671,7 +692,7 @@
     const bubble = document.createElement("div");
     bubble.style.cssText = "padding:10px 14px;margin:8px 0;border-radius:8px;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.7;";
     bubble.style.background = role === "user" ? "rgba(37,99,235,0.12)" : "rgba(13,148,136,0.12)";
-    bubble.style.borderInlineStart = role === "user" ? "3px solid var(--price)" : "3px solid var(--ai-color)";
+    bubble.style.borderInlineStart = role === "user" ? "3px solid var(--price-blue)" : "3px solid var(--ai-teal)";
     bubble.textContent = (role === "user" ? "أنت: " : "Gemini: ") + text;
     box.appendChild(bubble);
     box.scrollTop = box.scrollHeight;
