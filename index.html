@@ -288,7 +288,7 @@
     <div class="card" style="max-width: 750px; margin: 0 auto;">
       <h2>⚙️ إعدادات المظهر والنمط</h2>
       
-      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:18px;">
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:18px; margin-bottom: 24px;">
         <div>
           <label>🎨 اختر نمط المظهر المفضل</label>
           <select id="colorSelect" onchange="changeColorSetting(this.value)">
@@ -328,6 +328,28 @@
         </div>
       </div>
 
+      <!-- قسم تغيير رمز الأمان -->
+      <h2 style="font-size: 1.1em; margin-top:10px;">🔐 تغيير رمز الأمان (PIN للأدمن)</h2>
+      <div style="background:var(--stripe-bg); padding:16px; border-radius:10px; border:1px solid var(--border-color);">
+        <form id="changePinForm" onsubmit="updateAdminPin(event)">
+          <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:12px;">
+            <div>
+              <label>الرمز الحالي</label>
+              <input type="password" id="currentPin" placeholder="الرمز الحالي..." required />
+            </div>
+            <div>
+              <label>الرمز الجديد</label>
+              <input type="password" id="newPin" placeholder="الرمز الجديد..." required />
+            </div>
+            <div>
+              <label>تأكيد الرمز الجديد</label>
+              <input type="password" id="confirmPin" placeholder="أعد إدخاله..." required />
+            </div>
+          </div>
+          <button type="submit" class="btn-price" style="margin-top:8px;">حفظ الرمز الجديد</button>
+        </form>
+      </div>
+
       <button onclick="resetSettings()" class="btn-secondary" style="margin-top:22px;">استعادة الإعدادات الافتراضية</button>
     </div>
   </div>
@@ -363,6 +385,32 @@
 </div>
 
 <script>
+  // الحصول على رمز الأدمن المحفوظ أو الافتراضي "1234"
+  function getAdminPin() {
+    return localStorage.getItem('admin_pin') || "1234";
+  }
+
+  function updateAdminPin(e) {
+    e.preventDefault();
+    const curr = document.getElementById('currentPin').value;
+    const newP = document.getElementById('newPin').value;
+    const conf = document.getElementById('confirmPin').value;
+
+    if (curr !== getAdminPin()) {
+      return alert("❌ الرمز الحالي غير صحيح!");
+    }
+    if (newP !== conf) {
+      return alert("❌ الرمز الجديد وتأكيده غير متطابقين!");
+    }
+    if (newP.length < 4) {
+      return alert("⚠️ يفضل أن يتكون الرمز من 4 أرقام أو أكثر.");
+    }
+
+    localStorage.setItem('admin_pin', newP);
+    showToast("🔑 تم تغيير رمز الأمان بنجاح!");
+    document.getElementById('changePinForm').reset();
+  }
+
   // تحميل تطبيق الألوان المخصص
   function loadSettings() {
     const theme = localStorage.getItem('app_theme') || 'light';
@@ -460,7 +508,6 @@
   }
 
   // Admin Authentication
-  const ADMIN_PIN = "1234";
   let isAdmin = false;
 
   function toggleAdminAuth() {
@@ -474,7 +521,7 @@
       showToast("تم الخروج من وضع التعديل.");
     } else {
       const pin = prompt("🔑 أدخل رمز الأدمن السري للتمكن من التعديل والإضافة:");
-      if (pin === ADMIN_PIN) {
+      if (pin === getAdminPin()) {
         isAdmin = true;
         document.body.classList.add("is-admin");
         document.getElementById("adminToggleBtn").innerText = "👑 وضع الأدمن (نشط)";
