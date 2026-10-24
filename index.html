@@ -12,7 +12,7 @@
   <!-- Barcode Scanner Library -->
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
-  <!-- Google Fonts for Customization -->
+  <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Tajawal:wght@400;500;700;900&family=Almarai:wght@400;700;800&family=IBM+Plex+Mono:wght@600;700&display=swap" rel="stylesheet">
 
   <style>
@@ -36,7 +36,7 @@
       --radius: 12px;
       --shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.05);
       --font-body: 'Tajawal', sans-serif;
-      --font-size-base: 15px;
+      --font-size-base: 15.5px;
     }
 
     body.dark-mode {
@@ -65,7 +65,7 @@
       direction: rtl;
       font-size: var(--font-size-base);
       line-height: 1.5;
-      transition: font-size 0.2s ease, font-family 0.2s ease;
+      transition: font-size 0.2s ease, font-family 0.2s ease, background-color 0.3s ease;
     }
 
     header {
@@ -285,25 +285,26 @@
 
   <!-- 3. SETTINGS & APPEARANCE SECTION -->
   <div id="settingsSection" class="tab-content">
-    <div class="card" style="max-width: 700px; margin: 0 auto;">
-      <h2>⚙️ إعدادات المظهر والخطوط</h2>
+    <div class="card" style="max-width: 750px; margin: 0 auto;">
+      <h2>⚙️ إعدادات المظهر والنمط</h2>
       
-      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:18px;">
         <div>
-          <label>🌙 وضع المظهر (ليلي / نهاري)</label>
-          <select id="themeSelect" onchange="changeThemeSetting(this.value)">
-            <option value="light">وضع النهار (فاتح)</option>
-            <option value="dark">وضع الليل (داكن)</option>
+          <label>🎨 اختر نمط المظهر المفضل</label>
+          <select id="colorSelect" onchange="changeColorSetting(this.value)">
+            <option value="blue">🏛️ الكلاسيكي الفاخر (أزرق ملكي)</option>
+            <option value="emerald">🌲 الزمردي الهادئ (أخضر مريح للعين)</option>
+            <option value="burgundy">🍇 العنابي الملكي (داكن وفخم)</option>
+            <option value="slate">💻 العصر الحديث (رمادي فحمي)</option>
+            <option value="vintage">📜 الورقي المطور (دافئ)</option>
           </select>
         </div>
 
         <div>
-          <label>🎨 لون الهوية البصرية</label>
-          <select id="colorSelect" onchange="changeColorSetting(this.value)">
-            <option value="blue">أزرق ملكي (افتراضي)</option>
-            <option value="emerald">أخضر زمردي</option>
-            <option value="burgundy">عنابي فاخر</option>
-            <option value="slate">رمادي فحمي</option>
+          <label>🌙 درجة الإضاءة (فاتح / داكن)</label>
+          <select id="themeSelect" onchange="changeThemeSetting(this.value)">
+            <option value="light">☀️ وضع النهار (فاتح)</option>
+            <option value="dark">🌙 وضع الليل (داكن)</option>
           </select>
         </div>
 
@@ -327,7 +328,7 @@
         </div>
       </div>
 
-      <button onclick="resetSettings()" class="btn-secondary" style="margin-top:20px;">استعادة الإعدادات الافتراضية</button>
+      <button onclick="resetSettings()" class="btn-secondary" style="margin-top:22px;">استعادة الإعدادات الافتراضية</button>
     </div>
   </div>
 
@@ -362,7 +363,7 @@
 </div>
 
 <script>
-  // نظام الإعدادات والمظهر
+  // تحميل تطبيق الألوان المخصص
   function loadSettings() {
     const theme = localStorage.getItem('app_theme') || 'light';
     const color = localStorage.getItem('app_color') || 'blue';
@@ -391,13 +392,13 @@
       document.body.classList.remove('dark-mode');
       localStorage.setItem('app_theme', 'light');
     }
-    showToast("تم تحديث وضع المظهر بنجاح");
+    showToast("تم تحديث وضع الإضاءة");
   }
 
   function changeColorSetting(color) {
     applyColorTheme(color);
     localStorage.setItem('app_color', color);
-    showToast("تم تحديث لون الهوية البصرية");
+    showToast("تم تحديث نمط المظهر والألوان");
   }
 
   function applyColorTheme(color) {
@@ -405,20 +406,29 @@
     if (color === 'emerald') {
       root.style.setProperty('--primary', '#065F46');
       root.style.setProperty('--price-blue', '#059669');
-      root.style.setProperty('--brass', '#B45309');
+      root.style.setProperty('--brass', '#D97706');
+      root.style.setProperty('--bg-main', '#F0FDF4');
     } else if (color === 'burgundy') {
       root.style.setProperty('--primary', '#831843');
       root.style.setProperty('--price-blue', '#BE185D');
       root.style.setProperty('--brass', '#9A3412');
+      root.style.setProperty('--bg-main', '#FDF2F8');
     } else if (color === 'slate') {
-      root.style.setProperty('--primary', '#334155');
-      root.style.setProperty('--price-blue', '#475569');
-      root.style.setProperty('--brass', '#64748B');
+      root.style.setProperty('--primary', '#1E293B');
+      root.style.setProperty('--price-blue', '#3B82F6');
+      root.style.setProperty('--brass', '#F59E0B');
+      root.style.setProperty('--bg-main', '#F8FAFC');
+    } else if (color === 'vintage') {
+      root.style.setProperty('--primary', '#2C4368');
+      root.style.setProperty('--price-blue', '#24508C');
+      root.style.setProperty('--brass', '#A9822E');
+      root.style.setProperty('--bg-main', '#E7DEC4');
     } else {
-      // الأزرق الافتراضي
+      // الأزرق الملكي الافتراضي
       root.style.setProperty('--primary', '#1E3A8A');
       root.style.setProperty('--price-blue', '#2563EB');
       root.style.setProperty('--brass', '#D97706');
+      root.style.setProperty('--bg-main', '#F1F5F9');
     }
   }
 
@@ -847,7 +857,7 @@ ${JSON.stringify(context, null, 2)}
     }
   }
 
-  // تحميل الإعدادات عند تشغيل الصفحة
+  // تحميل الإعدادات المخصصة فور تشغيل النظام
   window.onload = function() {
     loadSettings();
   };
