@@ -129,6 +129,23 @@
     .btn-secondary { background: var(--text-muted); color: var(--bg-main); }
     .btn-admin { background: var(--brass); color: #FFF; }
 
+    /* أنماط البحث المطور */
+    .filter-btn {
+      padding: 7px 14px; font-size: 0.85em; font-weight: 700; border-radius: 20px;
+      border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-muted);
+      cursor: pointer; transition: all 0.2s; width: auto; display: inline-block;
+    }
+    .filter-btn.active {
+      background: var(--primary); color: #FFF; border-color: var(--primary); box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    .search-container { position: relative; flex: 1; }
+    .clear-search-btn {
+      position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; color: var(--text-muted); font-size: 1.1em;
+      cursor: pointer; padding: 0; width: auto; display: none;
+    }
+
     .table-wrapper { overflow-x: auto; margin-top: 12px; border-radius: 10px; border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); }
     table { width: 100%; border-collapse: collapse; }
     th, td { padding: 14px 16px; text-align: center; border-bottom: 1px solid var(--border-color); vertical-align: middle; }
@@ -157,6 +174,7 @@
     .stock-badge { padding: 5px 12px; border-radius: 20px; font-size: 0.9em; font-weight: 800; font-family: 'IBM Plex Mono', monospace; display: inline-block; }
     .stock-low { background: var(--danger-bg); color: var(--danger); border: 1px solid rgba(220, 38, 38, 0.3); }
     .stock-ok { background: var(--success-bg); color: var(--success); border: 1px solid rgba(5, 150, 105, 0.3); }
+    .stock-out { background: #334155; color: #FFF; }
 
     .quick-qty-btn {
       width: 28px; height: 28px; padding: 0; display: inline-flex; align-items: center; justify-content: center;
@@ -225,10 +243,36 @@
         <span>🔍 دليل المواد والأسعار والمخزون</span>
         <button onclick="exportCsv()" class="btn-secondary" style="width:auto; font-size:0.85em; padding:6px 14px;">📥 تصدير Excel</button>
       </h2>
-      <div style="display:flex; gap:10px; margin-bottom:18px;">
-        <input type="text" id="searchPrice" placeholder="🔍 بحث سريع عن مادة أو باركود..." oninput="renderPrices()" style="margin:0;" />
-        <button onclick="setFilter('all')" id="filterAllBtn" class="btn-price" style="width:auto; padding:8px 18px; font-size:0.95em;">الكل</button>
-        <button onclick="setFilter('low')" id="filterLowBtn" class="btn-secondary" style="width:auto; padding:8px 18px; font-size:0.95em;">الناقصة فقط</button>
+      
+      <!-- أدوات البحث والفرز المتقدمة -->
+      <div style="display:flex; flex-direction:column; gap:12px; margin-bottom:18px;">
+        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+          
+          <!-- حقل البحث الذكي -->
+          <div class="search-container">
+            <input type="text" id="searchPrice" placeholder="🔍 ابحث باسم المادة، الباركود، أو السعر..." oninput="handleSearchInput()" style="margin:0; padding-left:35px;" />
+            <button id="clearSearchBtn" class="clear-search-btn" onclick="clearSearch()">✕</button>
+          </div>
+
+          <!-- خيار الفرز والترتيب -->
+          <div style="width:180px;">
+            <select id="sortBySelect" onchange="renderPrices()" style="margin:0;">
+              <option value="newest">🕒 الأحدث إضافتاً</option>
+              <option value="name">🔤 اسم المادة (أ-ي)</option>
+              <option value="priceDesc">💰 السعر (من الأعلى)</option>
+              <option value="priceAsc">🏷️ السعر (من الأقل)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- تصنيفات واختصارات سريعة -->
+        <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+          <span style="font-size:0.85em; font-weight:700; color:var(--text-muted);">فلترة سريعة:</span>
+          <button onclick="setFilter('all')" class="filter-btn active" id="chip-all">الكل</button>
+          <button onclick="setFilter('low')" class="filter-btn" id="chip-low">⚠️ الناقصة (<= 5)</button>
+          <button onclick="setFilter('available')" class="filter-btn" id="chip-available">✅ المتوفر بالمخزن</button>
+          <button onclick="setFilter('outOfStock')" class="filter-btn" id="chip-outOfStock">🚫 النفاد التام (0)</button>
+        </div>
       </div>
       
       <div class="table-wrapper">
@@ -385,7 +429,6 @@
 </div>
 
 <script>
-  // الحصول على رمز الأدمن المحفوظ أو الافتراضي "1234"
   function getAdminPin() {
     return localStorage.getItem('admin_pin') || "1234";
   }
@@ -411,7 +454,6 @@
     document.getElementById('changePinForm').reset();
   }
 
-  // تحميل تطبيق الألوان المخصص
   function loadSettings() {
     const theme = localStorage.getItem('app_theme') || 'light';
     const color = localStorage.getItem('app_color') || 'blue';
@@ -472,7 +514,6 @@
       root.style.setProperty('--brass', '#A9822E');
       root.style.setProperty('--bg-main', '#E7DEC4');
     } else {
-      // الأزرق الملكي الافتراضي
       root.style.setProperty('--primary', '#1E3A8A');
       root.style.setProperty('--price-blue', '#2563EB');
       root.style.setProperty('--brass', '#D97706');
@@ -497,7 +538,6 @@
     location.reload();
   }
 
-  // Toast System
   function showToast(message) {
     const container = document.getElementById("toastContainer");
     const toast = document.createElement("div");
@@ -507,7 +547,6 @@
     setTimeout(() => toast.remove(), 3000);
   }
 
-  // Admin Authentication
   let isAdmin = false;
 
   function toggleAdminAuth() {
@@ -534,7 +573,6 @@
     }
   }
 
-  // Firebase Setup
   const firebaseConfig = {
     apiKey: "AIzaSyC-QqnQTbbyVFS8QFkf4CYZTcURcr9nBW0",
     authDomain: "gimi-fd7fe.firebaseapp.com",
@@ -613,19 +651,72 @@
     return value === "" ? 0 : Number(value);
   }
 
+  /* وظائف البحث والفرز المطور */
+  function handleSearchInput() {
+    const val = document.getElementById("searchPrice").value;
+    document.getElementById("clearSearchBtn").style.display = val.length > 0 ? "block" : "none";
+    renderPrices();
+  }
+
+  function clearSearch() {
+    document.getElementById("searchPrice").value = "";
+    document.getElementById("clearSearchBtn").style.display = "none";
+    renderPrices();
+  }
+
+  function setFilter(filter) {
+    currentFilter = filter;
+    document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+    document.getElementById(`chip-${filter}`)?.classList.add('active');
+    renderPrices();
+  }
+
   function renderPrices() {
     const tbody = document.getElementById("pricesTable");
     if (!tbody) return;
     const query = (document.getElementById("searchPrice")?.value || "").trim().toLowerCase();
-    const entries = Object.entries(currentData.prices || {}).filter(([id, p]) => {
-      const matches = `${p.name || ""} ${p.code || ""}`.toLowerCase().includes(query);
-      const low = (p.packetStock !== "" && p.packetStock != null && Number(p.packetStock) <= 5) ||
-                  (p.cartonStock !== "" && p.cartonStock != null && Number(p.cartonStock) <= 5);
-      return matches && (currentFilter === "all" || low);
+    const sortBy = document.getElementById("sortBySelect")?.value || "newest";
+
+    let entries = Object.entries(currentData.prices || {});
+
+    // 1. الفلترة للبحث
+    entries = entries.filter(([id, p]) => {
+      const pName = (p.name || "").toLowerCase();
+      const pCode = (p.code || "").toLowerCase();
+      const pSell = String(p.packetSell || "");
+      const cSell = String(p.cartonSell || "");
+
+      const matchesSearch = pName.includes(query) || pCode.includes(query) || pSell.includes(query) || cSell.includes(query);
+
+      const pStock = Number(p.packetStock) || 0;
+      const cStock = Number(p.cartonStock) || 0;
+
+      const isLow = (p.packetStock !== "" && p.packetStock != null && pStock <= 5) ||
+                    (p.cartonStock !== "" && p.cartonStock != null && cStock <= 5);
+      const isAvailable = pStock > 0 || cStock > 0;
+      const isOut = pStock === 0 && cStock === 0;
+
+      if (!matchesSearch) return false;
+
+      if (currentFilter === "low") return isLow;
+      if (currentFilter === "available") return isAvailable;
+      if (currentFilter === "outOfStock") return isOut;
+
+      return true;
+    });
+
+    // 2. الترتيب
+    entries.sort((a, b) => {
+      const itemA = a[1];
+      const itemB = b[1];
+      if (sortBy === "name") return (itemA.name || "").localeCompare(itemB.name || "", "ar");
+      if (sortBy === "priceDesc") return (Number(itemB.packetSell) || 0) - (Number(itemA.packetSell) || 0);
+      if (sortBy === "priceAsc") return (Number(itemA.packetSell) || 0) - (Number(itemB.packetSell) || 0);
+      return 0;
     });
 
     if (!entries.length) {
-      tbody.innerHTML = '<tr><td colspan="7" style="padding:24px; color:var(--text-muted); font-weight:700;">لا توجد مواد مطابقة للبحث.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7" style="padding:24px; color:var(--text-muted); font-weight:700;">لا توجد مواد مطابقة لنتائج البحث.</td></tr>';
     } else {
       tbody.innerHTML = entries.map(([id, p]) => {
         const packetCost = Number(p.packetCost) || 0;
@@ -636,8 +727,8 @@
         const cartonSell = Number(p.cartonSell) || 0;
         const cartonProfit = cartonSell - cartonCost;
 
-        const packetLow = Number(p.packetStock) <= 5;
-        const cartonLow = Number(p.cartonStock) <= 5;
+        const pStockNum = Number(p.packetStock) || 0;
+        const cStockNum = Number(p.cartonStock) || 0;
 
         const quickControls = (type) => isAdmin ? `
           <button class="quick-qty-btn" onclick="adjustQty('${id}', '${type}', 1)">+</button>
@@ -650,6 +741,12 @@
             <button class="action-btn" style="background:var(--danger); color:#fff;" onclick="deletePrice('${id}')">حذف</button>
           </td>
         ` : '';
+
+        const getBadgeClass = (qty) => {
+          if (qty === 0) return "stock-out";
+          if (qty <= 5) return "stock-low";
+          return "stock-ok";
+        };
 
         return `<tr>
           <td>
@@ -665,7 +762,7 @@
             </div>
           </td>
           <td>
-            <span class="stock-badge ${packetLow ? "stock-low" : "stock-ok"}">${Number(p.packetStock) || 0}</span>
+            <span class="stock-badge ${getBadgeClass(pStockNum)}">${pStockNum}</span>
             <br>${quickControls('packet')}
           </td>
           <td>
@@ -676,15 +773,13 @@
             </div>
           </td>
           <td>
-            <span class="stock-badge ${cartonLow ? "stock-low" : "stock-ok"}">${Number(p.cartonStock) || 0}</span>
+            <span class="stock-badge ${getBadgeClass(cStockNum)}">${cStockNum}</span>
             <br>${quickControls('carton')}
           </td>
           ${actionButtons}
         </tr>`;
       }).join("");
     }
-    document.getElementById("filterAllBtn")?.classList.toggle("btn-price", currentFilter === "all");
-    document.getElementById("filterLowBtn")?.classList.toggle("btn-price", currentFilter === "low");
     updateDashboard();
   }
 
@@ -702,11 +797,6 @@
     } catch(err) {
       alert("تعذر تحديث المخزون: " + err.message);
     }
-  }
-
-  function setFilter(filter) {
-    currentFilter = filter;
-    renderPrices();
   }
 
   document.getElementById("priceForm").addEventListener("submit", async function(e) {
@@ -904,7 +994,6 @@ ${JSON.stringify(context, null, 2)}
     }
   }
 
-  // تحميل الإعدادات المخصصة فور تشغيل النظام
   window.onload = function() {
     loadSettings();
   };
