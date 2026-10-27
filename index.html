@@ -6,18 +6,14 @@
   <meta name="theme-color" content="#1E3A8A" />
   <title>نظام إدارة المخزن وعرض الأسعار - محلات الدباغ</title>
 
-  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-
-  <!-- Barcode Scanner -->
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
-  <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Tajawal:wght@400;500;700;900&family=Almarai:wght@400;700;800&family=IBM+Plex+Mono:wght@600;700&display=swap" rel="stylesheet">
+  <!-- ⬇️ خطوط عربية موسّعة ⬇️ -->
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=Cairo:wght@400;600;700;800&family=Almarai:wght@400;700;800&family=Noto+Kufi+Arabic:wght@400;600;700;800&family=Readex+Pro:wght@400;600;700&family=IBM+Plex+Sans+Arabic:wght@400;600;700&family=Amiri:wght@400;700&family=Rubik:wght@400;600;700&family=Changa:wght@400;600;700&family=El+Messiri:wght@400;600;700&family=Lateef&family=IBM+Plex+Mono:wght@600;700&display=swap" rel="stylesheet">
 
   <style>
-    /* ============ المتغيرات ============ */
     :root {
       --bg-main: #F1F5F9;
       --card-bg: #FFFFFF;
@@ -35,7 +31,6 @@
       --brass: #D97706;
       --warning: #D97706;
       --warning-bg: #FEF3C7;
-
       --radius: 12px;
       --radius-sm: 8px;
       --shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.05);
@@ -76,7 +71,6 @@
       transition: background-color 0.3s ease, color 0.3s ease;
     }
 
-    /* ============ الرأس ============ */
     header {
       background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
       color: #F8FAFC; padding: 18px 30px; font-size: 21px; font-weight: 800;
@@ -87,13 +81,9 @@
       transition: border-color 0.3s ease;
     }
     header.admin-active { border-bottom-color: var(--success); }
-
     .header-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-
-    /* ============ التخطيط ============ */
     .container { max-width: 1480px; margin: 24px auto; padding: 0 20px; }
 
-    /* ============ حالة السحابة ============ */
     #cloudStatus {
       padding: 12px 18px; text-align: center; font-weight: 700;
       border-radius: var(--radius); margin-bottom: 20px;
@@ -106,7 +96,6 @@
     #cloudStatus.online { color: var(--success); border-color: var(--success); }
     #cloudStatus.offline { color: var(--danger); border-color: var(--danger); }
 
-    /* ============ بطاقات الملخص ============ */
     .dashboard-summary {
       display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
       gap: 18px; margin-bottom: 24px;
@@ -121,7 +110,6 @@
     .dash-card .label { font-size: 0.9em; color: var(--text-muted); font-weight: 700; margin-bottom: 4px; }
     .dash-card .value { font-size: 1.5em; font-weight: 900; font-family: 'IBM Plex Mono', monospace; }
 
-    /* ============ التبويبات ============ */
     .tabs {
       display: flex; gap: 8px; margin-bottom: 24px;
       border-bottom: 3px solid var(--border-color); flex-wrap: wrap;
@@ -140,13 +128,11 @@
     .tab-content.active { display: block; animation: fadeIn 0.25s ease; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 
-    /* ============ نظام الأدمن ============ */
     .admin-only { display: none !important; }
     body.is-admin .admin-only { display: block !important; }
     body.is-admin th.admin-only, body.is-admin td.admin-only { display: table-cell !important; }
     body.is-admin .tab-btn.admin-only { display: flex !important; }
 
-    /* ============ البطاقات ============ */
     .card {
       background: var(--card-bg); border: 1px solid var(--border-color);
       border-radius: var(--radius); padding: 24px;
@@ -192,13 +178,42 @@
     .btn-admin { background: var(--brass); color: #FFF; }
     .btn-danger { background: var(--danger); }
 
-    /* ============ شريط البحث والفلترة ============ */
-    .search-toolbar {
-      display: flex; flex-direction: column; gap: 12px; margin-bottom: 18px;
+    /* معاينة الأنماط */
+    .theme-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 10px; margin-top: 12px; margin-bottom: 22px;
     }
-    .search-row {
-      display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+    .theme-swatch {
+      padding: 12px; border-radius: 10px; text-align: center;
+      border: 3px solid transparent; cursor: pointer;
+      font-weight: 800; font-size: 0.85em;
+      transition: all 0.2s; color: #FFF;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+      min-height: 70px; display: flex; flex-direction: column;
+      justify-content: center; align-items: center; gap: 4px;
     }
+    .theme-swatch:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+    .theme-swatch.active { border-color: var(--text-main); box-shadow: 0 0 0 3px rgba(0,0,0,0.1); }
+    .theme-swatch small { font-size: 0.75em; opacity: 0.9; font-weight: 600; }
+
+    /* معاينة الخطوط */
+    .font-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 10px; margin-top: 12px; margin-bottom: 22px;
+    }
+    .font-swatch {
+      padding: 14px 16px; border-radius: 10px; text-align: center;
+      border: 2px solid var(--border-color); cursor: pointer;
+      background: var(--card-bg); color: var(--text-main);
+      transition: all 0.2s;
+    }
+    .font-swatch:hover { border-color: var(--primary); transform: translateY(-2px); }
+    .font-swatch.active { border-color: var(--primary); background: rgba(37,99,235,0.08); box-shadow: 0 0 0 3px rgba(37,99,235,0.15); }
+    .font-swatch .sample { font-size: 1.4em; font-weight: 700; margin-bottom: 4px; }
+    .font-swatch .name { font-size: 0.75em; color: var(--text-muted); font-weight: 700; }
+
+    .search-toolbar { display: flex; flex-direction: column; gap: 12px; margin-bottom: 18px; }
+    .search-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
     .search-container { position: relative; flex: 1; min-width: 200px; }
     .search-container input { margin: 0; padding-left: 38px; }
     .clear-search-btn {
@@ -207,10 +222,7 @@
       font-size: 1.1em; cursor: pointer; padding: 0;
       width: auto; display: none;
     }
-
-    .filter-row {
-      display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
-    }
+    .filter-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
     .filter-btn {
       padding: 7px 14px; font-size: 0.85em; font-weight: 700;
       border-radius: 20px; border: 1px solid var(--border-color);
@@ -223,7 +235,6 @@
       box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
 
-    /* ============ الجدول ============ */
     .table-wrapper {
       overflow-x: auto; margin-top: 12px;
       border-radius: 10px; border: 1px solid var(--border-color);
@@ -234,13 +245,9 @@
       padding: 14px 16px; text-align: center;
       border-bottom: 1px solid var(--border-color); vertical-align: middle;
     }
-    th {
-      background: #1E293B; color: #F8FAFC;
-      font-weight: 800; font-size: 1em;
-    }
+    th { background: #1E293B; color: #F8FAFC; font-weight: 800; font-size: 1em; }
     tbody tr:nth-child(even) { background: var(--stripe-bg); }
     tbody tr:hover { background: rgba(37, 99, 235, 0.04); }
-
     .product-name { font-weight: 800; font-size: 1.1em; color: var(--text-main); }
     .product-meta { color: var(--text-muted); font-size: 0.8em; }
 
@@ -287,7 +294,6 @@
       border-radius: 6px; font-weight: 700;
     }
 
-    /* ============ الإشعارات ============ */
     #toastContainer {
       position: fixed; bottom: 20px; left: 20px; z-index: 10000;
       display: flex; flex-direction: column; gap: 10px; pointer-events: none;
@@ -307,7 +313,6 @@
     @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes fadeOut { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(20px); } }
 
-    /* ============ المودالات ============ */
     .modal {
       display: none; position: fixed; z-index: 1000;
       left: 0; top: 0; width: 100%; height: 100%;
@@ -338,13 +343,9 @@
       color: var(--text-muted); cursor: pointer; padding: 4px; width: auto;
     }
     .modal-close:hover { color: var(--danger); }
-
-    .modal-actions {
-      display: flex; gap: 10px; margin-top: 16px;
-    }
+    .modal-actions { display: flex; gap: 10px; margin-top: 16px; }
     .modal-actions button { flex: 1; }
 
-    /* ============ الطباعة ============ */
     @media print {
       header, .tabs, .dashboard-summary, #cloudStatus,
       .search-toolbar, .admin-only, .no-print,
@@ -360,10 +361,8 @@
       .price-box { background: #f9f9f9 !important; border-color: #ccc !important; }
       .tab-content { display: none !important; }
       .tab-content.active { display: block !important; }
-      a[href]:after { content: ""; }
     }
 
-    /* ============ الجوال ============ */
     @media (max-width: 768px) {
       header { padding: 14px 16px; font-size: 17px; }
       .container { padding: 0 12px; margin: 16px auto; }
@@ -392,16 +391,16 @@
       }
       td.action-cell { justify-content: center; padding-top: 12px; border-top: 1px dashed var(--border-color); margin-top: 8px; }
       td.action-cell::before { content: ""; display: none; }
-
       .price-box { min-width: 180px; }
       .filter-btn { font-size: 0.8em; padding: 6px 10px; }
       .search-row select { min-width: 100%; }
-
       .dashboard-summary { grid-template-columns: 1fr; }
       .tabs { gap: 4px; }
       .tab-btn { min-width: 100px; font-size: 0.9em; padding: 10px; }
       .modal-content { padding: 18px; }
       h2 { font-size: 1.1em; }
+      .theme-grid { grid-template-columns: repeat(2, 1fr); }
+      .font-grid { grid-template-columns: repeat(2, 1fr); }
     }
   </style>
 </head>
@@ -409,7 +408,6 @@
 
 <div id="toastContainer"></div>
 
-<!-- ============ الرأس ============ -->
 <header id="appHeader">
   <div>📦 نظام إدارة المخزن وعرض الأسعار - محلات الدباغ</div>
   <div class="header-actions">
@@ -421,7 +419,6 @@
 <div class="container">
   <div id="cloudStatus">🔄 جاري مزامنة البيانات...</div>
 
-  <!-- ============ لوحة الملخص ============ -->
   <div class="dashboard-summary">
     <div class="dash-card" onclick="setFilter('all')">
       <div class="label">📦 إجمالي المواد بالدليل</div>
@@ -437,7 +434,6 @@
     </div>
   </div>
 
-  <!-- ============ التبويبات ============ -->
   <div class="tabs">
     <button class="tab-btn active" data-tab="prices" onclick="switchTab('prices')">🔍 عرض الأسعار والمخزون</button>
     <button class="tab-btn admin-only" data-tab="addProduct" onclick="switchTab('addProduct')">➕ إضافة مادة جديدة</button>
@@ -445,7 +441,7 @@
     <button class="tab-btn" data-tab="ai" onclick="switchTab('ai')">🤖 المساعد الذكي</button>
   </div>
 
-  <!-- ============ 1. عرض الأسعار ============ -->
+  <!-- عرض الأسعار -->
   <div id="pricesSection" class="tab-content active">
     <div class="card">
       <h2>
@@ -498,7 +494,7 @@
     </div>
   </div>
 
-  <!-- ============ 2. إضافة مادة ============ -->
+  <!-- إضافة مادة -->
   <div id="addProductSection" class="tab-content">
     <div class="card" style="max-width: 680px; margin: 0 auto;">
       <h2>➕ إضافة مادة جديدة إلى الدليل</h2>
@@ -531,35 +527,26 @@
     </div>
   </div>
 
-  <!-- ============ 3. الإعدادات ============ -->
+  <!-- الإعدادات -->
   <div id="settingsSection" class="tab-content">
-    <div class="card" style="max-width: 750px; margin: 0 auto;">
+    <div class="card" style="max-width: 900px; margin: 0 auto;">
       <h2>⚙️ إعدادات المظهر والنمط</h2>
 
-      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:18px; margin-bottom: 24px;">
-        <div>
-          <label>🎨 نمط الألوان</label>
-          <select id="colorSelect" onchange="changeColorSetting(this.value)">
-            <option value="blue">🏛️ الكلاسيكي (أزرق ملكي)</option>
-            <option value="emerald">🌲 الزمردي</option>
-            <option value="burgundy">🍇 العنابي</option>
-            <option value="slate">💻 الحديث (رمادي)</option>
-            <option value="vintage">📜 الورقي</option>
-          </select>
-        </div>
+      <!-- 🎨 اختيار اللون مع معاينة -->
+      <label style="font-size: 1em; margin-bottom: 8px;">🎨 نمط الألوان (اضغط للاختيار)</label>
+      <div class="theme-grid" id="themeGrid"></div>
+
+      <!-- 🔤 اختيار الخط مع معاينة -->
+      <label style="font-size: 1em; margin-bottom: 8px;">🔤 نوع الخط (اضغط للاختيار)</label>
+      <div class="font-grid" id="fontGrid"></div>
+
+      <!-- إعدادات أخرى -->
+      <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:14px; margin-top: 10px; margin-bottom: 24px;">
         <div>
           <label>🌙 درجة الإضاءة</label>
           <select id="themeSelect" onchange="changeThemeSetting(this.value)">
             <option value="light">☀️ فاتح</option>
             <option value="dark">🌙 داكن</option>
-          </select>
-        </div>
-        <div>
-          <label>🔤 الخط</label>
-          <select id="fontSelect" onchange="changeFontSetting(this.value)">
-            <option value="Tajawal">تجوال</option>
-            <option value="Cairo">كايرو</option>
-            <option value="Almarai">المراعي</option>
           </select>
         </div>
         <div>
@@ -569,15 +556,15 @@
             <option value="15.5px" selected>عادي</option>
             <option value="17px">كبير</option>
             <option value="19px">كبير جداً</option>
+            <option value="21px">ضخم</option>
           </select>
         </div>
         <div>
-          <label>⚠️ عتبة تنبيه المخزون (الكمية)</label>
+          <label>⚠️ عتبة تنبيه المخزون</label>
           <input type="number" id="lowStockThreshold" min="1" max="100" onchange="changeLowStockThreshold(this.value)" />
         </div>
       </div>
 
-      <!-- 🔐 قسم PIN -->
       <h2 style="font-size: 1.1em; margin-top:10px;">🔐 تغيير رمز الأمان (PIN للأدمن)</h2>
       <div style="background:var(--stripe-bg); padding:16px; border-radius:10px; border:1px solid var(--border-color);">
         <form id="changePinForm" onsubmit="updateAdminPin(event)">
@@ -599,32 +586,24 @@
         </form>
       </div>
 
-      <!-- 💾 قسم النسخ الاحتياطي والاسترجاع -->
       <h2 style="font-size: 1.1em; margin-top:20px;">💾 النسخ الاحتياطي والاسترجاع</h2>
       <div style="background:var(--stripe-bg); padding:16px; border-radius:10px; border:1px solid var(--border-color);">
         <p style="margin:0 0 14px; color:var(--text-muted); font-size:0.9em;">
           احفظ نسخة من جميع بيانات المخزن (المواد، الأسعار، المخزون، الإعدادات) في ملف JSON آمن.
-          يمكنك استرجاعها في أي وقت أو على أي جهاز.
         </p>
         <div style="display:flex; gap:10px; flex-wrap:wrap;">
-          <button onclick="exportBackup()" class="btn-success" style="flex:1; min-width:150px;">
-            📦 تصدير نسخة احتياطية
-          </button>
-          <button onclick="triggerImportBackup()" class="btn-price admin-only" style="flex:1; min-width:150px;">
-            📥 استرجاع نسخة
-          </button>
+          <button onclick="exportBackup()" class="btn-success" style="flex:1; min-width:150px;">📦 تصدير نسخة احتياطية</button>
+          <button onclick="triggerImportBackup()" class="btn-price admin-only" style="flex:1; min-width:150px;">📥 استرجاع نسخة</button>
         </div>
         <input type="file" id="backupFileInput" accept=".json,application/json" style="display:none;" onchange="handleBackupFile(event)" />
-        <p style="margin:12px 0 0; font-size:0.8em; color:var(--text-muted);">
-          💡 <strong>نصيحة:</strong> خذ نسخة احتياطية دورياً (أسبوعياً) واحفظها في مكان آمن (Google Drive، USB، إلخ).
-        </p>
+        <p style="margin:12px 0 0; font-size:0.8em; color:var(--text-muted);">💡 خذ نسخة احتياطية دورياً واحفظها في مكان آمن.</p>
       </div>
 
       <button onclick="resetSettings()" class="btn-secondary" style="margin-top:22px;">🔄 استعادة الإعدادات الافتراضية</button>
     </div>
   </div>
 
-  <!-- ============ 4. المساعد الذكي ============ -->
+  <!-- المساعد الذكي -->
   <div id="aiSection" class="tab-content">
     <div class="card" style="max-width: 800px; margin: 0 auto;">
       <h2>🤖 المساعد المحاسبي الذكي (Gemini)</h2>
@@ -646,12 +625,12 @@
   </div>
 </div>
 
-<!-- ============ مودال إدخال PIN ============ -->
+<!-- المودالات -->
 <div id="adminPinModal" class="modal">
   <div class="modal-content">
     <div class="modal-header">
       <h3>🔐 تفعيل وضع التعديل</h3>
-      <button class="modal-close" onclick="closeModal('adminPinModal')" aria-label="إغلاق">✕</button>
+      <button class="modal-close" onclick="closeModal('adminPinModal')">✕</button>
     </div>
     <label for="adminPinInput">رمز الأدمن السري</label>
     <input type="password" id="adminPinInput" placeholder="أدخل الرمز..." autocomplete="off"
@@ -663,12 +642,11 @@
   </div>
 </div>
 
-<!-- ============ مودال تعديل منتج ============ -->
 <div id="editProductModal" class="modal">
   <div class="modal-content" style="max-width: 640px;">
     <div class="modal-header">
       <h3>✏️ تعديل بيانات المادة</h3>
-      <button class="modal-close" onclick="closeModal('editProductModal')" aria-label="إغلاق">✕</button>
+      <button class="modal-close" onclick="closeModal('editProductModal')">✕</button>
     </div>
     <form id="editForm" novalidate>
       <input type="hidden" id="editId" />
@@ -676,7 +654,6 @@
       <input type="text" id="editName" required />
       <label>الباركود</label>
       <input type="text" id="editCode" />
-
       <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; background:var(--stripe-bg); padding:16px; border-radius:10px; border:1px solid var(--border-color); margin:12px 0;">
         <div>
           <label style="color:var(--primary); font-weight:800;">📦 الباكيت</label>
@@ -691,7 +668,6 @@
           <input type="number" id="editCartonStock" placeholder="المخزون" min="0" step="1" style="margin-bottom:0;" />
         </div>
       </div>
-
       <div class="modal-actions">
         <button type="button" class="btn-secondary" onclick="closeModal('editProductModal')">إلغاء</button>
         <button type="submit" class="btn-price">💾 حفظ التعديلات</button>
@@ -700,7 +676,6 @@
   </div>
 </div>
 
-<!-- ============ مودال تأكيد ============ -->
 <div id="confirmModal" class="modal">
   <div class="modal-content danger" style="max-width: 420px; text-align:center;">
     <div style="font-size: 2.5em; margin-bottom: 10px;">⚠️</div>
@@ -713,12 +688,11 @@
   </div>
 </div>
 
-<!-- ============ مودال تعديل المخزون ============ -->
 <div id="stockModal" class="modal">
   <div class="modal-content" style="max-width: 420px;">
     <div class="modal-header">
       <h3>📦 تعديل كمية المخزون</h3>
-      <button class="modal-close" onclick="closeModal('stockModal')" aria-label="إغلاق">✕</button>
+      <button class="modal-close" onclick="closeModal('stockModal')">✕</button>
     </div>
     <p id="stockProductName" style="font-weight: 700; color: var(--primary); margin-bottom: 12px;"></p>
     <label>الكمية الحالية</label>
@@ -730,67 +704,53 @@
   </div>
 </div>
 
-<!-- ============ مودال الباركود ============ -->
 <div id="scannerModal" class="modal">
   <div class="modal-content" style="text-align:center; max-width: 500px;">
     <div class="modal-header">
       <h3>📷 قراءة الباركود</h3>
-      <button class="modal-close" onclick="stopScanner()" aria-label="إغلاق">✕</button>
+      <button class="modal-close" onclick="stopScanner()">✕</button>
     </div>
     <div id="interactive" style="width:100%; height:260px; background:#000; margin-bottom:14px; border-radius:8px;"></div>
     <button onclick="stopScanner()" class="btn-secondary">إغلاق الكاميرا</button>
   </div>
 </div>
 
-<!-- ============ مودال استرجاع النسخة الاحتياطية ============ -->
 <div id="backupImportModal" class="modal">
   <div class="modal-content" style="max-width: 520px;">
     <div class="modal-header">
       <h3>📥 استرجاع النسخة الاحتياطية</h3>
-      <button class="modal-close" onclick="closeModal('backupImportModal')" aria-label="إغلاق">✕</button>
+      <button class="modal-close" onclick="closeModal('backupImportModal')">✕</button>
     </div>
-
     <div id="backupInfo" style="background:var(--stripe-bg); padding:14px; border-radius:8px; margin-bottom:16px; font-size:0.9em; line-height:1.9; border:1px solid var(--border-color);"></div>
-
     <p style="font-weight:800; margin-bottom:10px; color:var(--primary);">⚙️ اختر طريقة الاسترجاع:</p>
-
     <label style="display:flex; align-items:flex-start; gap:12px; padding:12px; border:2px solid var(--border-color); border-radius:8px; margin-bottom:10px; cursor:pointer; background:var(--stripe-bg);">
       <input type="radio" name="importMode" value="merge" checked style="width:auto; margin:4px 0 0 0;" />
       <div>
         <strong style="color:var(--success);">🔀 دمج ذكي (موصى به)</strong>
-        <div style="font-size:0.85em; color:var(--text-muted); margin-top:4px;">
-          يحدّث المواد المطابقة (بالاسم أو الباركود) ويضيف المواد الجديدة دون حذف شيء.
-        </div>
+        <div style="font-size:0.85em; color:var(--text-muted); margin-top:4px;">يحدّث المواد المطابقة ويضيف الجديدة دون حذف شيء.</div>
       </div>
     </label>
-
     <label style="display:flex; align-items:flex-start; gap:12px; padding:12px; border:2px solid var(--border-color); border-radius:8px; margin-bottom:16px; cursor:pointer; background:var(--stripe-bg);">
       <input type="radio" name="importMode" value="replace" style="width:auto; margin:4px 0 0 0;" />
       <div>
         <strong style="color:var(--danger);">⚠️ استبدال كامل (خطر)</strong>
-        <div style="font-size:0.85em; color:var(--text-muted); margin-top:4px;">
-          يحذف جميع البيانات الحالية في السحابة ويستبدلها بمحتوى الملف. لا يمكن التراجع!
-        </div>
+        <div style="font-size:0.85em; color:var(--text-muted); margin-top:4px;">يحذف جميع البيانات الحالية ويستبدلها بمحتوى الملف.</div>
       </div>
     </label>
-
     <label style="display:flex; align-items:center; gap:10px; padding:10px; cursor:pointer; margin-bottom:16px;">
       <input type="checkbox" id="restoreSettingsCheck" checked style="width:auto; margin:0;" />
       <span style="font-weight:700; font-size:0.9em;">🎨 استرجاع الإعدادات (اللون، الخط، إلخ)</span>
     </label>
-
     <div class="modal-actions">
       <button class="btn-secondary" onclick="closeModal('backupImportModal')">إلغاء</button>
-      <button id="importExecuteBtn" class="btn-success" onclick="executeImport()">
-        ✅ تنفيذ الاسترجاع
-      </button>
+      <button id="importExecuteBtn" class="btn-success" onclick="executeImport()">✅ تنفيذ الاسترجاع</button>
     </div>
   </div>
 </div>
 
 <script>
 /* ==================================================================
-   1. الثوابت والإعدادات
+   1. الثوابت
    ================================================================== */
 const DEFAULTS = {
   THEME: 'light',
@@ -802,6 +762,42 @@ const DEFAULTS = {
   PIN_KEY: 'admin_pin',
   SESSION_KEY: 'admin_session_until'
 };
+
+/* ⬇️⬇️⬇️ الأنماط الـ 15 ⬇️⬇️⬇️ */
+const COLOR_THEMES = {
+  blue:     { name: 'أزرق ملكي',    emoji: '🏛️', primary: '#1E3A8A', price: '#2563EB', brass: '#D97706', bg: '#F1F5F9' },
+  burgundy: { name: 'عنابي',         emoji: '🍇', primary: '#831843', price: '#BE185D', brass: '#9A3412', bg: '#FDF2F8' },
+  navy:     { name: 'بحري',          emoji: '⚓', primary: '#0F172A', price: '#6366F1', brass: '#F59E0B', bg: '#EEF2FF' },
+  purple:   { name: 'بنفسجي ملكي',   emoji: '🟣', primary: '#581C87', price: '#9333EA', brass: '#D97706', bg: '#FAF5FF' },
+  plum:     { name: 'برقوقي',        emoji: '🍑', primary: '#4C1D95', price: '#A855F7', brass: '#EC4899', bg: '#F5F3FF' },
+  rose:     { name: 'وردي',          emoji: '🌸', primary: '#9F1239', price: '#E11D48', brass: '#D97706', bg: '#FFF1F2' },
+  crimson:  { name: 'قرمزي',         emoji: '🔴', primary: '#7F1D1D', price: '#DC2626', brass: '#F59E0B', bg: '#FEF2F2' },
+  sunset:   { name: 'غروب',          emoji: '🌅', primary: '#9A3412', price: '#EA580C', brass: '#D97706', bg: '#FFF7ED' },
+  amber:    { name: 'عنبري',         emoji: '🟡', primary: '#78350F', price: '#F59E0B', brass: '#D97706', bg: '#FFFBEB' },
+  coffee:   { name: 'قهوي',          emoji: '☕', primary: '#451A03', price: '#92400E', brass: '#B45309', bg: '#FEF6E4' },
+  emerald:  { name: 'زمردي',         emoji: '🌲', primary: '#065F46', price: '#059669', brass: '#D97706', bg: '#F0FDF4' },
+  forest:   { name: 'غابة',          emoji: '🌳', primary: '#14532D', price: '#16A34A', brass: '#CA8A04', bg: '#F0FDF4' },
+  ocean:    { name: 'محيطي',         emoji: '🌊', primary: '#0F766E', price: '#14B8A6', brass: '#F59E0B', bg: '#F0FDFA' },
+  mint:     { name: 'نعناعي',        emoji: '🍃', primary: '#134E4A', price: '#10B981', brass: '#F59E0B', bg: '#F0FDFA' },
+  slate:    { name: 'حديث رمادي',    emoji: '💻', primary: '#1E293B', price: '#3B82F6', brass: '#F59E0B', bg: '#F8FAFC' },
+  vintage:  { name: 'ورقي دافئ',     emoji: '📜', primary: '#2C4368', price: '#24508C', brass: '#A9822E', bg: '#E7DEC4' },
+  midnight: { name: 'منتصف الليل',   emoji: '🌃', primary: '#0C4A6E', price: '#0284C7', brass: '#EAB308', bg: '#F0F9FF' }
+};
+
+/* ⬇️⬇️⬇️ الخطوط الـ 11 ⬇️⬇️⬇️ */
+const FONT_OPTIONS = [
+  { value: 'Tajawal',           name: 'تجوال',          sample: 'مرحبا' },
+  { value: 'Cairo',             name: 'كايرو',          sample: 'مرحبا' },
+  { value: 'Almarai',           name: 'المراعي',        sample: 'مرحبا' },
+  { value: 'Noto Kufi Arabic',  name: 'كوفي حديث',      sample: 'مرحبا' },
+  { value: 'Readex Pro',        name: 'ريدكس برو',      sample: 'مرحبا' },
+  { value: 'IBM Plex Sans Arabic', name: 'IBM بليكس',   sample: 'مرحبا' },
+  { value: 'Amiri',             name: 'أميري كلاسيكي',  sample: 'مرحبا' },
+  { value: 'Rubik',             name: 'روبيك',          sample: 'مرحبا' },
+  { value: 'Changa',            name: 'تشانغا',         sample: 'مرحبا' },
+  { value: 'El Messiri',        name: 'المسيري',        sample: 'مرحبا' },
+  { value: 'Lateef',            name: 'لطيف',           sample: 'مرحبا' }
+];
 
 const GEMINI_MODEL = 'gemini-2.5-flash';
 
@@ -825,7 +821,7 @@ let confirmCallback = null;
 let pendingBackup = null;
 
 /* ==================================================================
-   2. الإشعارات
+   2. الإشعارات والمودالات
    ================================================================== */
 function showToast(message, type = 'info') {
   const container = document.getElementById("toastContainer");
@@ -836,9 +832,6 @@ function showToast(message, type = 'info') {
   setTimeout(() => toast.remove(), 3000);
 }
 
-/* ==================================================================
-   3. المودالات
-   ================================================================== */
 function openModal(id) { document.getElementById(id).classList.add('show'); }
 function closeModal(id) { document.getElementById(id).classList.remove('show'); }
 
@@ -855,7 +848,43 @@ function showConfirm(title, message, onConfirm) {
 }
 
 /* ==================================================================
-   4. إعدادات المظهر
+   3. بناء شبكة الأنماط والخطوط
+   ================================================================== */
+function buildThemeGrid() {
+  const grid = document.getElementById('themeGrid');
+  grid.innerHTML = Object.entries(COLOR_THEMES).map(([key, t]) => `
+    <div class="theme-swatch" data-theme="${key}" onclick="changeColorSetting('${key}')"
+         style="background: linear-gradient(135deg, ${t.primary}, ${t.price});">
+      <div style="font-size: 1.5em;">${t.emoji}</div>
+      <div>${t.name}</div>
+    </div>
+  `).join('');
+}
+
+function buildFontGrid() {
+  const grid = document.getElementById('fontGrid');
+  grid.innerHTML = FONT_OPTIONS.map(f => `
+    <div class="font-swatch" data-font="${f.value}" onclick="changeFontSetting('${f.value}')">
+      <div class="sample" style="font-family: '${f.value}', sans-serif;">${f.sample}</div>
+      <div class="name">${f.name}</div>
+    </div>
+  `).join('');
+}
+
+function highlightActiveTheme(color) {
+  document.querySelectorAll('.theme-swatch').forEach(el => {
+    el.classList.toggle('active', el.dataset.theme === color);
+  });
+}
+
+function highlightActiveFont(font) {
+  document.querySelectorAll('.font-swatch').forEach(el => {
+    el.classList.toggle('active', el.dataset.font === font);
+  });
+}
+
+/* ==================================================================
+   4. الإعدادات
    ================================================================== */
 function getAdminPin() {
   return localStorage.getItem(DEFAULTS.PIN_KEY) || DEFAULTS.ADMIN_PIN;
@@ -879,10 +908,11 @@ function loadSettings() {
   document.documentElement.style.setProperty('--low-stock-threshold', lowStock);
 
   document.getElementById('themeSelect').value = theme;
-  document.getElementById('colorSelect').value = color;
-  document.getElementById('fontSelect').value = font;
   document.getElementById('fontSizeSelect').value = fontSize;
   document.getElementById('lowStockThreshold').value = lowStock;
+
+  highlightActiveTheme(color);
+  highlightActiveFont(font);
 
   const sessionUntil = Number(localStorage.getItem(DEFAULTS.SESSION_KEY) || 0);
   if (sessionUntil > Date.now()) {
@@ -899,19 +929,13 @@ function changeThemeSetting(val) {
 function changeColorSetting(color) {
   applyColorTheme(color);
   localStorage.setItem('app_color', color);
-  showToast("تم تحديث نمط المظهر", "success");
+  highlightActiveTheme(color);
+  showToast(`🎨 ${COLOR_THEMES[color]?.name || 'نمط جديد'}`, "success");
 }
 
 function applyColorTheme(color) {
   const root = document.documentElement;
-  const themes = {
-    emerald:  { primary: '#065F46', price: '#059669', brass: '#D97706', bg: '#F0FDF4' },
-    burgundy: { primary: '#831843', price: '#BE185D', brass: '#9A3412', bg: '#FDF2F8' },
-    slate:    { primary: '#1E293B', price: '#3B82F6', brass: '#F59E0B', bg: '#F8FAFC' },
-    vintage:  { primary: '#2C4368', price: '#24508C', brass: '#A9822E', bg: '#E7DEC4' },
-    blue:     { primary: '#1E3A8A', price: '#2563EB', brass: '#D97706', bg: '#F1F5F9' }
-  };
-  const t = themes[color] || themes.blue;
+  const t = COLOR_THEMES[color] || COLOR_THEMES.blue;
   root.style.setProperty('--primary', t.primary);
   root.style.setProperty('--price-blue', t.price);
   root.style.setProperty('--brass', t.brass);
@@ -921,7 +945,9 @@ function applyColorTheme(color) {
 function changeFontSetting(font) {
   document.body.style.fontFamily = `'${font}', sans-serif`;
   localStorage.setItem('app_font', font);
-  showToast("تم تغيير الخط", "success");
+  highlightActiveFont(font);
+  const f = FONT_OPTIONS.find(x => x.value === font);
+  showToast(`🔤 ${f?.name || font}`, "success");
 }
 
 function changeFontSizeSetting(size) {
@@ -949,10 +975,7 @@ function resetSettings() {
    5. نظام الأدمن
    ================================================================== */
 function openAdminPinModal() {
-  if (isAdmin) {
-    setAdminMode(false);
-    return;
-  }
+  if (isAdmin) { setAdminMode(false); return; }
   document.getElementById('adminPinInput').value = '';
   openModal('adminPinModal');
   setTimeout(() => document.getElementById('adminPinInput').focus(), 100);
@@ -981,21 +1004,13 @@ function setAdminMode(enabled, announce = true) {
     btn.style.background = "var(--success)";
     header.classList.add('admin-active');
     localStorage.setItem(DEFAULTS.SESSION_KEY, Date.now() + 60 * 60 * 1000);
-    if (announce) {
-      showToast("✅ تم تفعيل وضع الأدمن", "success");
-      switchTab('prices');
-      renderPrices();
-    }
+    if (announce) { showToast("✅ تم تفعيل وضع الأدمن", "success"); switchTab('prices'); renderPrices(); }
   } else {
     btn.innerText = "🔒 وضع التعديل";
     btn.style.background = "var(--brass)";
     header.classList.remove('admin-active');
     localStorage.removeItem(DEFAULTS.SESSION_KEY);
-    if (announce) {
-      showToast("تم الخروج من وضع التعديل", "info");
-      switchTab('prices');
-      renderPrices();
-    }
+    if (announce) { showToast("تم الخروج من وضع التعديل", "info"); switchTab('prices'); renderPrices(); }
   }
 }
 
@@ -1004,11 +1019,9 @@ function updateAdminPin(e) {
   const curr = document.getElementById('currentPin').value;
   const newP = document.getElementById('newPin').value;
   const conf = document.getElementById('confirmPin').value;
-
   if (curr !== getAdminPin()) return showToast("❌ الرمز الحالي غير صحيح", "error");
   if (newP !== conf) return showToast("❌ الرمز الجديد غير متطابق", "error");
   if (newP.length < 4) return showToast("⚠️ الرمز يجب أن يكون 4 أرقام+", "warning");
-
   localStorage.setItem(DEFAULTS.PIN_KEY, newP);
   showToast("🔑 تم تغيير الرمز بنجاح", "success");
   document.getElementById('changePinForm').reset();
@@ -1022,7 +1035,6 @@ function initFirebase() {
   try {
     firebase.initializeApp(firebaseConfig);
     db = firebase.database().ref("simple_price_debts_v4");
-
     db.on("value", (snapshot) => {
       status.innerText = "🟢 متصل بالسحابة - مزامنة تلقائية";
       status.className = "online";
@@ -1046,7 +1058,6 @@ function initFirebase() {
 function switchTab(tabName) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-
   const btn = document.querySelector(`.tab-btn[data-tab="${tabName}"]`);
   const section = document.getElementById(tabName + 'Section');
   if (btn) btn.classList.add('active');
@@ -1059,20 +1070,17 @@ function switchTab(tabName) {
 function updateDashboard() {
   const prices = Object.values(currentData.prices || {});
   const threshold = getLowStockThreshold();
-
   const lowStock = prices.filter(p => {
     const ps = Number(p.packetStock) || 0;
     const cs = Number(p.cartonStock) || 0;
     return (p.packetStock != null && ps <= threshold && ps > 0) ||
            (p.cartonStock != null && cs <= threshold && cs > 0);
   }).length;
-
   const totalValue = prices.reduce((sum, p) => {
     const pVal = (Number(p.packetSell) || 0) * (Number(p.packetStock) || 0);
     const cVal = (Number(p.cartonSell) || 0) * (Number(p.cartonStock) || 0);
     return sum + pVal + cVal;
   }, 0);
-
   document.getElementById('dashPricesCount').textContent = prices.length.toLocaleString('ar-IQ');
   document.getElementById('dashLowStockCount').textContent = lowStock.toLocaleString('ar-IQ');
   document.getElementById('dashTotalValue').textContent = formatIQD(totalValue);
@@ -1081,16 +1089,10 @@ function updateDashboard() {
 /* ==================================================================
    9. أدوات مساعدة
    ================================================================== */
-function formatIQD(value) {
-  return (Number(value) || 0).toLocaleString('en-US') + " د.ع";
-}
-
+function formatIQD(value) { return (Number(value) || 0).toLocaleString('en-US') + " د.ع"; }
 function escapeHtml(value) {
-  return String(value ?? '').replace(/[&<>"']/g, ch => ({
-    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
-  })[ch]);
+  return String(value ?? '').replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[ch]);
 }
-
 function safeNumber(id) {
   const el = document.getElementById(id);
   if (!el) return 0;
@@ -1101,7 +1103,7 @@ function safeNumber(id) {
 }
 
 /* ==================================================================
-   10. البحث والفلترة والترتيب
+   10. البحث والفلترة
    ================================================================== */
 function handleSearchInput() {
   const val = document.getElementById('searchPrice').value;
@@ -1109,13 +1111,11 @@ function handleSearchInput() {
   clearTimeout(searchDebounceTimer);
   searchDebounceTimer = setTimeout(renderPrices, 250);
 }
-
 function clearSearch() {
   document.getElementById('searchPrice').value = '';
   document.getElementById('clearSearchBtn').style.display = 'none';
   renderPrices();
 }
-
 function setFilter(filter) {
   currentFilter = filter;
   document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
@@ -1129,28 +1129,22 @@ function setFilter(filter) {
 function renderPrices() {
   const tbody = document.getElementById('pricesTable');
   if (!tbody) return;
-
   const query = (document.getElementById('searchPrice')?.value || '').trim().toLowerCase();
   const sortBy = document.getElementById('sortBySelect')?.value || 'newest';
   const threshold = getLowStockThreshold();
 
   let entries = Object.entries(currentData.prices || {});
-
   entries = entries.filter(([id, p]) => {
     const pName = (p.name || '').toLowerCase();
     const pCode = (p.code || '').toLowerCase();
     const pSell = String(p.packetSell || '');
     const cSell = String(p.cartonSell || '');
-    const matchesSearch = !query || pName.includes(query) || pCode.includes(query) ||
-                          pSell.includes(query) || cSell.includes(query);
-
+    const matchesSearch = !query || pName.includes(query) || pCode.includes(query) || pSell.includes(query) || cSell.includes(query);
     const pStock = Number(p.packetStock) || 0;
     const cStock = Number(p.cartonStock) || 0;
-    const isLow = (p.packetStock != null && pStock > 0 && pStock <= threshold) ||
-                  (p.cartonStock != null && cStock > 0 && cStock <= threshold);
+    const isLow = (p.packetStock != null && pStock > 0 && pStock <= threshold) || (p.cartonStock != null && cStock > 0 && cStock <= threshold);
     const isAvailable = pStock > 0 || cStock > 0;
     const isOut = pStock === 0 && cStock === 0;
-
     if (!matchesSearch) return false;
     if (currentFilter === 'low') return isLow;
     if (currentFilter === 'available') return isAvailable;
@@ -1164,11 +1158,7 @@ function renderPrices() {
       case 'name': return (A.name || '').localeCompare(B.name || '', 'ar');
       case 'priceDesc': return (Number(B.packetSell) || 0) - (Number(A.packetSell) || 0);
       case 'priceAsc': return (Number(A.packetSell) || 0) - (Number(B.packetSell) || 0);
-      case 'stockAsc': {
-        const aS = (Number(A.packetStock) || 0) + (Number(A.cartonStock) || 0);
-        const bS = (Number(B.packetStock) || 0) + (Number(B.cartonStock) || 0);
-        return aS - bS;
-      }
+      case 'stockAsc': return ((Number(A.packetStock) || 0) + (Number(A.cartonStock) || 0)) - ((Number(B.packetStock) || 0) + (Number(B.cartonStock) || 0));
       default: return 0;
     }
   });
@@ -1187,21 +1177,17 @@ function renderPrices() {
     const cartonProfit = cartonSell - cartonCost;
     const pStock = Number(p.packetStock) || 0;
     const cStock = Number(p.cartonStock) || 0;
-
     const getBadgeClass = (qty) => qty === 0 ? 'stock-out' : (qty <= threshold ? 'stock-low' : 'stock-ok');
-
     const quickControls = (type) => isAdmin ? `
       <button class="quick-qty-btn" onclick="adjustQty('${id}','${type}',1)" title="زيادة">+</button>
       <button class="quick-qty-btn" onclick="adjustQty('${id}','${type}',-1)" title="نقصان">-</button>
       <button class="quick-qty-btn" onclick="openStockModal('${id}','${type}')" title="تعديل مخصص">✎</button>
     ` : '';
-
     const actionCell = isAdmin ? `
       <td class="admin-only action-cell" data-label="إجراءات">
         <button class="action-btn btn-secondary" onclick="openEditModal('${id}')">✏️ تعديل</button>
         <button class="action-btn btn-danger" onclick="confirmDelete('${id}')">🗑️ حذف</button>
       </td>` : '';
-
     return `<tr>
       <td data-label="المادة">
         <div class="product-name">${escapeHtml(p.name)}</div>
@@ -1245,14 +1231,9 @@ async function adjustQty(id, type, amount) {
   const field = type === 'packet' ? 'packetStock' : 'cartonStock';
   const newQty = Math.max(0, (Number(p[field]) || 0) + amount);
   try {
-    await db.child("prices").child(id).update({
-      [field]: newQty,
-      updatedAt: new Date().toLocaleString('ar-IQ')
-    });
+    await db.child("prices").child(id).update({ [field]: newQty, updatedAt: new Date().toLocaleString('ar-IQ') });
     showToast(`تم تحديث المخزون إلى ${newQty}`, "success");
-  } catch (err) {
-    showToast("تعذر التحديث: " + err.message, "error");
-  }
+  } catch (err) { showToast("تعذر التحديث: " + err.message, "error"); }
 }
 
 function openStockModal(id, type) {
@@ -1273,17 +1254,11 @@ async function submitStockUpdate() {
   const id = input.dataset.id;
   const field = input.dataset.field;
   const newQty = Math.max(0, parseInt(input.value, 10) || 0);
-
   try {
-    await db.child("prices").child(id).update({
-      [field]: newQty,
-      updatedAt: new Date().toLocaleString('ar-IQ')
-    });
+    await db.child("prices").child(id).update({ [field]: newQty, updatedAt: new Date().toLocaleString('ar-IQ') });
     closeModal('stockModal');
     showToast(`تم التحديث إلى ${newQty}`, "success");
-  } catch (err) {
-    showToast("تعذر التحديث: " + err.message, "error");
-  }
+  } catch (err) { showToast("تعذر التحديث: " + err.message, "error"); }
 }
 
 /* ==================================================================
@@ -1293,34 +1268,23 @@ document.getElementById('priceForm').addEventListener('submit', async function(e
   e.preventDefault();
   if (!isAdmin) return showToast("يجب تفعيل وضع الأدمن أولاً", "warning");
   if (!db) return showToast("قاعدة البيانات غير متصلة", "error");
-
   const nameInput = document.getElementById('pName').value.trim();
   const codeInput = document.getElementById('pCode').value.trim();
-
   if (!nameInput) {
     document.getElementById('pName').classList.add('invalid');
     return showToast("⚠️ أدخل اسم المادة", "warning");
   }
-
   const isDuplicate = Object.values(currentData.prices || {}).some(p => {
     const matchName = p.name && p.name.trim().toLowerCase() === nameInput.toLowerCase();
     const matchCode = codeInput !== '' && p.code && p.code.trim() === codeInput;
     return matchName || matchCode;
   });
-
-  if (isDuplicate) {
-    return showToast("⚠️ المادة موجودة مسبقاً (بالاسم أو الباركود)", "warning");
-  }
+  if (isDuplicate) return showToast("⚠️ المادة موجودة مسبقاً", "warning");
 
   const product = {
-    name: nameInput,
-    code: codeInput,
-    packetCost: safeNumber('pPacketCost'),
-    packetSell: safeNumber('pPacketSell'),
-    packetStock: safeNumber('pPacketStock'),
-    cartonCost: safeNumber('pCartonCost'),
-    cartonSell: safeNumber('pCartonSell'),
-    cartonStock: safeNumber('pCartonStock'),
+    name: nameInput, code: codeInput,
+    packetCost: safeNumber('pPacketCost'), packetSell: safeNumber('pPacketSell'), packetStock: safeNumber('pPacketStock'),
+    cartonCost: safeNumber('pCartonCost'), cartonSell: safeNumber('pCartonSell'), cartonStock: safeNumber('pCartonStock'),
     createdAt: new Date().toLocaleString('ar-IQ'),
     updatedAt: new Date().toLocaleString('ar-IQ')
   };
@@ -1328,7 +1292,6 @@ document.getElementById('priceForm').addEventListener('submit', async function(e
   const submitBtn = this.querySelector('button[type="submit"]');
   submitBtn.disabled = true;
   submitBtn.textContent = '⏳ جاري الحفظ...';
-
   try {
     await db.child("prices").push().set(product);
     this.reset();
@@ -1342,9 +1305,7 @@ document.getElementById('priceForm').addEventListener('submit', async function(e
   }
 });
 
-document.getElementById('pName').addEventListener('input', function() {
-  this.classList.remove('invalid');
-});
+document.getElementById('pName').addEventListener('input', function() { this.classList.remove('invalid'); });
 
 /* ==================================================================
    14. تعديل منتج
@@ -1353,7 +1314,6 @@ function openEditModal(id) {
   if (!isAdmin) return showToast("يجب تفعيل وضع الأدمن", "warning");
   const p = currentData.prices[id];
   if (!p) return;
-
   document.getElementById('editId').value = id;
   document.getElementById('editName').value = p.name || '';
   document.getElementById('editCode').value = p.code || '';
@@ -1363,7 +1323,6 @@ function openEditModal(id) {
   document.getElementById('editCartonCost').value = p.cartonCost ?? '';
   document.getElementById('editCartonSell').value = p.cartonSell ?? '';
   document.getElementById('editCartonStock').value = p.cartonStock ?? 0;
-
   openModal('editProductModal');
 }
 
@@ -1372,26 +1331,17 @@ document.getElementById('editForm').addEventListener('submit', async function(e)
   const id = document.getElementById('editId').value;
   const name = document.getElementById('editName').value.trim();
   if (!name) return showToast("⚠️ اسم المادة مطلوب", "warning");
-
   const updated = {
-    name,
-    code: document.getElementById('editCode').value.trim(),
-    packetCost: safeNumber('editPacketCost'),
-    packetSell: safeNumber('editPacketSell'),
-    packetStock: safeNumber('editPacketStock'),
-    cartonCost: safeNumber('editCartonCost'),
-    cartonSell: safeNumber('editCartonSell'),
-    cartonStock: safeNumber('editCartonStock'),
+    name, code: document.getElementById('editCode').value.trim(),
+    packetCost: safeNumber('editPacketCost'), packetSell: safeNumber('editPacketSell'), packetStock: safeNumber('editPacketStock'),
+    cartonCost: safeNumber('editCartonCost'), cartonSell: safeNumber('editCartonSell'), cartonStock: safeNumber('editCartonStock'),
     updatedAt: new Date().toLocaleString('ar-IQ')
   };
-
   try {
     await db.child("prices").child(id).update(updated);
     closeModal('editProductModal');
     showToast("✅ تم حفظ التعديلات", "success");
-  } catch (err) {
-    showToast("تعذر التعديل: " + err.message, "error");
-  }
+  } catch (err) { showToast("تعذر التعديل: " + err.message, "error"); }
 });
 
 /* ==================================================================
@@ -1401,47 +1351,30 @@ function confirmDelete(id) {
   if (!isAdmin) return showToast("يجب تفعيل وضع الأدمن", "warning");
   const p = currentData.prices[id];
   if (!p) return;
-
-  showConfirm(
-    "تأكيد الحذف",
-    `هل تريد حذف "${p.name}" نهائياً؟ لا يمكن التراجع.`,
-    async () => {
-      try {
-        await db.child("prices").child(id).remove();
-        showToast("🗑️ تم الحذف بنجاح", "success");
-      } catch (err) {
-        showToast("تعذر الحذف: " + err.message, "error");
-      }
-    }
-  );
+  showConfirm("تأكيد الحذف", `هل تريد حذف "${p.name}" نهائياً؟`, async () => {
+    try {
+      await db.child("prices").child(id).remove();
+      showToast("🗑️ تم الحذف بنجاح", "success");
+    } catch (err) { showToast("تعذر الحذف: " + err.message, "error"); }
+  });
 }
 
 /* ==================================================================
    16. تصدير Excel
    ================================================================== */
 function exportCsv() {
-  const rows = [["اسم المادة", "الباركود", "كلفة الباكيت", "بيع الباكيت", "مخزون الباكيت",
-                 "كلفة الكارتون", "بيع الكارتون", "مخزون الكارتون"]];
-
+  const rows = [["اسم المادة", "الباركود", "كلفة الباكيت", "بيع الباكيت", "مخزون الباكيت", "كلفة الكارتون", "بيع الكارتون", "مخزون الكارتون"]];
   Object.values(currentData.prices || {}).forEach(p => rows.push([
-    p.name || '', p.code || '', p.packetCost || 0, p.packetSell || 0,
-    p.packetStock || 0, p.cartonCost || 0, p.cartonSell || 0, p.cartonStock || 0
+    p.name || '', p.code || '', p.packetCost || 0, p.packetSell || 0, p.packetStock || 0,
+    p.cartonCost || 0, p.cartonSell || 0, p.cartonStock || 0
   ]));
-
-  const csv = '\uFEFF' + rows.map(row =>
-    row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')
-  ).join('\r\n');
-
+  const csv = '\uFEFF' + rows.map(row => row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\r\n');
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  const date = new Date().toISOString().slice(0, 10);
   a.href = url;
-  a.download = `دليل_أسعار_الدباغ_${date}.csv`;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
+  a.download = `دليل_أسعار_الدباغ_${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
   showToast("📥 تم تصدير الملف", "success");
 }
 
@@ -1449,9 +1382,7 @@ function exportCsv() {
    17. الباركود
    ================================================================== */
 async function startScanner() {
-  if (typeof Html5Qrcode === 'undefined') {
-    return showToast("مكتبة الباركود غير محملة", "error");
-  }
+  if (typeof Html5Qrcode === 'undefined') return showToast("مكتبة الباركود غير محملة", "error");
   openModal('scannerModal');
   try {
     html5QrCode = new Html5Qrcode("interactive");
@@ -1482,21 +1413,13 @@ async function stopScanner() {
 }
 
 /* ==================================================================
-   18. المساعد الذكي (Gemini)
+   18. المساعد الذكي
    ================================================================== */
 function saveApiKey() {
   const value = document.getElementById('geminiApiKey').value.trim();
-  if (value) {
-    localStorage.setItem('gemini_api_key', value);
-    showToast("✅ تم حفظ المفتاح", "success");
-  }
+  if (value) { localStorage.setItem('gemini_api_key', value); showToast("✅ تم حفظ المفتاح", "success"); }
 }
-
-function quickAsk(question) {
-  document.getElementById('aiPrompt').value = question;
-  sendAiMessage();
-}
-
+function quickAsk(question) { document.getElementById('aiPrompt').value = question; sendAiMessage(); }
 function appendChatMessage(role, text) {
   const box = document.getElementById('aiChatBox');
   const bubble = document.createElement('div');
@@ -1508,75 +1431,49 @@ function appendChatMessage(role, text) {
   box.scrollTop = box.scrollHeight;
   return bubble;
 }
-
 function buildAccountingContext() {
   const prices = Object.values(currentData.prices || {});
   const threshold = getLowStockThreshold();
   return {
-    currency: "IQD",
-    productsCount: prices.length,
-    lowStockThreshold: threshold,
-    lowStock: prices
-      .filter(p => (Number(p.packetStock) || 0) <= threshold || (Number(p.cartonStock) || 0) <= threshold)
-      .map(p => ({ name: p.name, packetStock: p.packetStock, cartonStock: p.cartonStock })),
-    products: prices.map(p => ({
-      name: p.name, code: p.code,
-      packetCost: p.packetCost, packetSell: p.packetSell, packetStock: p.packetStock,
-      cartonCost: p.cartonCost, cartonSell: p.cartonSell, cartonStock: p.cartonStock
-    }))
+    currency: "IQD", productsCount: prices.length, lowStockThreshold: threshold,
+    lowStock: prices.filter(p => (Number(p.packetStock) || 0) <= threshold || (Number(p.cartonStock) || 0) <= threshold).map(p => ({ name: p.name, packetStock: p.packetStock, cartonStock: p.cartonStock })),
+    products: prices.map(p => ({ name: p.name, code: p.code, packetCost: p.packetCost, packetSell: p.packetSell, packetStock: p.packetStock, cartonCost: p.cartonCost, cartonSell: p.cartonSell, cartonStock: p.cartonStock }))
   };
 }
-
 async function sendAiMessage() {
   const input = document.getElementById('aiPrompt');
   const sendBtn = document.getElementById('aiSendBtn');
   const question = input.value.trim();
   if (!question) return;
-
   const apiKey = localStorage.getItem('gemini_api_key');
   if (!apiKey) return showToast("أدخل مفتاح Gemini API أولاً", "warning");
-
   appendChatMessage('user', question);
   input.value = '';
   sendBtn.disabled = true;
   const loading = appendChatMessage('assistant', '⏳ جاري التحليل...');
-
   const context = buildAccountingContext();
-  const systemPrompt = `أنت مساعد محاسبي ذكي لنظام إدارة المخزون وعرض الأسعار في محلات الدباغ.
-إليك بيانات المخزون الحالية بصيغة JSON:
-${JSON.stringify(context, null, 2)}
-أجب بوضوح واحترافية وباللغة العربية بناءً على البيانات أعلاه.`;
-
+  const systemPrompt = `أنت مساعد محاسبي ذكي لنظام إدارة المخزون وعرض الأسعار في محلات الدباغ.\nإليك بيانات المخزون الحالية بصيغة JSON:\n${JSON.stringify(context, null, 2)}\nأجب بوضوح واحترافية وباللغة العربية.`;
   try {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ role: 'user', parts: [{ text: systemPrompt + '\n\nسؤال: ' + question }] }]
-        })
-      }
-    );
-
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: systemPrompt + '\n\nسؤال: ' + question }] }] })
+    });
     if (!response.ok) {
       const errData = await response.json().catch(() => ({}));
       throw new Error(errData.error?.message || `HTTP ${response.status}`);
     }
-
     const data = await response.json();
     const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "لم أتمكن من الحصول على إجابة.";
     loading.textContent = 'Gemini: ' + reply;
   } catch (err) {
     loading.textContent = 'Gemini: ⚠️ خطأ - ' + err.message;
     loading.style.borderInlineStartColor = 'var(--danger)';
-  } finally {
-    sendBtn.disabled = false;
-  }
+  } finally { sendBtn.disabled = false; }
 }
 
 /* ==================================================================
-   19. النسخ الاحتياطي والاسترجاع
+   19. النسخ الاحتياطي
    ================================================================== */
 function sanitizeProduct(p) {
   return {
@@ -1596,12 +1493,9 @@ function sanitizeProduct(p) {
 async function exportBackup() {
   try {
     const backup = {
-      version: '1.0',
-      app: 'محلات الدباغ - نظام إدارة المخزن',
+      version: '1.0', app: 'محلات الدباغ - نظام إدارة المخزن',
       exportedAt: new Date().toISOString(),
-      data: {
-        prices: currentData.prices || {}
-      },
+      data: { prices: currentData.prices || {} },
       settings: {
         theme: localStorage.getItem('app_theme') || DEFAULTS.THEME,
         color: localStorage.getItem('app_color') || DEFAULTS.COLOR,
@@ -1610,28 +1504,19 @@ async function exportBackup() {
         lowStockThreshold: getLowStockThreshold()
       }
     };
-
     const json = JSON.stringify(backup, null, 2);
     const blob = new Blob([json], { type: 'application/json;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
-
     const now = new Date();
     const date = now.toISOString().slice(0, 10);
     const time = now.toTimeString().slice(0, 5).replace(':', '-');
     const count = Object.keys(currentData.prices || {}).length;
-
     const a = document.createElement('a');
     a.href = url;
     a.download = `نسخة_احتياطية_الدباغ_${date}_${time}.json`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-
+    document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
     showToast(`📦 تم تصدير ${count} مادة بنجاح`, "success");
-  } catch (err) {
-    showToast("تعذر التصدير: " + err.message, "error");
-  }
+  } catch (err) { showToast("تعذر التصدير: " + err.message, "error"); }
 }
 
 function triggerImportBackup() {
@@ -1642,106 +1527,61 @@ function triggerImportBackup() {
 async function handleBackupFile(event) {
   const file = event.target.files[0];
   if (!file) return;
-
   event.target.value = '';
-
-  if (!file.name.toLowerCase().endsWith('.json')) {
-    return showToast("⚠️ الملف يجب أن يكون بصيغة JSON", "error");
-  }
-
-  if (file.size > 10 * 1024 * 1024) {
-    return showToast("⚠️ الملف كبير جداً (الحد 10MB)", "error");
-  }
-
+  if (!file.name.toLowerCase().endsWith('.json')) return showToast("⚠️ الملف يجب أن يكون JSON", "error");
+  if (file.size > 10 * 1024 * 1024) return showToast("⚠️ الملف كبير جداً (الحد 10MB)", "error");
   try {
     const text = await file.text();
     const backup = JSON.parse(text);
-
-    if (!backup || typeof backup !== 'object') {
-      return showToast("❌ بنية الملف غير صالحة", "error");
-    }
-    if (!backup.data || typeof backup.data.prices !== 'object' || backup.data.prices === null) {
-      return showToast("❌ الملف لا يحتوي على بيانات مواد صالحة", "error");
-    }
-
+    if (!backup || typeof backup !== 'object') return showToast("❌ بنية الملف غير صالحة", "error");
+    if (!backup.data || typeof backup.data.prices !== 'object' || backup.data.prices === null) return showToast("❌ الملف لا يحتوي على بيانات صالحة", "error");
     const count = Object.keys(backup.data.prices).length;
-    if (count === 0) {
-      return showToast("⚠️ الملف لا يحتوي على أي مواد", "warning");
-    }
-
+    if (count === 0) return showToast("⚠️ الملف لا يحتوي على مواد", "warning");
     pendingBackup = backup;
-    const exportedDate = backup.exportedAt
-      ? new Date(backup.exportedAt).toLocaleString('ar-IQ')
-      : 'غير معروف';
-
+    const exportedDate = backup.exportedAt ? new Date(backup.exportedAt).toLocaleString('ar-IQ') : 'غير معروف';
     document.getElementById('backupInfo').innerHTML = `
       <strong>📄 معلومات الملف:</strong><br>
       <span style="color:var(--text-muted);">تاريخ التصدير:</span> <strong>${escapeHtml(exportedDate)}</strong><br>
       <span style="color:var(--text-muted);">عدد المواد:</span> <strong style="color:var(--success);">${count}</strong><br>
-      <span style="color:var(--text-muted);">المواد الحالية في السحابة:</span> <strong style="color:var(--price-blue);">${Object.keys(currentData.prices || {}).length}</strong>
+      <span style="color:var(--text-muted);">المواد الحالية:</span> <strong style="color:var(--price-blue);">${Object.keys(currentData.prices || {}).length}</strong>
       ${backup.settings ? '<br><span style="color:var(--text-muted);">✔ يحتوي إعدادات مظهر</span>' : ''}
     `;
-
     document.querySelector('input[name="importMode"][value="merge"]').checked = true;
-
     openModal('backupImportModal');
-  } catch (err) {
-    showToast("❌ تعذر قراءة الملف: " + err.message, "error");
-  }
+  } catch (err) { showToast("❌ تعذر قراءة الملف: " + err.message, "error"); }
 }
 
 async function executeImport() {
-  if (!pendingBackup || !db) {
-    return showToast("البيانات غير جاهزة", "error");
-  }
-
+  if (!pendingBackup || !db) return showToast("البيانات غير جاهزة", "error");
   const mode = document.querySelector('input[name="importMode"]:checked')?.value || 'merge';
   const restoreSettings = document.getElementById('restoreSettingsCheck').checked;
   const prices = pendingBackup.data.prices || {};
   const count = Object.keys(prices).length;
-
   const btn = document.getElementById('importExecuteBtn');
   btn.disabled = true;
   btn.textContent = '⏳ جاري التنفيذ...';
-
   try {
     if (mode === 'replace') {
       const sanitized = {};
-      for (const [id, p] of Object.entries(prices)) {
-        sanitized[id] = sanitizeProduct(p);
-      }
+      for (const [id, p] of Object.entries(prices)) sanitized[id] = sanitizeProduct(p);
       await db.child('prices').set(sanitized);
       showToast(`✅ تم استبدال البيانات بـ ${count} مادة`, "success");
     } else {
       let added = 0, updated = 0;
       const existingList = Object.entries(currentData.prices || {});
-
       for (const [, product] of Object.entries(prices)) {
         const sanitized = sanitizeProduct(product);
         if (!sanitized.name) continue;
-
         const match = existingList.find(([, ep]) => {
           const epName = (ep.name || '').trim().toLowerCase();
           const epCode = (ep.code || '').trim();
-          const pName = sanitized.name.toLowerCase();
-          const pCode = sanitized.code;
-
-          const nameMatch = epName && pName && epName === pName;
-          const codeMatch = epCode && pCode && epCode === pCode;
-          return nameMatch || codeMatch;
+          return (epName && sanitized.name.toLowerCase() === epName) || (epCode && sanitized.code && epCode === sanitized.code);
         });
-
-        if (match) {
-          await db.child('prices').child(match[0]).update(sanitized);
-          updated++;
-        } else {
-          await db.child('prices').push().set(sanitized);
-          added++;
-        }
+        if (match) { await db.child('prices').child(match[0]).update(sanitized); updated++; }
+        else { await db.child('prices').push().set(sanitized); added++; }
       }
       showToast(`✅ الدمج اكتمل: ${added} جديد، ${updated} محدّث`, "success");
     }
-
     if (restoreSettings && pendingBackup.settings) {
       const s = pendingBackup.settings;
       if (s.theme) localStorage.setItem('app_theme', s.theme);
@@ -1751,36 +1591,28 @@ async function executeImport() {
       if (s.lowStockThreshold) localStorage.setItem('low_stock_threshold', s.lowStockThreshold);
       loadSettings();
     }
-
     closeModal('backupImportModal');
     pendingBackup = null;
-  } catch (err) {
-    showToast("❌ تعذر الاسترجاع: " + err.message, "error");
-  } finally {
-    btn.disabled = false;
-    btn.textContent = '✅ تنفيذ الاسترجاع';
-  }
+  } catch (err) { showToast("❌ تعذر الاسترجاع: " + err.message, "error"); }
+  finally { btn.disabled = false; btn.textContent = '✅ تنفيذ الاسترجاع'; }
 }
 
 /* ==================================================================
-   20. إغلاق المودالات بالنقر خارجها أو ESC
+   20. المودالات والإغلاق
    ================================================================== */
 document.querySelectorAll('.modal').forEach(modal => {
-  modal.addEventListener('click', (e) => {
-    if (e.target === modal) modal.classList.remove('show');
-  });
+  modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('show'); });
 });
-
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') {
-    document.querySelectorAll('.modal.show').forEach(m => m.classList.remove('show'));
-  }
+  if (e.key === 'Escape') document.querySelectorAll('.modal.show').forEach(m => m.classList.remove('show'));
 });
 
 /* ==================================================================
    21. التهيئة
    ================================================================== */
 window.addEventListener('load', () => {
+  buildThemeGrid();
+  buildFontGrid();
   loadSettings();
   initFirebase();
   document.getElementById('geminiApiKey').value = localStorage.getItem('gemini_api_key') || '';
