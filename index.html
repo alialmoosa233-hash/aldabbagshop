@@ -191,11 +191,6 @@
     .btn-secondary { background: var(--text-muted); color: var(--bg-main); }
     .btn-admin { background: var(--brass); color: #FFF; }
     .btn-danger { background: var(--danger); }
-    .btn-ghost {
-      background: transparent; color: var(--text-muted);
-      border: 1px solid var(--border-color);
-    }
-    .btn-ghost:hover { color: var(--text-main); border-color: var(--text-muted); }
 
     /* ============ شريط البحث والفلترة ============ */
     .search-toolbar {
@@ -374,7 +369,6 @@
       .container { padding: 0 12px; margin: 16px auto; }
       .card { padding: 16px; }
 
-      /* الجدول → بطاقات */
       .table-wrapper { border: none; box-shadow: none; }
       table, thead, tbody, th, td, tr { display: block; }
       thead { display: none; }
@@ -583,6 +577,7 @@
         </div>
       </div>
 
+      <!-- 🔐 قسم PIN -->
       <h2 style="font-size: 1.1em; margin-top:10px;">🔐 تغيير رمز الأمان (PIN للأدمن)</h2>
       <div style="background:var(--stripe-bg); padding:16px; border-radius:10px; border:1px solid var(--border-color);">
         <form id="changePinForm" onsubmit="updateAdminPin(event)">
@@ -602,6 +597,27 @@
           </div>
           <button type="submit" class="btn-price" style="margin-top:8px;">💾 حفظ الرمز الجديد</button>
         </form>
+      </div>
+
+      <!-- 💾 قسم النسخ الاحتياطي والاسترجاع -->
+      <h2 style="font-size: 1.1em; margin-top:20px;">💾 النسخ الاحتياطي والاسترجاع</h2>
+      <div style="background:var(--stripe-bg); padding:16px; border-radius:10px; border:1px solid var(--border-color);">
+        <p style="margin:0 0 14px; color:var(--text-muted); font-size:0.9em;">
+          احفظ نسخة من جميع بيانات المخزن (المواد، الأسعار، المخزون، الإعدادات) في ملف JSON آمن.
+          يمكنك استرجاعها في أي وقت أو على أي جهاز.
+        </p>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button onclick="exportBackup()" class="btn-success" style="flex:1; min-width:150px;">
+            📦 تصدير نسخة احتياطية
+          </button>
+          <button onclick="triggerImportBackup()" class="btn-price admin-only" style="flex:1; min-width:150px;">
+            📥 استرجاع نسخة
+          </button>
+        </div>
+        <input type="file" id="backupFileInput" accept=".json,application/json" style="display:none;" onchange="handleBackupFile(event)" />
+        <p style="margin:12px 0 0; font-size:0.8em; color:var(--text-muted);">
+          💡 <strong>نصيحة:</strong> خذ نسخة احتياطية دورياً (أسبوعياً) واحفظها في مكان آمن (Google Drive، USB، إلخ).
+        </p>
       </div>
 
       <button onclick="resetSettings()" class="btn-secondary" style="margin-top:22px;">🔄 استعادة الإعدادات الافتراضية</button>
@@ -726,6 +742,52 @@
   </div>
 </div>
 
+<!-- ============ مودال استرجاع النسخة الاحتياطية ============ -->
+<div id="backupImportModal" class="modal">
+  <div class="modal-content" style="max-width: 520px;">
+    <div class="modal-header">
+      <h3>📥 استرجاع النسخة الاحتياطية</h3>
+      <button class="modal-close" onclick="closeModal('backupImportModal')" aria-label="إغلاق">✕</button>
+    </div>
+
+    <div id="backupInfo" style="background:var(--stripe-bg); padding:14px; border-radius:8px; margin-bottom:16px; font-size:0.9em; line-height:1.9; border:1px solid var(--border-color);"></div>
+
+    <p style="font-weight:800; margin-bottom:10px; color:var(--primary);">⚙️ اختر طريقة الاسترجاع:</p>
+
+    <label style="display:flex; align-items:flex-start; gap:12px; padding:12px; border:2px solid var(--border-color); border-radius:8px; margin-bottom:10px; cursor:pointer; background:var(--stripe-bg);">
+      <input type="radio" name="importMode" value="merge" checked style="width:auto; margin:4px 0 0 0;" />
+      <div>
+        <strong style="color:var(--success);">🔀 دمج ذكي (موصى به)</strong>
+        <div style="font-size:0.85em; color:var(--text-muted); margin-top:4px;">
+          يحدّث المواد المطابقة (بالاسم أو الباركود) ويضيف المواد الجديدة دون حذف شيء.
+        </div>
+      </div>
+    </label>
+
+    <label style="display:flex; align-items:flex-start; gap:12px; padding:12px; border:2px solid var(--border-color); border-radius:8px; margin-bottom:16px; cursor:pointer; background:var(--stripe-bg);">
+      <input type="radio" name="importMode" value="replace" style="width:auto; margin:4px 0 0 0;" />
+      <div>
+        <strong style="color:var(--danger);">⚠️ استبدال كامل (خطر)</strong>
+        <div style="font-size:0.85em; color:var(--text-muted); margin-top:4px;">
+          يحذف جميع البيانات الحالية في السحابة ويستبدلها بمحتوى الملف. لا يمكن التراجع!
+        </div>
+      </div>
+    </label>
+
+    <label style="display:flex; align-items:center; gap:10px; padding:10px; cursor:pointer; margin-bottom:16px;">
+      <input type="checkbox" id="restoreSettingsCheck" checked style="width:auto; margin:0;" />
+      <span style="font-weight:700; font-size:0.9em;">🎨 استرجاع الإعدادات (اللون، الخط، إلخ)</span>
+    </label>
+
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal('backupImportModal')">إلغاء</button>
+      <button id="importExecuteBtn" class="btn-success" onclick="executeImport()">
+        ✅ تنفيذ الاسترجاع
+      </button>
+    </div>
+  </div>
+</div>
+
 <script>
 /* ==================================================================
    1. الثوابت والإعدادات
@@ -741,7 +803,7 @@ const DEFAULTS = {
   SESSION_KEY: 'admin_session_until'
 };
 
-const GEMINI_MODEL = 'gemini-2.5-flash'; // ✅ اسم صحيح بدل gemini-3.8-flash
+const GEMINI_MODEL = 'gemini-2.5-flash';
 
 const firebaseConfig = {
   apiKey: "AIzaSyC-QqnQTbbyVFS8QFkf4CYZTcURcr9nBW0",
@@ -760,6 +822,7 @@ let isAdmin = false;
 let searchDebounceTimer = null;
 let html5QrCode = null;
 let confirmCallback = null;
+let pendingBackup = null;
 
 /* ==================================================================
    2. الإشعارات
@@ -774,7 +837,7 @@ function showToast(message, type = 'info') {
 }
 
 /* ==================================================================
-   3. المودالات (عام)
+   3. المودالات
    ================================================================== */
 function openModal(id) { document.getElementById(id).classList.add('show'); }
 function closeModal(id) { document.getElementById(id).classList.remove('show'); }
@@ -821,7 +884,6 @@ function loadSettings() {
   document.getElementById('fontSizeSelect').value = fontSize;
   document.getElementById('lowStockThreshold').value = lowStock;
 
-  // استعادة جلسة الأدمن إن لم تنته
   const sessionUntil = Number(localStorage.getItem(DEFAULTS.SESSION_KEY) || 0);
   if (sessionUntil > Date.now()) {
     setAdminMode(true, false);
@@ -888,7 +950,6 @@ function resetSettings() {
    ================================================================== */
 function openAdminPinModal() {
   if (isAdmin) {
-    // خروج
     setAdminMode(false);
     return;
   }
@@ -919,7 +980,6 @@ function setAdminMode(enabled, announce = true) {
     btn.innerText = "👑 وضع الأدمن (نشط)";
     btn.style.background = "var(--success)";
     header.classList.add('admin-active');
-    // جلسة ساعة واحدة
     localStorage.setItem(DEFAULTS.SESSION_KEY, Date.now() + 60 * 60 * 1000);
     if (announce) {
       showToast("✅ تم تفعيل وضع الأدمن", "success");
@@ -1047,7 +1107,7 @@ function handleSearchInput() {
   const val = document.getElementById('searchPrice').value;
   document.getElementById('clearSearchBtn').style.display = val.length > 0 ? 'block' : 'none';
   clearTimeout(searchDebounceTimer);
-  searchDebounceTimer = setTimeout(renderPrices, 250); // debounce
+  searchDebounceTimer = setTimeout(renderPrices, 250);
 }
 
 function clearSearch() {
@@ -1076,7 +1136,6 @@ function renderPrices() {
 
   let entries = Object.entries(currentData.prices || {});
 
-  // البحث
   entries = entries.filter(([id, p]) => {
     const pName = (p.name || '').toLowerCase();
     const pCode = (p.code || '').toLowerCase();
@@ -1099,7 +1158,6 @@ function renderPrices() {
     return true;
   });
 
-  // الترتيب
   entries.sort((a, b) => {
     const A = a[1], B = b[1];
     switch (sortBy) {
@@ -1244,7 +1302,6 @@ document.getElementById('priceForm').addEventListener('submit', async function(e
     return showToast("⚠️ أدخل اسم المادة", "warning");
   }
 
-  // التحقق من التكرار
   const isDuplicate = Object.values(currentData.prices || {}).some(p => {
     const matchName = p.name && p.name.trim().toLowerCase() === nameInput.toLowerCase();
     const matchCode = codeInput !== '' && p.code && p.code.trim() === codeInput;
@@ -1290,7 +1347,7 @@ document.getElementById('pName').addEventListener('input', function() {
 });
 
 /* ==================================================================
-   14. تعديل منتج (مودال)
+   14. تعديل منتج
    ================================================================== */
 function openEditModal(id) {
   if (!isAdmin) return showToast("يجب تفعيل وضع الأدمن", "warning");
@@ -1519,7 +1576,194 @@ ${JSON.stringify(context, null, 2)}
 }
 
 /* ==================================================================
-   19. إغلاق المودالات بالنقر خارجها أو ESC
+   19. النسخ الاحتياطي والاسترجاع
+   ================================================================== */
+function sanitizeProduct(p) {
+  return {
+    name: String(p?.name || '').trim(),
+    code: String(p?.code || '').trim(),
+    packetCost: Math.max(0, Number(p?.packetCost) || 0),
+    packetSell: Math.max(0, Number(p?.packetSell) || 0),
+    packetStock: Math.max(0, Math.floor(Number(p?.packetStock) || 0)),
+    cartonCost: Math.max(0, Number(p?.cartonCost) || 0),
+    cartonSell: Math.max(0, Number(p?.cartonSell) || 0),
+    cartonStock: Math.max(0, Math.floor(Number(p?.cartonStock) || 0)),
+    createdAt: String(p?.createdAt || new Date().toLocaleString('ar-IQ')),
+    updatedAt: String(p?.updatedAt || new Date().toLocaleString('ar-IQ'))
+  };
+}
+
+async function exportBackup() {
+  try {
+    const backup = {
+      version: '1.0',
+      app: 'محلات الدباغ - نظام إدارة المخزن',
+      exportedAt: new Date().toISOString(),
+      data: {
+        prices: currentData.prices || {}
+      },
+      settings: {
+        theme: localStorage.getItem('app_theme') || DEFAULTS.THEME,
+        color: localStorage.getItem('app_color') || DEFAULTS.COLOR,
+        font: localStorage.getItem('app_font') || DEFAULTS.FONT,
+        fontSize: localStorage.getItem('app_fontsize') || DEFAULTS.FONT_SIZE,
+        lowStockThreshold: getLowStockThreshold()
+      }
+    };
+
+    const json = JSON.stringify(backup, null, 2);
+    const blob = new Blob([json], { type: 'application/json;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+
+    const now = new Date();
+    const date = now.toISOString().slice(0, 10);
+    const time = now.toTimeString().slice(0, 5).replace(':', '-');
+    const count = Object.keys(currentData.prices || {}).length;
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `نسخة_احتياطية_الدباغ_${date}_${time}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+
+    showToast(`📦 تم تصدير ${count} مادة بنجاح`, "success");
+  } catch (err) {
+    showToast("تعذر التصدير: " + err.message, "error");
+  }
+}
+
+function triggerImportBackup() {
+  if (!isAdmin) return showToast("يجب تفعيل وضع الأدمن", "warning");
+  document.getElementById('backupFileInput').click();
+}
+
+async function handleBackupFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  event.target.value = '';
+
+  if (!file.name.toLowerCase().endsWith('.json')) {
+    return showToast("⚠️ الملف يجب أن يكون بصيغة JSON", "error");
+  }
+
+  if (file.size > 10 * 1024 * 1024) {
+    return showToast("⚠️ الملف كبير جداً (الحد 10MB)", "error");
+  }
+
+  try {
+    const text = await file.text();
+    const backup = JSON.parse(text);
+
+    if (!backup || typeof backup !== 'object') {
+      return showToast("❌ بنية الملف غير صالحة", "error");
+    }
+    if (!backup.data || typeof backup.data.prices !== 'object' || backup.data.prices === null) {
+      return showToast("❌ الملف لا يحتوي على بيانات مواد صالحة", "error");
+    }
+
+    const count = Object.keys(backup.data.prices).length;
+    if (count === 0) {
+      return showToast("⚠️ الملف لا يحتوي على أي مواد", "warning");
+    }
+
+    pendingBackup = backup;
+    const exportedDate = backup.exportedAt
+      ? new Date(backup.exportedAt).toLocaleString('ar-IQ')
+      : 'غير معروف';
+
+    document.getElementById('backupInfo').innerHTML = `
+      <strong>📄 معلومات الملف:</strong><br>
+      <span style="color:var(--text-muted);">تاريخ التصدير:</span> <strong>${escapeHtml(exportedDate)}</strong><br>
+      <span style="color:var(--text-muted);">عدد المواد:</span> <strong style="color:var(--success);">${count}</strong><br>
+      <span style="color:var(--text-muted);">المواد الحالية في السحابة:</span> <strong style="color:var(--price-blue);">${Object.keys(currentData.prices || {}).length}</strong>
+      ${backup.settings ? '<br><span style="color:var(--text-muted);">✔ يحتوي إعدادات مظهر</span>' : ''}
+    `;
+
+    document.querySelector('input[name="importMode"][value="merge"]').checked = true;
+
+    openModal('backupImportModal');
+  } catch (err) {
+    showToast("❌ تعذر قراءة الملف: " + err.message, "error");
+  }
+}
+
+async function executeImport() {
+  if (!pendingBackup || !db) {
+    return showToast("البيانات غير جاهزة", "error");
+  }
+
+  const mode = document.querySelector('input[name="importMode"]:checked')?.value || 'merge';
+  const restoreSettings = document.getElementById('restoreSettingsCheck').checked;
+  const prices = pendingBackup.data.prices || {};
+  const count = Object.keys(prices).length;
+
+  const btn = document.getElementById('importExecuteBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ جاري التنفيذ...';
+
+  try {
+    if (mode === 'replace') {
+      const sanitized = {};
+      for (const [id, p] of Object.entries(prices)) {
+        sanitized[id] = sanitizeProduct(p);
+      }
+      await db.child('prices').set(sanitized);
+      showToast(`✅ تم استبدال البيانات بـ ${count} مادة`, "success");
+    } else {
+      let added = 0, updated = 0;
+      const existingList = Object.entries(currentData.prices || {});
+
+      for (const [, product] of Object.entries(prices)) {
+        const sanitized = sanitizeProduct(product);
+        if (!sanitized.name) continue;
+
+        const match = existingList.find(([, ep]) => {
+          const epName = (ep.name || '').trim().toLowerCase();
+          const epCode = (ep.code || '').trim();
+          const pName = sanitized.name.toLowerCase();
+          const pCode = sanitized.code;
+
+          const nameMatch = epName && pName && epName === pName;
+          const codeMatch = epCode && pCode && epCode === pCode;
+          return nameMatch || codeMatch;
+        });
+
+        if (match) {
+          await db.child('prices').child(match[0]).update(sanitized);
+          updated++;
+        } else {
+          await db.child('prices').push().set(sanitized);
+          added++;
+        }
+      }
+      showToast(`✅ الدمج اكتمل: ${added} جديد، ${updated} محدّث`, "success");
+    }
+
+    if (restoreSettings && pendingBackup.settings) {
+      const s = pendingBackup.settings;
+      if (s.theme) localStorage.setItem('app_theme', s.theme);
+      if (s.color) localStorage.setItem('app_color', s.color);
+      if (s.font) localStorage.setItem('app_font', s.font);
+      if (s.fontSize) localStorage.setItem('app_fontsize', s.fontSize);
+      if (s.lowStockThreshold) localStorage.setItem('low_stock_threshold', s.lowStockThreshold);
+      loadSettings();
+    }
+
+    closeModal('backupImportModal');
+    pendingBackup = null;
+  } catch (err) {
+    showToast("❌ تعذر الاسترجاع: " + err.message, "error");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '✅ تنفيذ الاسترجاع';
+  }
+}
+
+/* ==================================================================
+   20. إغلاق المودالات بالنقر خارجها أو ESC
    ================================================================== */
 document.querySelectorAll('.modal').forEach(modal => {
   modal.addEventListener('click', (e) => {
@@ -1534,7 +1778,7 @@ document.addEventListener('keydown', (e) => {
 });
 
 /* ==================================================================
-   20. التهيئة
+   21. التهيئة
    ================================================================== */
 window.addEventListener('load', () => {
   loadSettings();
