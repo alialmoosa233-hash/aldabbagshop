@@ -10,7 +10,6 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
-  <!-- 12 خط عربي -->
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=Cairo:wght@400;600;700;800&family=Almarai:wght@400;700;800&family=Noto+Kufi+Arabic:wght@400;600;700;800&family=Readex+Pro:wght@400;600;700&family=IBM+Plex+Sans+Arabic:wght@400;600;700&family=Amiri:wght@400;700&family=Rubik:wght@400;600;700&family=Changa:wght@400;600;700&family=El+Messiri:wght@400;600;700&family=Cairo+Play:wght@400;700;900&family=Lalezar&family=IBM+Plex+Mono:wght@600;700&display=swap" rel="stylesheet">
 
   <style>
@@ -39,7 +38,6 @@
       --font-body: 'Tajawal', sans-serif;
       --font-size-base: 15.5px;
       --low-stock-threshold: 5;
-      --border-thickness: 1px;
     }
 
     body.dark-mode {
@@ -61,9 +59,6 @@
     }
 
     /* ============ أنماط التصميم ============ */
-    /* Classic = الافتراضي (لا تغيير) */
-
-    /* Modern: حواف ناعمة، ظلال أعمق */
     body.style-modern {
       --radius: 20px;
       --radius-sm: 14px;
@@ -74,7 +69,6 @@
     body.style-modern button { border-radius: 14px; }
     body.style-modern .dash-card { border-inline-start-width: 6px; }
 
-    /* Flat: بدون ظلال، حواف حادة */
     body.style-flat {
       --radius: 4px;
       --radius-sm: 3px;
@@ -308,13 +302,39 @@
     .search-toolbar { display: flex; flex-direction: column; gap: 12px; margin-bottom: 18px; }
     .search-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
     .search-container { position: relative; flex: 1; min-width: 200px; }
-    .search-container input { margin: 0; padding-left: 38px; }
+    .search-container input { margin: 0; padding-left: 38px; padding-right: 48px; }
+
+    .scan-search-btn {
+      position: absolute;
+      right: 6px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: var(--primary);
+      border: none;
+      color: #fff;
+      width: 34px;
+      height: 34px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 1.05em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      transition: all 0.2s;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      width: 34px !important;
+    }
+    .scan-search-btn:hover { background: var(--price-blue); transform: translateY(-50%) scale(1.08); }
+    .scan-search-btn:active { transform: translateY(-50%) scale(0.95); }
+
     .clear-search-btn {
       position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
       background: none; border: none; color: var(--text-muted);
       font-size: 1.1em; cursor: pointer; padding: 0;
       width: auto; display: none;
     }
+
     .filter-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
     .filter-btn {
       padding: 7px 14px; font-size: 0.85em; font-weight: 700;
@@ -326,6 +346,12 @@
       background: var(--primary); color: #FFF;
       border-color: var(--primary);
       box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    /* تأثير إبراز عند العثور على المنتج */
+    @keyframes barcodeHighlight {
+      0%, 100% { background: transparent; }
+      15%, 85% { background: rgba(37, 99, 235, 0.18); }
     }
 
     /* ============ الجدول ============ */
@@ -551,6 +577,7 @@
         <div class="search-row">
           <div class="search-container">
             <input type="text" id="searchPrice" placeholder="🔍 ابحث بالاسم، الباركود، أو السعر..." oninput="handleSearchInput()" />
+            <button class="scan-search-btn" onclick="startScanner('search')" title="مسح باركود للبحث" aria-label="مسح باركود للبحث">📷</button>
             <button id="clearSearchBtn" class="clear-search-btn" onclick="clearSearch()" aria-label="مسح البحث">✕</button>
           </div>
           <div style="min-width:180px;">
@@ -603,7 +630,7 @@
         <label for="pCode">الباركود / الكود</label>
         <div style="display:flex; gap:8px;">
           <input type="text" id="pCode" placeholder="امسح أو أدخل الكود..." style="margin-bottom:14px;" />
-          <button type="button" onclick="startScanner()" class="btn-price" style="width:50px; height:46px; padding:0; display:flex; align-items:center; justify-content:center; font-size:1.2em;" aria-label="مسح الباركود">📷</button>
+          <button type="button" onclick="startScanner('add')" class="btn-price" style="width:50px; height:46px; padding:0; display:flex; align-items:center; justify-content:center; font-size:1.2em;" aria-label="مسح الباركود">📷</button>
         </div>
 
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; background:var(--stripe-bg); padding:16px; border-radius:var(--radius-sm); border:1px solid var(--border-color); margin-bottom:18px;">
@@ -630,19 +657,15 @@
     <div class="card" style="max-width: 950px; margin: 0 auto;">
       <h2>⚙️ إعدادات المظهر والنمط</h2>
 
-      <!-- الثيمات -->
       <label style="font-size: 1em; margin-bottom: 8px;">🎨 نمط الألوان (اضغط للاختيار)</label>
       <div class="theme-grid" id="themeGrid"></div>
 
-      <!-- الخطوط -->
       <label style="font-size: 1em; margin-bottom: 8px;">🔤 نوع الخط (اضغط للاختيار)</label>
       <div class="font-grid" id="fontGrid"></div>
 
-      <!-- أنماط التصميم -->
       <label style="font-size: 1em; margin-bottom: 8px;">✨ نمط التصميم</label>
       <div class="style-grid" id="styleGrid"></div>
 
-      <!-- إعدادات أخرى -->
       <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:14px; margin-top: 10px; margin-bottom: 24px;">
         <div>
           <label>🌙 درجة الإضاءة</label>
@@ -908,6 +931,7 @@ let searchDebounceTimer = null;
 let html5QrCode = null;
 let confirmCallback = null;
 let pendingBackup = null;
+let scannerMode = 'add';
 
 /* ==================================================================
    2. الإشعارات والمودالات
@@ -976,13 +1000,11 @@ function highlightActiveTheme(color) {
     el.classList.toggle('active', el.dataset.theme === color);
   });
 }
-
 function highlightActiveFont(font) {
   document.querySelectorAll('.font-swatch').forEach(el => {
     el.classList.toggle('active', el.dataset.font === font);
   });
 }
-
 function highlightActiveStyle(style) {
   document.querySelectorAll('.style-swatch').forEach(el => {
     el.classList.toggle('active', el.dataset.style === style);
@@ -995,7 +1017,6 @@ function highlightActiveStyle(style) {
 function getAdminPin() {
   return localStorage.getItem(DEFAULTS.PIN_KEY) || DEFAULTS.ADMIN_PIN;
 }
-
 function getLowStockThreshold() {
   return Number(localStorage.getItem('low_stock_threshold')) || DEFAULTS.LOW_STOCK;
 }
@@ -1499,10 +1520,15 @@ function exportCsv() {
 }
 
 /* ==================================================================
-   17. الباركود
+   17. الباركود — مع وضعين: بحث / إضافة
    ================================================================== */
-async function startScanner() {
+async function startScanner(mode = 'add') {
   if (typeof Html5Qrcode === 'undefined') return showToast("مكتبة الباركود غير محملة", "error");
+  scannerMode = mode;
+
+  const titleEl = document.querySelector('#scannerModal h3');
+  if (titleEl) titleEl.textContent = mode === 'search' ? '📷 امسح الباركود للبحث' : '📷 قراءة الباركود';
+
   openModal('scannerModal');
   try {
     html5QrCode = new Html5Qrcode("interactive");
@@ -1510,9 +1536,13 @@ async function startScanner() {
       { facingMode: "environment" },
       { fps: 10, qrbox: { width: 250, height: 150 } },
       (decodedText) => {
-        document.getElementById('pCode').value = decodedText;
+        if (scannerMode === 'search') {
+          handleBarcodeSearch(decodedText);
+        } else {
+          document.getElementById('pCode').value = decodedText;
+          showToast("✅ تم قراءة الباركود", "success");
+        }
         stopScanner();
-        showToast("✅ تم قراءة الباركود", "success");
       },
       () => {}
     );
@@ -1530,6 +1560,46 @@ async function stopScanner() {
     html5QrCode = null;
   }
   closeModal('scannerModal');
+}
+
+/* 🔍 البحث بالباركود من شاشة الأسعار */
+function handleBarcodeSearch(barcode) {
+  const barcodeClean = String(barcode).trim();
+  const products = Object.values(currentData.prices || {});
+  const exactMatch = products.find(p => (p.code || '').trim() === barcodeClean);
+
+  switchTab('prices');
+
+  const searchInput = document.getElementById('searchPrice');
+  searchInput.value = barcodeClean;
+  document.getElementById('clearSearchBtn').style.display = 'block';
+  document.getElementById('clearSearchBtn').classList.add('visible');
+
+  // إعادة التصفية إلى "الكل" لضمان ظهور النتيجة
+  currentFilter = 'all';
+  document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+  document.getElementById('chip-all')?.classList.add('active');
+
+  renderPrices();
+
+  if (exactMatch) {
+    showToast(`✅ ${exactMatch.name} — ${formatIQD(exactMatch.packetSell)}`, "success");
+    setTimeout(() => {
+      const rows = document.querySelectorAll('#pricesTable tr');
+      for (const row of rows) {
+        const cells = row.querySelectorAll('td');
+        if (cells.length < 2) continue;
+        const codeCell = cells[1]?.textContent?.trim() || '';
+        if (codeCell === barcodeClean) {
+          row.style.animation = 'barcodeHighlight 2s ease';
+          row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          break;
+        }
+      }
+    }, 120);
+  } else {
+    showToast(`⚠️ لا توجد مادة بهذا الباركود: ${barcodeClean}`, "warning");
+  }
 }
 
 /* ==================================================================
