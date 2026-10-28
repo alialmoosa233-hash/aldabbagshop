@@ -6,14 +6,10 @@
   <meta name="theme-color" content="#1E3A8A" />
   <title>نظام إدارة المخزن وعرض الأسعار - محلات الدباغ</title>
 
-  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-
-  <!-- Barcode Scanner -->
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
-  <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Tajawal:wght@400;500;700;900&family=Almarai:wght@400;700;800&family=IBM+Plex+Mono:wght@600;700&display=swap" rel="stylesheet">
 
   <style>
@@ -35,7 +31,6 @@
       --brass: #D97706;
       --warning: #D97706;
       --warning-bg: #FEF3C7;
-
       --radius: 12px;
       --radius-sm: 8px;
       --shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.05);
@@ -76,7 +71,6 @@
       transition: background-color 0.3s ease, color 0.3s ease;
     }
 
-    /* ============ الرأس ============ */
     header {
       background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
       color: #F8FAFC; padding: 18px 30px; font-size: 21px; font-weight: 800;
@@ -90,7 +84,6 @@
     .header-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
     .container { max-width: 1480px; margin: 24px auto; padding: 0 20px; }
 
-    /* ============ حالة السحابة ============ */
     #cloudStatus {
       padding: 12px 18px; text-align: center; font-weight: 700;
       border-radius: var(--radius); margin-bottom: 20px;
@@ -103,7 +96,6 @@
     #cloudStatus.online { color: var(--success); border-color: var(--success); }
     #cloudStatus.offline { color: var(--danger); border-color: var(--danger); }
 
-    /* ============ بطاقات الملخص ============ */
     .dashboard-summary {
       display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
       gap: 18px; margin-bottom: 24px;
@@ -118,7 +110,6 @@
     .dash-card .label { font-size: 0.9em; color: var(--text-muted); font-weight: 700; margin-bottom: 4px; }
     .dash-card .value { font-size: 1.5em; font-weight: 900; font-family: 'IBM Plex Mono', monospace; }
 
-    /* ============ التبويبات ============ */
     .tabs {
       display: flex; gap: 8px; margin-bottom: 24px;
       border-bottom: 3px solid var(--border-color); flex-wrap: wrap;
@@ -137,13 +128,11 @@
     .tab-content.active { display: block; animation: fadeIn 0.25s ease; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 
-    /* ============ نظام الأدمن ============ */
     .admin-only { display: none !important; }
     body.is-admin .admin-only { display: block !important; }
     body.is-admin th.admin-only, body.is-admin td.admin-only { display: table-cell !important; }
     body.is-admin .tab-btn.admin-only { display: flex !important; }
 
-    /* ============ البطاقات ============ */
     .card {
       background: var(--card-bg); border: 1px solid var(--border-color);
       border-radius: var(--radius); padding: 24px;
@@ -189,7 +178,6 @@
     .btn-admin { background: var(--brass); color: #FFF; }
     .btn-danger { background: var(--danger); }
 
-    /* ============ البحث والفلترة ============ */
     .search-toolbar { display: flex; flex-direction: column; gap: 12px; margin-bottom: 18px; }
     .search-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
     .search-container { position: relative; flex: 1; min-width: 200px; }
@@ -213,7 +201,6 @@
       box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
 
-    /* ============ الجدول ============ */
     .table-wrapper {
       overflow-x: auto; margin-top: 12px;
       border-radius: 10px; border: 1px solid var(--border-color);
@@ -273,7 +260,6 @@
       border-radius: 6px; font-weight: 700;
     }
 
-    /* ============ الإشعارات ============ */
     #toastContainer {
       position: fixed; bottom: 20px; left: 20px; z-index: 10000;
       display: flex; flex-direction: column; gap: 10px; pointer-events: none;
@@ -293,7 +279,6 @@
     @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes fadeOut { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(20px); } }
 
-    /* ============ المودالات ============ */
     .modal {
       display: none; position: fixed; z-index: 1000;
       left: 0; top: 0; width: 100%; height: 100%;
@@ -327,7 +312,6 @@
     .modal-actions { display: flex; gap: 10px; margin-top: 16px; }
     .modal-actions button { flex: 1; }
 
-    /* ============ الطباعة ============ */
     @media print {
       header, .tabs, .dashboard-summary, #cloudStatus,
       .search-toolbar, .admin-only, .no-print,
@@ -345,7 +329,6 @@
       .tab-content.active { display: block !important; }
     }
 
-    /* ============ الجوال ============ */
     @media (max-width: 768px) {
       header { padding: 14px 16px; font-size: 17px; }
       .container { padding: 0 12px; margin: 16px auto; }
@@ -389,7 +372,6 @@
 
 <div id="toastContainer"></div>
 
-<!-- ============ الرأس ============ -->
 <header id="appHeader">
   <div>📦 نظام إدارة المخزن وعرض الأسعار - محلات الدباغ</div>
   <div class="header-actions">
@@ -401,7 +383,6 @@
 <div class="container">
   <div id="cloudStatus">🔄 جاري مزامنة البيانات...</div>
 
-  <!-- ============ لوحة الملخص ============ -->
   <div class="dashboard-summary">
     <div class="dash-card" onclick="setFilter('all')">
       <div class="label">📦 إجمالي المواد بالدليل</div>
@@ -417,7 +398,6 @@
     </div>
   </div>
 
-  <!-- ============ التبويبات ============ -->
   <div class="tabs">
     <button class="tab-btn active" data-tab="prices" onclick="switchTab('prices')">🔍 عرض الأسعار والمخزون</button>
     <button class="tab-btn admin-only" data-tab="addProduct" onclick="switchTab('addProduct')">➕ إضافة مادة جديدة</button>
@@ -425,7 +405,6 @@
     <button class="tab-btn" data-tab="ai" onclick="switchTab('ai')">🤖 المساعد الذكي</button>
   </div>
 
-  <!-- ============ 1. عرض الأسعار ============ -->
   <div id="pricesSection" class="tab-content active">
     <div class="card">
       <h2>
@@ -478,7 +457,6 @@
     </div>
   </div>
 
-  <!-- ============ 2. إضافة مادة ============ -->
   <div id="addProductSection" class="tab-content">
     <div class="card" style="max-width: 680px; margin: 0 auto;">
       <h2>➕ إضافة مادة جديدة إلى الدليل</h2>
@@ -511,7 +489,6 @@
     </div>
   </div>
 
-  <!-- ============ 3. الإعدادات ============ -->
   <div id="settingsSection" class="tab-content">
     <div class="card" style="max-width: 750px; margin: 0 auto;">
       <h2>⚙️ إعدادات المظهر والنمط</h2>
@@ -593,7 +570,6 @@
     </div>
   </div>
 
-  <!-- ============ 4. المساعد الذكي ============ -->
   <div id="aiSection" class="tab-content">
     <div class="card" style="max-width: 800px; margin: 0 auto;">
       <h2>🤖 المساعد المحاسبي الذكي (Ollama Cloud)</h2>
@@ -837,7 +813,6 @@ function loadSettings() {
   document.getElementById('fontSizeSelect').value = fontSize;
   document.getElementById('lowStockThreshold').value = lowStock;
 
-  // تحميل مفتاح ونموذج Ollama
   document.getElementById('ollamaApiKey').value = localStorage.getItem('ollama_api_key') || '';
   const savedModel = localStorage.getItem('ollama_model') || 'qwen2.5:14b';
   document.getElementById('modelSelect').value = savedModel;
@@ -1343,7 +1318,7 @@ async function stopScanner() {
 }
 
 /* ==================================================================
-   17. المساعد الذكي (Ollama Cloud)
+   17. المساعد الذكي (Ollama Cloud) - مع وسيط CORS
    ================================================================== */
 function saveApiKey() {
   const value = document.getElementById('ollamaApiKey').value.trim();
@@ -1408,8 +1383,13 @@ async function sendAiMessage() {
 ${JSON.stringify(context, null, 2)}
 أجب بوضوح واحترافية وباللغة العربية بناءً على البيانات أعلاه.`;
 
+  // استخدام وسيط CORS لتجاوز قيود المتصفح
+  const proxyUrl = 'https://api.allorigins.win/raw?url=';
+  const targetUrl = 'https://ollama.com/api/chat';
+  const urlWithProxy = proxyUrl + encodeURIComponent(targetUrl);
+
   try {
-    const response = await fetch('https://ollama.com/api/chat', {
+    const response = await fetch(urlWithProxy, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
