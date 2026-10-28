@@ -404,7 +404,6 @@
     <button class="tab-btn" data-tab="ai" onclick="switchTab('ai')">🤖 المساعد الذكي</button>
   </div>
 
-  <!-- عرض الأسعار -->
   <div id="pricesSection" class="tab-content active">
     <div class="card">
       <h2>
@@ -457,7 +456,6 @@
     </div>
   </div>
 
-  <!-- إضافة مادة -->
   <div id="addProductSection" class="tab-content">
     <div class="card" style="max-width: 680px; margin: 0 auto;">
       <h2>➕ إضافة مادة جديدة إلى الدليل</h2>
@@ -490,7 +488,6 @@
     </div>
   </div>
 
-  <!-- الإعدادات -->
   <div id="settingsSection" class="tab-content">
     <div class="card" style="max-width: 750px; margin: 0 auto;">
       <h2>⚙️ إعدادات المظهر والنمط</h2>
@@ -572,7 +569,6 @@
     </div>
   </div>
 
-  <!-- المساعد الذكي -->
   <div id="aiSection" class="tab-content">
     <div class="card" style="max-width: 800px; margin: 0 auto;">
       <h2>🤖 المساعد المحاسبي الذكي (Cloudflare AI)</h2>
@@ -605,7 +601,6 @@
   </div>
 </div>
 
-<!-- المودالات -->
 <div id="adminPinModal" class="modal">
   <div class="modal-content">
     <div class="modal-header">
@@ -742,6 +737,9 @@ const DEFAULTS = {
   SESSION_KEY: 'admin_session_until'
 };
 
+// 🔗 رابط الـ Worker الخاص بك (وسيط CORS)
+const CORS_PROXY = 'https://soft-queen-c57c.alialmoosa233.workers.dev/';
+
 const firebaseConfig = {
   apiKey: "AIzaSyC-QqnQTbbyVFS8QFkf4CYZTcURcr9nBW0",
   authDomain: "gimi-fd7fe.firebaseapp.com",
@@ -818,7 +816,6 @@ function loadSettings() {
   document.getElementById('fontSizeSelect').value = fontSize;
   document.getElementById('lowStockThreshold').value = lowStock;
 
-  // تحميل إعدادات Cloudflare AI
   document.getElementById('cfApiKey').value = localStorage.getItem('cf_api_key') || '';
   document.getElementById('cfAccountId').value = localStorage.getItem('cf_account_id') || '';
   const savedModel = localStorage.getItem('cf_model') || '@cf/meta/llama-3.1-8b-instruct';
@@ -1401,10 +1398,12 @@ async function sendAiMessage() {
 ${JSON.stringify(context, null, 2)}
 أجب بوضوح واحترافية وباللغة العربية بناءً على البيانات أعلاه.`;
 
-  try {
-    const url = `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/v1/chat/completions`;
+  // ✅ نقطة النهاية الصحيحة + الوسيط الخاص بك
+  const targetUrl = `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/v1/chat/completions`;
+  const proxyUrl = CORS_PROXY + '?url=' + encodeURIComponent(targetUrl);
 
-    const response = await fetch(url, {
+  try {
+    const response = await fetch(proxyUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
