@@ -332,7 +332,6 @@
       header { padding: 14px 16px; font-size: 17px; }
       .container { padding: 0 12px; margin: 16px auto; }
       .card { padding: 16px; }
-
       .table-wrapper { border: none; box-shadow: none; }
       table, thead, tbody, th, td, tr { display: block; }
       thead { display: none; }
@@ -401,7 +400,6 @@
     <button class="tab-btn active" data-tab="prices" onclick="switchTab('prices')">🔍 عرض الأسعار والمخزون</button>
     <button class="tab-btn admin-only" data-tab="addProduct" onclick="switchTab('addProduct')">➕ إضافة مادة جديدة</button>
     <button class="tab-btn" data-tab="settings" onclick="switchTab('settings')">⚙️ الضبط والمظهر</button>
-    <button class="tab-btn" data-tab="ai" onclick="switchTab('ai')">🤖 المساعد الذكي</button>
   </div>
 
   <div id="pricesSection" class="tab-content active">
@@ -568,37 +566,6 @@
       <button onclick="resetSettings()" class="btn-secondary" style="margin-top:22px;">🔄 استعادة الإعدادات الافتراضية</button>
     </div>
   </div>
-
-  <div id="aiSection" class="tab-content">
-    <div class="card" style="max-width: 800px; margin: 0 auto;">
-      <h2>🤖 المساعد المحاسبي الذكي (Cloudflare AI)</h2>
-
-      <label class="admin-only">🔑 مفتاح Cloudflare API Token</label>
-      <input type="password" id="cfApiKey" class="admin-only" placeholder="الصق المفتاح هنا..." onchange="saveApiKey()" autocomplete="off" style="margin-bottom:14px;" />
-
-      <label class="admin-only">🆔 Account ID</label>
-      <input type="text" id="cfAccountId" class="admin-only" placeholder="معرّف الحساب (32 حرفاً)..." onchange="saveAccountId()" autocomplete="off" style="margin-bottom:14px;" />
-
-      <label class="admin-only">🤖 اختر النموذج</label>
-      <select id="modelSelect" class="admin-only" onchange="saveSelectedModel()" style="margin-bottom:14px;">
-        <option value="@cf/meta/llama-3.3-70b-instruct-fp8-fast">Llama 3.3 70B (الأقوى — للعربية)</option>
-        <option value="@cf/meta/llama-3.1-8b-instruct">Llama 3.1 8B (سريع ومتوازن)</option>
-        <option value="@cf/qwen/qwen1.5-14b-chat-awq">Qwen 1.5 14B (ممتاز للعربية)</option>
-        <option value="@cf/meta/llama-3.2-3b-instruct">Llama 3.2 3B (الأسرع)</option>
-      </select>
-
-      <div style="display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap;">
-        <button onclick="quickAsk('ما هي أكثر المواد التي أوشكت على النفاد؟')" class="btn-secondary" style="width:auto; font-size:0.85em; padding:6px 12px;">⚠️ المواد الناقصة</button>
-        <button onclick="quickAsk('اعطني ملخصاً شاملاً عن حالة المخزن والأسعار')" class="btn-secondary" style="width:auto; font-size:0.85em; padding:6px 12px;">📊 ملخص عام</button>
-      </div>
-
-      <div id="aiChatBox" style="height:320px; overflow-y:auto; background:var(--stripe-bg); padding:16px; border-radius:10px; margin-bottom:14px; border:1px solid var(--border-color);"></div>
-      <div style="display:flex; gap:10px;">
-        <input type="text" id="aiPrompt" placeholder="اسأل المساعد..." style="margin:0;" onkeypress="if(event.key==='Enter') sendAiMessage()" />
-        <button onclick="sendAiMessage()" id="aiSendBtn" class="btn-price" style="width:auto; padding:0 24px;">إرسال</button>
-      </div>
-    </div>
-  </div>
 </div>
 
 <div id="adminPinModal" class="modal">
@@ -737,9 +704,6 @@ const DEFAULTS = {
   SESSION_KEY: 'admin_session_until'
 };
 
-// 🔗 رابط الـ Worker الخاص بك (وسيط CORS)
-const CORS_PROXY = 'https://soft-queen-c57c.alialmoosa233.workers.dev/';
-
 const firebaseConfig = {
   apiKey: "AIzaSyC-QqnQTbbyVFS8QFkf4CYZTcURcr9nBW0",
   authDomain: "gimi-fd7fe.firebaseapp.com",
@@ -815,11 +779,6 @@ function loadSettings() {
   document.getElementById('fontSelect').value = font;
   document.getElementById('fontSizeSelect').value = fontSize;
   document.getElementById('lowStockThreshold').value = lowStock;
-
-  document.getElementById('cfApiKey').value = localStorage.getItem('cf_api_key') || '';
-  document.getElementById('cfAccountId').value = localStorage.getItem('cf_account_id') || '';
-  const savedModel = localStorage.getItem('cf_model') || '@cf/meta/llama-3.1-8b-instruct';
-  document.getElementById('modelSelect').value = savedModel;
 
   const sessionUntil = Number(localStorage.getItem(DEFAULTS.SESSION_KEY) || 0);
   if (sessionUntil > Date.now()) setAdminMode(true, false);
@@ -1322,125 +1281,7 @@ async function stopScanner() {
 }
 
 /* ==================================================================
-   17. المساعد الذكي (Cloudflare Workers AI)
-   ================================================================== */
-function saveApiKey() {
-  const value = document.getElementById('cfApiKey').value.trim();
-  if (value) {
-    localStorage.setItem('cf_api_key', value);
-    showToast("✅ تم حفظ مفتاح Cloudflare", "success");
-  }
-}
-
-function saveAccountId() {
-  const value = document.getElementById('cfAccountId').value.trim();
-  if (value) {
-    localStorage.setItem('cf_account_id', value);
-    showToast("✅ تم حفظ Account ID", "success");
-  }
-}
-
-function saveSelectedModel() {
-  const model = document.getElementById('modelSelect').value;
-  localStorage.setItem('cf_model', model);
-  showToast(`🤖 النموذج: ${model.split('/').pop()}`, "success");
-}
-
-function quickAsk(question) {
-  document.getElementById('aiPrompt').value = question;
-  sendAiMessage();
-}
-
-function appendChatMessage(role, text) {
-  const box = document.getElementById('aiChatBox');
-  const bubble = document.createElement('div');
-  bubble.style.cssText = 'padding:10px 14px; margin:8px 0; border-radius:8px; white-space:pre-wrap; overflow-wrap:anywhere; line-height:1.7;';
-  bubble.style.background = role === 'user' ? 'rgba(37,99,235,0.12)' : 'rgba(13,148,136,0.12)';
-  bubble.style.borderInlineStart = role === 'user' ? '3px solid var(--price-blue)' : '3px solid var(--brass)';
-  bubble.textContent = (role === 'user' ? 'أنت: ' : 'AI: ') + text;
-  box.appendChild(bubble);
-  box.scrollTop = box.scrollHeight;
-  return bubble;
-}
-
-function buildAccountingContext() {
-  const prices = Object.values(currentData.prices || {});
-  const threshold = getLowStockThreshold();
-  return {
-    currency: "IQD", productsCount: prices.length, lowStockThreshold: threshold,
-    lowStock: prices.filter(p => (Number(p.packetStock) || 0) <= threshold || (Number(p.cartonStock) || 0) <= threshold).map(p => ({ name: p.name, packetStock: p.packetStock, cartonStock: p.cartonStock })),
-    products: prices.map(p => ({ name: p.name, code: p.code, packetCost: p.packetCost, packetSell: p.packetSell, packetStock: p.packetStock, cartonCost: p.cartonCost, cartonSell: p.cartonSell, cartonStock: p.cartonStock }))
-  };
-}
-
-async function sendAiMessage() {
-  const input = document.getElementById('aiPrompt');
-  const sendBtn = document.getElementById('aiSendBtn');
-  const question = input.value.trim();
-  if (!question) return;
-
-  const apiKey = localStorage.getItem('cf_api_key');
-  const accountId = localStorage.getItem('cf_account_id');
-
-  if (!apiKey) return showToast("أدخل مفتاح Cloudflare API أولاً", "warning");
-  if (!accountId) return showToast("أدخل Account ID أولاً", "warning");
-
-  const model = localStorage.getItem('cf_model') || '@cf/meta/llama-3.1-8b-instruct';
-
-  appendChatMessage('user', question);
-  input.value = '';
-  sendBtn.disabled = true;
-  const loading = appendChatMessage('assistant', '⏳ جاري التحليل...');
-
-  const context = buildAccountingContext();
-  const systemPrompt = `أنت مساعد محاسبي ذكي لنظام إدارة المخزون وعرض الأسعار في محلات الدباغ.
-إليك بيانات المخزون الحالية بصيغة JSON:
-${JSON.stringify(context, null, 2)}
-أجب بوضوح واحترافية وباللغة العربية بناءً على البيانات أعلاه.`;
-
-  // ✅ نقطة النهاية الصحيحة + الوسيط الخاص بك
-  const targetUrl = `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/v1/chat/completions`;
-  const proxyUrl = CORS_PROXY + '?url=' + encodeURIComponent(targetUrl);
-
-  try {
-    const response = await fetch(proxyUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
-      },
-      body: JSON.stringify({
-        model: model,
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: question }
-        ],
-        max_tokens: 1024,
-        temperature: 0.7
-      })
-    });
-
-    if (!response.ok) {
-      const errData = await response.json().catch(() => ({}));
-      const errMsg = errData.errors?.[0]?.message || errData.error?.message || `HTTP ${response.status}`;
-      throw new Error(errMsg);
-    }
-
-    const data = await response.json();
-    const reply = data.choices?.[0]?.message?.content
-               || data.result?.response
-               || "لم أتمكن من الحصول على إجابة.";
-    loading.textContent = 'AI: ' + reply;
-  } catch (err) {
-    loading.textContent = 'AI: ⚠️ خطأ - ' + err.message;
-    loading.style.borderInlineStartColor = 'var(--danger)';
-  } finally {
-    sendBtn.disabled = false;
-  }
-}
-
-/* ==================================================================
-   18. النسخ الاحتياطي
+   17. النسخ الاحتياطي
    ================================================================== */
 function sanitizeProduct(p) {
   return {
@@ -1565,7 +1406,7 @@ async function executeImport() {
 }
 
 /* ==================================================================
-   19. المودالات والإغلاق
+   18. المودالات والإغلاق
    ================================================================== */
 document.querySelectorAll('.modal').forEach(modal => {
   modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('show'); });
@@ -1575,7 +1416,7 @@ document.addEventListener('keydown', (e) => {
 });
 
 /* ==================================================================
-   20. التهيئة
+   19. التهيئة
    ================================================================== */
 window.addEventListener('load', () => {
   loadSettings();
