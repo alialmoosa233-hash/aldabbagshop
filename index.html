@@ -10,9 +10,11 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Tajawal:wght@400;500;700;900&family=Almarai:wght@400;700;800&family=IBM+Plex+Mono:wght@600;700&display=swap" rel="stylesheet">
+  <!-- 12 خط عربي -->
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=Cairo:wght@400;600;700;800&family=Almarai:wght@400;700;800&family=Noto+Kufi+Arabic:wght@400;600;700;800&family=Readex+Pro:wght@400;600;700&family=IBM+Plex+Sans+Arabic:wght@400;600;700&family=Amiri:wght@400;700&family=Rubik:wght@400;600;700&family=Changa:wght@400;600;700&family=El+Messiri:wght@400;600;700&family=Cairo+Play:wght@400;700;900&family=Lalezar&family=IBM+Plex+Mono:wght@600;700&display=swap" rel="stylesheet">
 
   <style>
+    /* ============ المتغيرات ============ */
     :root {
       --bg-main: #F1F5F9;
       --card-bg: #FFFFFF;
@@ -37,6 +39,7 @@
       --font-body: 'Tajawal', sans-serif;
       --font-size-base: 15.5px;
       --low-stock-threshold: 5;
+      --border-thickness: 1px;
     }
 
     body.dark-mode {
@@ -57,6 +60,35 @@
       --warning-bg: rgba(217, 119, 6, 0.15);
     }
 
+    /* ============ أنماط التصميم ============ */
+    /* Classic = الافتراضي (لا تغيير) */
+
+    /* Modern: حواف ناعمة، ظلال أعمق */
+    body.style-modern {
+      --radius: 20px;
+      --radius-sm: 14px;
+      --shadow-sm: 0 4px 16px rgba(15, 23, 42, 0.08);
+      --shadow-md: 0 12px 32px rgba(15, 23, 42, 0.16);
+    }
+    body.style-modern .card { padding: 28px; }
+    body.style-modern button { border-radius: 14px; }
+    body.style-modern .dash-card { border-inline-start-width: 6px; }
+
+    /* Flat: بدون ظلال، حواف حادة */
+    body.style-flat {
+      --radius: 4px;
+      --radius-sm: 3px;
+      --shadow-sm: none;
+      --shadow-md: none;
+    }
+    body.style-flat .card { border-width: 2px; }
+    body.style-flat button { border-radius: 3px; }
+    body.style-flat header { border-bottom-width: 5px; }
+    body.style-flat .dash-card { border-width: 2px; border-inline-start-width: 6px; }
+    body.style-flat .stock-badge,
+    body.style-flat .filter-btn { border-radius: 4px; }
+    body.style-flat .price-box { border-radius: 3px; }
+
     * { box-sizing: border-box; }
 
     body {
@@ -70,6 +102,7 @@
       transition: background-color 0.3s ease, color 0.3s ease;
     }
 
+    /* ============ الرأس ============ */
     header {
       background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
       color: #F8FAFC; padding: 18px 30px; font-size: 21px; font-weight: 800;
@@ -117,7 +150,7 @@
       flex: 1; min-width: 140px; padding: 14px; font-size: 1.05em; font-weight: 800;
       background: var(--card-bg); color: var(--text-muted);
       border: 1px solid var(--border-color); border-bottom: none;
-      border-radius: 12px 12px 0 0; cursor: pointer; text-align: center;
+      border-radius: var(--radius) var(--radius) 0 0; cursor: pointer; text-align: center;
       transition: all 0.2s ease; font-family: var(--font-body);
     }
     .tab-btn:hover:not(.active) { color: var(--primary); }
@@ -177,6 +210,101 @@
     .btn-admin { background: var(--brass); color: #FFF; }
     .btn-danger { background: var(--danger); }
 
+    /* ============ شبكة الثيمات ============ */
+    .theme-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+    .theme-swatch {
+      padding: 12px 8px;
+      border-radius: 10px;
+      text-align: center;
+      border: 3px solid transparent;
+      cursor: pointer;
+      font-weight: 800;
+      font-size: 0.82em;
+      transition: all 0.2s;
+      color: #FFF;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.35);
+      min-height: 74px;
+      display: flex; flex-direction: column;
+      justify-content: center; align-items: center; gap: 4px;
+      position: relative;
+    }
+    .theme-swatch:hover { transform: translateY(-3px) scale(1.02); box-shadow: var(--shadow-md); z-index: 1; }
+    .theme-swatch.active {
+      border-color: #FFF;
+      box-shadow: 0 0 0 3px var(--text-main), 0 4px 12px rgba(0,0,0,0.2);
+    }
+    .theme-swatch.active::after {
+      content: '✓';
+      position: absolute;
+      top: 4px; left: 6px;
+      font-size: 1em; font-weight: 900;
+      background: #FFF; color: #000;
+      width: 20px; height: 20px; line-height: 20px;
+      border-radius: 50%; text-align: center;
+      text-shadow: none;
+    }
+    .theme-swatch .emoji { font-size: 1.4em; }
+
+    /* ============ شبكة الخطوط ============ */
+    .font-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+    .font-swatch {
+      padding: 14px 12px;
+      border-radius: 10px;
+      text-align: center;
+      border: 2px solid var(--border-color);
+      cursor: pointer;
+      background: var(--card-bg);
+      color: var(--text-main);
+      transition: all 0.2s;
+    }
+    .font-swatch:hover { border-color: var(--primary); transform: translateY(-2px); box-shadow: var(--shadow-sm); }
+    .font-swatch.active {
+      border-color: var(--primary);
+      background: rgba(37, 99, 235, 0.08);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
+    }
+    .font-swatch .sample { font-size: 1.5em; font-weight: 700; margin-bottom: 6px; line-height: 1.2; }
+    .font-swatch .name { font-size: 0.78em; color: var(--text-muted); font-weight: 700; }
+
+    /* ============ شبكة الأنماط ============ */
+    .style-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+    .style-swatch {
+      padding: 16px 12px;
+      border-radius: 10px;
+      text-align: center;
+      border: 2px solid var(--border-color);
+      cursor: pointer;
+      background: var(--card-bg);
+      color: var(--text-main);
+      transition: all 0.2s;
+      font-weight: 700;
+    }
+    .style-swatch:hover { border-color: var(--primary); transform: translateY(-2px); }
+    .style-swatch.active {
+      border-color: var(--primary);
+      background: rgba(37, 99, 235, 0.08);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
+    }
+    .style-swatch .icon { font-size: 1.8em; margin-bottom: 6px; }
+    .style-swatch .name { font-size: 0.9em; font-weight: 800; }
+    .style-swatch .desc { font-size: 0.72em; color: var(--text-muted); margin-top: 4px; font-weight: 600; }
+
+    /* ============ البحث والفلترة ============ */
     .search-toolbar { display: flex; flex-direction: column; gap: 12px; margin-bottom: 18px; }
     .search-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
     .search-container { position: relative; flex: 1; min-width: 200px; }
@@ -200,9 +328,10 @@
       box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
 
+    /* ============ الجدول ============ */
     .table-wrapper {
       overflow-x: auto; margin-top: 12px;
-      border-radius: 10px; border: 1px solid var(--border-color);
+      border-radius: var(--radius); border: 1px solid var(--border-color);
       box-shadow: var(--shadow-sm);
     }
     table { width: 100%; border-collapse: collapse; }
@@ -259,6 +388,7 @@
       border-radius: 6px; font-weight: 700;
     }
 
+    /* ============ الإشعارات ============ */
     #toastContainer {
       position: fixed; bottom: 20px; left: 20px; z-index: 10000;
       display: flex; flex-direction: column; gap: 10px; pointer-events: none;
@@ -278,6 +408,7 @@
     @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes fadeOut { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(20px); } }
 
+    /* ============ المودالات ============ */
     .modal {
       display: none; position: fixed; z-index: 1000;
       left: 0; top: 0; width: 100%; height: 100%;
@@ -311,6 +442,7 @@
     .modal-actions { display: flex; gap: 10px; margin-top: 16px; }
     .modal-actions button { flex: 1; }
 
+    /* ============ الطباعة ============ */
     @media print {
       header, .tabs, .dashboard-summary, #cloudStatus,
       .search-toolbar, .admin-only, .no-print,
@@ -328,10 +460,12 @@
       .tab-content.active { display: block !important; }
     }
 
+    /* ============ الجوال ============ */
     @media (max-width: 768px) {
       header { padding: 14px 16px; font-size: 17px; }
       .container { padding: 0 12px; margin: 16px auto; }
       .card { padding: 16px; }
+
       .table-wrapper { border: none; box-shadow: none; }
       table, thead, tbody, th, td, tr { display: block; }
       thead { display: none; }
@@ -363,6 +497,9 @@
       .tab-btn { min-width: 100px; font-size: 0.9em; padding: 10px; }
       .modal-content { padding: 18px; }
       h2 { font-size: 1.1em; }
+      .theme-grid { grid-template-columns: repeat(3, 1fr); }
+      .font-grid { grid-template-columns: repeat(2, 1fr); }
+      .style-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -391,7 +528,7 @@
       <div class="value" id="dashLowStockCount" style="color:var(--danger);">0</div>
     </div>
     <div class="dash-card admin-only" onclick="void(0)">
-      <div class="label">💰 القيمة الإجمالية للمخزن (سعر البيع)</div>
+      <div class="label">💰 القيمة الإجمالية للمخزن</div>
       <div class="value" id="dashTotalValue" style="color:var(--success);">0 د.ع</div>
     </div>
   </div>
@@ -402,6 +539,7 @@
     <button class="tab-btn" data-tab="settings" onclick="switchTab('settings')">⚙️ الضبط والمظهر</button>
   </div>
 
+  <!-- عرض الأسعار -->
   <div id="pricesSection" class="tab-content active">
     <div class="card">
       <h2>
@@ -454,6 +592,7 @@
     </div>
   </div>
 
+  <!-- إضافة مادة -->
   <div id="addProductSection" class="tab-content">
     <div class="card" style="max-width: 680px; margin: 0 auto;">
       <h2>➕ إضافة مادة جديدة إلى الدليل</h2>
@@ -467,7 +606,7 @@
           <button type="button" onclick="startScanner()" class="btn-price" style="width:50px; height:46px; padding:0; display:flex; align-items:center; justify-content:center; font-size:1.2em;" aria-label="مسح الباركود">📷</button>
         </div>
 
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; background:var(--stripe-bg); padding:16px; border-radius:10px; border:1px solid var(--border-color); margin-bottom:18px;">
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; background:var(--stripe-bg); padding:16px; border-radius:var(--radius-sm); border:1px solid var(--border-color); margin-bottom:18px;">
           <div>
             <label style="color:var(--primary); font-weight:800;">📦 تفاصيل الباكيت</label>
             <input type="number" id="pPacketCost" placeholder="الكلفة" min="0" step="any" />
@@ -486,21 +625,25 @@
     </div>
   </div>
 
+  <!-- الإعدادات -->
   <div id="settingsSection" class="tab-content">
-    <div class="card" style="max-width: 750px; margin: 0 auto;">
+    <div class="card" style="max-width: 950px; margin: 0 auto;">
       <h2>⚙️ إعدادات المظهر والنمط</h2>
 
-      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:18px; margin-bottom: 24px;">
-        <div>
-          <label>🎨 نمط الألوان</label>
-          <select id="colorSelect" onchange="changeColorSetting(this.value)">
-            <option value="blue">🏛️ الكلاسيكي (أزرق ملكي)</option>
-            <option value="emerald">🌲 الزمردي</option>
-            <option value="burgundy">🍇 العنابي</option>
-            <option value="slate">💻 الحديث (رمادي)</option>
-            <option value="vintage">📜 الورقي</option>
-          </select>
-        </div>
+      <!-- الثيمات -->
+      <label style="font-size: 1em; margin-bottom: 8px;">🎨 نمط الألوان (اضغط للاختيار)</label>
+      <div class="theme-grid" id="themeGrid"></div>
+
+      <!-- الخطوط -->
+      <label style="font-size: 1em; margin-bottom: 8px;">🔤 نوع الخط (اضغط للاختيار)</label>
+      <div class="font-grid" id="fontGrid"></div>
+
+      <!-- أنماط التصميم -->
+      <label style="font-size: 1em; margin-bottom: 8px;">✨ نمط التصميم</label>
+      <div class="style-grid" id="styleGrid"></div>
+
+      <!-- إعدادات أخرى -->
+      <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:14px; margin-top: 10px; margin-bottom: 24px;">
         <div>
           <label>🌙 درجة الإضاءة</label>
           <select id="themeSelect" onchange="changeThemeSetting(this.value)">
@@ -509,24 +652,18 @@
           </select>
         </div>
         <div>
-          <label>🔤 الخط</label>
-          <select id="fontSelect" onchange="changeFontSetting(this.value)">
-            <option value="Tajawal">تجوال</option>
-            <option value="Cairo">كايرو</option>
-            <option value="Almarai">المراعي</option>
-          </select>
-        </div>
-        <div>
           <label>🔍 حجم الخط</label>
           <select id="fontSizeSelect" onchange="changeFontSizeSetting(this.value)">
+            <option value="13px">صغير جداً</option>
             <option value="14px">صغير</option>
             <option value="15.5px" selected>عادي</option>
             <option value="17px">كبير</option>
             <option value="19px">كبير جداً</option>
+            <option value="22px">ضخم</option>
           </select>
         </div>
         <div>
-          <label>⚠️ عتبة تنبيه المخزون (الكمية)</label>
+          <label>⚠️ عتبة تنبيه المخزون</label>
           <input type="number" id="lowStockThreshold" min="1" max="100" onchange="changeLowStockThreshold(this.value)" />
         </div>
       </div>
@@ -568,11 +705,12 @@
   </div>
 </div>
 
+<!-- المودالات -->
 <div id="adminPinModal" class="modal">
   <div class="modal-content">
     <div class="modal-header">
       <h3>🔐 تفعيل وضع التعديل</h3>
-      <button class="modal-close" onclick="closeModal('adminPinModal')" aria-label="إغلاق">✕</button>
+      <button class="modal-close" onclick="closeModal('adminPinModal')">✕</button>
     </div>
     <label for="adminPinInput">رمز الأدمن السري</label>
     <input type="password" id="adminPinInput" placeholder="أدخل الرمز..." autocomplete="off" onkeypress="if(event.key==='Enter') submitAdminPin()" />
@@ -587,7 +725,7 @@
   <div class="modal-content" style="max-width: 640px;">
     <div class="modal-header">
       <h3>✏️ تعديل بيانات المادة</h3>
-      <button class="modal-close" onclick="closeModal('editProductModal')" aria-label="إغلاق">✕</button>
+      <button class="modal-close" onclick="closeModal('editProductModal')">✕</button>
     </div>
     <form id="editForm" novalidate>
       <input type="hidden" id="editId" />
@@ -633,7 +771,7 @@
   <div class="modal-content" style="max-width: 420px;">
     <div class="modal-header">
       <h3>📦 تعديل كمية المخزون</h3>
-      <button class="modal-close" onclick="closeModal('stockModal')" aria-label="إغلاق">✕</button>
+      <button class="modal-close" onclick="closeModal('stockModal')">✕</button>
     </div>
     <p id="stockProductName" style="font-weight: 700; color: var(--primary); margin-bottom: 12px;"></p>
     <label>الكمية الحالية</label>
@@ -649,7 +787,7 @@
   <div class="modal-content" style="text-align:center; max-width: 500px;">
     <div class="modal-header">
       <h3>📷 قراءة الباركود</h3>
-      <button class="modal-close" onclick="stopScanner()" aria-label="إغلاق">✕</button>
+      <button class="modal-close" onclick="stopScanner()">✕</button>
     </div>
     <div id="interactive" style="width:100%; height:260px; background:#000; margin-bottom:14px; border-radius:8px;"></div>
     <button onclick="stopScanner()" class="btn-secondary">إغلاق الكاميرا</button>
@@ -660,7 +798,7 @@
   <div class="modal-content" style="max-width: 520px;">
     <div class="modal-header">
       <h3>📥 استرجاع النسخة الاحتياطية</h3>
-      <button class="modal-close" onclick="closeModal('backupImportModal')" aria-label="إغلاق">✕</button>
+      <button class="modal-close" onclick="closeModal('backupImportModal')">✕</button>
     </div>
     <div id="backupInfo" style="background:var(--stripe-bg); padding:14px; border-radius:8px; margin-bottom:16px; font-size:0.9em; line-height:1.9; border:1px solid var(--border-color);"></div>
     <p style="font-weight:800; margin-bottom:10px; color:var(--primary);">⚙️ اختر طريقة الاسترجاع:</p>
@@ -698,11 +836,59 @@ const DEFAULTS = {
   COLOR: 'blue',
   FONT: 'Tajawal',
   FONT_SIZE: '15.5px',
+  STYLE: 'classic',
   LOW_STOCK: 5,
   ADMIN_PIN: '1234',
   PIN_KEY: 'admin_pin',
   SESSION_KEY: 'admin_session_until'
 };
+
+/* 🎨 20 ثيماً لونياً */
+const COLOR_THEMES = {
+  blue:      { name: 'أزرق ملكي',     emoji: '🏛️', primary: '#1E3A8A', price: '#2563EB', brass: '#D97706', bg: '#F1F5F9' },
+  emerald:   { name: 'زمردي',         emoji: '🌲', primary: '#065F46', price: '#059669', brass: '#D97706', bg: '#F0FDF4' },
+  burgundy:  { name: 'عنابي',         emoji: '🍇', primary: '#831843', price: '#BE185D', brass: '#9A3412', bg: '#FDF2F8' },
+  slate:     { name: 'رمادي حديث',    emoji: '💻', primary: '#1E293B', price: '#3B82F6', brass: '#F59E0B', bg: '#F8FAFC' },
+  vintage:   { name: 'ورقي دافئ',     emoji: '📜', primary: '#2C4368', price: '#24508C', brass: '#A9822E', bg: '#E7DEC4' },
+  purple:    { name: 'بنفسجي',        emoji: '🟣', primary: '#581C87', price: '#9333EA', brass: '#D97706', bg: '#FAF5FF' },
+  lavender:  { name: 'لافندر',        emoji: '💜', primary: '#6B21A8', price: '#A855F7', brass: '#EC4899', bg: '#F5F3FF' },
+  rose:      { name: 'وردي',          emoji: '🌸', primary: '#9F1239', price: '#E11D48', brass: '#D97706', bg: '#FFF1F2' },
+  crimson:   { name: 'قرمزي',         emoji: '🔴', primary: '#7F1D1D', price: '#DC2626', brass: '#F59E0B', bg: '#FEF2F2' },
+  coral:     { name: 'مرجاني',        emoji: '🪸', primary: '#9A3412', price: '#F97316', brass: '#EA580C', bg: '#FFF7ED' },
+  sunset:    { name: 'غروب',          emoji: '🌅', primary: '#9A3412', price: '#EA580C', brass: '#D97706', bg: '#FFF7ED' },
+  amber:     { name: 'عنبري',         emoji: '🟡', primary: '#78350F', price: '#F59E0B', brass: '#D97706', bg: '#FFFBEB' },
+  coffee:    { name: 'قهوي',          emoji: '☕', primary: '#451A03', price: '#92400E', brass: '#B45309', bg: '#FEF6E4' },
+  olive:     { name: 'زيتوني',        emoji: '🫒', primary: '#365314', price: '#65A30D', brass: '#CA8A04', bg: '#F7FEE7' },
+  forest:    { name: 'غابة',          emoji: '🌳', primary: '#14532D', price: '#16A34A', brass: '#CA8A04', bg: '#F0FDF4' },
+  mint:      { name: 'نعناعي',        emoji: '🍃', primary: '#134E4A', price: '#10B981', brass: '#F59E0B', bg: '#F0FDFA' },
+  ocean:     { name: 'محيطي',         emoji: '🌊', primary: '#0F766E', price: '#14B8A6', brass: '#F59E0B', bg: '#F0FDFA' },
+  teal:      { name: 'أزرق مخضر',     emoji: '🩵', primary: '#155E75', price: '#06B6D4', brass: '#F59E0B', bg: '#ECFEFF' },
+  midnight:  { name: 'منتصف الليل',   emoji: '🌃', primary: '#0C4A6E', price: '#0284C7', brass: '#EAB308', bg: '#F0F9FF' },
+  graphite:  { name: 'جرافيت',        emoji: '⚫', primary: '#27272A', price: '#52525B', brass: '#EAB308', bg: '#FAFAFA' }
+};
+
+/* 🔤 12 خط عربي */
+const FONT_OPTIONS = [
+  { value: 'Tajawal',           name: 'تجوال' },
+  { value: 'Cairo',             name: 'كايرو' },
+  { value: 'Almarai',           name: 'المراعي' },
+  { value: 'Noto Kufi Arabic',  name: 'كوفي حديث' },
+  { value: 'Readex Pro',        name: 'ريدكس' },
+  { value: 'IBM Plex Sans Arabic', name: 'IBM بليكس' },
+  { value: 'Amiri',             name: 'أميري كلاسيكي' },
+  { value: 'Rubik',             name: 'روبيك' },
+  { value: 'Changa',            name: 'تشانغا' },
+  { value: 'El Messiri',        name: 'المسيري' },
+  { value: 'Cairo Play',        name: 'كايرو بلاي' },
+  { value: 'Lalezar',           name: 'لاله زار' }
+];
+
+/* ✨ 3 أنماط تصميم */
+const STYLE_OPTIONS = [
+  { value: 'classic', name: 'كلاسيكي', icon: '🎩', desc: 'أنيق ومتوازن' },
+  { value: 'modern',  name: 'حديث',    icon: '✨', desc: 'حواف ناعمة' },
+  { value: 'flat',    name: 'مسطح',    icon: '⬜', desc: 'بدون ظلال' }
+];
 
 const firebaseConfig = {
   apiKey: "AIzaSyC-QqnQTbbyVFS8QFkf4CYZTcURcr9nBW0",
@@ -751,7 +937,60 @@ function showConfirm(title, message, onConfirm) {
 }
 
 /* ==================================================================
-   3. الإعدادات
+   3. بناء شبكات الثيمات والخطوط والأنماط
+   ================================================================== */
+function buildThemeGrid() {
+  const grid = document.getElementById('themeGrid');
+  grid.innerHTML = Object.entries(COLOR_THEMES).map(([key, t]) => `
+    <div class="theme-swatch" data-theme="${key}" onclick="changeColorSetting('${key}')"
+         style="background: linear-gradient(135deg, ${t.primary}, ${t.price});">
+      <div class="emoji">${t.emoji}</div>
+      <div>${t.name}</div>
+    </div>
+  `).join('');
+}
+
+function buildFontGrid() {
+  const grid = document.getElementById('fontGrid');
+  grid.innerHTML = FONT_OPTIONS.map(f => `
+    <div class="font-swatch" data-font="${f.value}" onclick="changeFontSetting('${f.value}')">
+      <div class="sample" style="font-family: '${f.value}', sans-serif;">مرحبا</div>
+      <div class="name">${f.name}</div>
+    </div>
+  `).join('');
+}
+
+function buildStyleGrid() {
+  const grid = document.getElementById('styleGrid');
+  grid.innerHTML = STYLE_OPTIONS.map(s => `
+    <div class="style-swatch" data-style="${s.value}" onclick="changeStyleSetting('${s.value}')">
+      <div class="icon">${s.icon}</div>
+      <div class="name">${s.name}</div>
+      <div class="desc">${s.desc}</div>
+    </div>
+  `).join('');
+}
+
+function highlightActiveTheme(color) {
+  document.querySelectorAll('.theme-swatch').forEach(el => {
+    el.classList.toggle('active', el.dataset.theme === color);
+  });
+}
+
+function highlightActiveFont(font) {
+  document.querySelectorAll('.font-swatch').forEach(el => {
+    el.classList.toggle('active', el.dataset.font === font);
+  });
+}
+
+function highlightActiveStyle(style) {
+  document.querySelectorAll('.style-swatch').forEach(el => {
+    el.classList.toggle('active', el.dataset.style === style);
+  });
+}
+
+/* ==================================================================
+   4. الإعدادات
    ================================================================== */
 function getAdminPin() {
   return localStorage.getItem(DEFAULTS.PIN_KEY) || DEFAULTS.ADMIN_PIN;
@@ -766,19 +1005,23 @@ function loadSettings() {
   const color = localStorage.getItem('app_color') || DEFAULTS.COLOR;
   const font = localStorage.getItem('app_font') || DEFAULTS.FONT;
   const fontSize = localStorage.getItem('app_fontsize') || DEFAULTS.FONT_SIZE;
+  const style = localStorage.getItem('app_style') || DEFAULTS.STYLE;
   const lowStock = getLowStockThreshold();
 
   if (theme === 'dark') document.body.classList.add('dark-mode');
   applyColorTheme(color);
+  applyStyle(style);
   document.body.style.fontFamily = `'${font}', sans-serif`;
   document.documentElement.style.setProperty('--font-size-base', fontSize);
   document.documentElement.style.setProperty('--low-stock-threshold', lowStock);
 
   document.getElementById('themeSelect').value = theme;
-  document.getElementById('colorSelect').value = color;
-  document.getElementById('fontSelect').value = font;
   document.getElementById('fontSizeSelect').value = fontSize;
   document.getElementById('lowStockThreshold').value = lowStock;
+
+  highlightActiveTheme(color);
+  highlightActiveFont(font);
+  highlightActiveStyle(style);
 
   const sessionUntil = Number(localStorage.getItem(DEFAULTS.SESSION_KEY) || 0);
   if (sessionUntil > Date.now()) setAdminMode(true, false);
@@ -793,19 +1036,13 @@ function changeThemeSetting(val) {
 function changeColorSetting(color) {
   applyColorTheme(color);
   localStorage.setItem('app_color', color);
-  showToast("تم تحديث نمط المظهر", "success");
+  highlightActiveTheme(color);
+  showToast(`🎨 ${COLOR_THEMES[color]?.name || 'ثيم جديد'}`, "success");
 }
 
 function applyColorTheme(color) {
   const root = document.documentElement;
-  const themes = {
-    emerald:  { primary: '#065F46', price: '#059669', brass: '#D97706', bg: '#F0FDF4' },
-    burgundy: { primary: '#831843', price: '#BE185D', brass: '#9A3412', bg: '#FDF2F8' },
-    slate:    { primary: '#1E293B', price: '#3B82F6', brass: '#F59E0B', bg: '#F8FAFC' },
-    vintage:  { primary: '#2C4368', price: '#24508C', brass: '#A9822E', bg: '#E7DEC4' },
-    blue:     { primary: '#1E3A8A', price: '#2563EB', brass: '#D97706', bg: '#F1F5F9' }
-  };
-  const t = themes[color] || themes.blue;
+  const t = COLOR_THEMES[color] || COLOR_THEMES.blue;
   root.style.setProperty('--primary', t.primary);
   root.style.setProperty('--price-blue', t.price);
   root.style.setProperty('--brass', t.brass);
@@ -815,7 +1052,22 @@ function applyColorTheme(color) {
 function changeFontSetting(font) {
   document.body.style.fontFamily = `'${font}', sans-serif`;
   localStorage.setItem('app_font', font);
-  showToast("تم تغيير الخط", "success");
+  highlightActiveFont(font);
+  const f = FONT_OPTIONS.find(x => x.value === font);
+  showToast(`🔤 ${f?.name || font}`, "success");
+}
+
+function changeStyleSetting(style) {
+  applyStyle(style);
+  localStorage.setItem('app_style', style);
+  highlightActiveStyle(style);
+  const s = STYLE_OPTIONS.find(x => x.value === style);
+  showToast(`✨ ${s?.name || style}`, "success");
+}
+
+function applyStyle(style) {
+  document.body.classList.remove('style-classic', 'style-modern', 'style-flat');
+  document.body.classList.add('style-' + style);
 }
 
 function changeFontSizeSetting(size) {
@@ -840,7 +1092,7 @@ function resetSettings() {
 }
 
 /* ==================================================================
-   4. نظام الأدمن
+   5. نظام الأدمن
    ================================================================== */
 function openAdminPinModal() {
   if (isAdmin) { setAdminMode(false); return; }
@@ -896,7 +1148,7 @@ function updateAdminPin(e) {
 }
 
 /* ==================================================================
-   5. Firebase
+   6. Firebase
    ================================================================== */
 function initFirebase() {
   const status = document.getElementById('cloudStatus');
@@ -921,7 +1173,7 @@ function initFirebase() {
 }
 
 /* ==================================================================
-   6. التبويبات
+   7. التبويبات
    ================================================================== */
 function switchTab(tabName) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -933,7 +1185,7 @@ function switchTab(tabName) {
 }
 
 /* ==================================================================
-   7. لوحة الملخص
+   8. لوحة الملخص
    ================================================================== */
 function updateDashboard() {
   const prices = Object.values(currentData.prices || {});
@@ -955,7 +1207,7 @@ function updateDashboard() {
 }
 
 /* ==================================================================
-   8. أدوات مساعدة
+   9. أدوات مساعدة
    ================================================================== */
 function formatIQD(value) { return (Number(value) || 0).toLocaleString('en-US') + " د.ع"; }
 function escapeHtml(value) {
@@ -971,7 +1223,7 @@ function safeNumber(id) {
 }
 
 /* ==================================================================
-   9. البحث والفلترة
+   10. البحث والفلترة
    ================================================================== */
 function handleSearchInput() {
   const val = document.getElementById('searchPrice').value;
@@ -992,7 +1244,7 @@ function setFilter(filter) {
 }
 
 /* ==================================================================
-   10. عرض الجدول
+   11. عرض الجدول
    ================================================================== */
 function renderPrices() {
   const tbody = document.getElementById('pricesTable');
@@ -1090,7 +1342,7 @@ function renderPrices() {
 }
 
 /* ==================================================================
-   11. تعديل المخزون
+   12. تعديل المخزون
    ================================================================== */
 async function adjustQty(id, type, amount) {
   if (!isAdmin) return;
@@ -1130,7 +1382,7 @@ async function submitStockUpdate() {
 }
 
 /* ==================================================================
-   12. إضافة منتج
+   13. إضافة منتج
    ================================================================== */
 document.getElementById('priceForm').addEventListener('submit', async function(e) {
   e.preventDefault();
@@ -1176,7 +1428,7 @@ document.getElementById('priceForm').addEventListener('submit', async function(e
 document.getElementById('pName').addEventListener('input', function() { this.classList.remove('invalid'); });
 
 /* ==================================================================
-   13. تعديل منتج
+   14. تعديل منتج
    ================================================================== */
 function openEditModal(id) {
   if (!isAdmin) return showToast("يجب تفعيل وضع الأدمن", "warning");
@@ -1213,7 +1465,7 @@ document.getElementById('editForm').addEventListener('submit', async function(e)
 });
 
 /* ==================================================================
-   14. حذف منتج
+   15. حذف منتج
    ================================================================== */
 function confirmDelete(id) {
   if (!isAdmin) return showToast("يجب تفعيل وضع الأدمن", "warning");
@@ -1228,7 +1480,7 @@ function confirmDelete(id) {
 }
 
 /* ==================================================================
-   15. تصدير Excel
+   16. تصدير Excel
    ================================================================== */
 function exportCsv() {
   const rows = [["اسم المادة", "الباركود", "كلفة الباكيت", "بيع الباكيت", "مخزون الباكيت", "كلفة الكارتون", "بيع الكارتون", "مخزون الكارتون"]];
@@ -1247,7 +1499,7 @@ function exportCsv() {
 }
 
 /* ==================================================================
-   16. الباركود
+   17. الباركود
    ================================================================== */
 async function startScanner() {
   if (typeof Html5Qrcode === 'undefined') return showToast("مكتبة الباركود غير محملة", "error");
@@ -1281,7 +1533,7 @@ async function stopScanner() {
 }
 
 /* ==================================================================
-   17. النسخ الاحتياطي
+   18. النسخ الاحتياطي
    ================================================================== */
 function sanitizeProduct(p) {
   return {
@@ -1309,6 +1561,7 @@ async function exportBackup() {
         color: localStorage.getItem('app_color') || DEFAULTS.COLOR,
         font: localStorage.getItem('app_font') || DEFAULTS.FONT,
         fontSize: localStorage.getItem('app_fontsize') || DEFAULTS.FONT_SIZE,
+        style: localStorage.getItem('app_style') || DEFAULTS.STYLE,
         lowStockThreshold: getLowStockThreshold()
       }
     };
@@ -1396,6 +1649,7 @@ async function executeImport() {
       if (s.color) localStorage.setItem('app_color', s.color);
       if (s.font) localStorage.setItem('app_font', s.font);
       if (s.fontSize) localStorage.setItem('app_fontsize', s.fontSize);
+      if (s.style) localStorage.setItem('app_style', s.style);
       if (s.lowStockThreshold) localStorage.setItem('low_stock_threshold', s.lowStockThreshold);
       loadSettings();
     }
@@ -1406,7 +1660,7 @@ async function executeImport() {
 }
 
 /* ==================================================================
-   18. المودالات والإغلاق
+   19. المودالات والإغلاق
    ================================================================== */
 document.querySelectorAll('.modal').forEach(modal => {
   modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('show'); });
@@ -1416,9 +1670,12 @@ document.addEventListener('keydown', (e) => {
 });
 
 /* ==================================================================
-   19. التهيئة
+   20. التهيئة
    ================================================================== */
 window.addEventListener('load', () => {
+  buildThemeGrid();
+  buildFontGrid();
+  buildStyleGrid();
   loadSettings();
   initFirebase();
 });
