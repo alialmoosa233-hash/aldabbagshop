@@ -414,15 +414,96 @@
     .diag-item .body { flex: 1; }
     .diag-item .title { font-weight: 800; margin-bottom: 4px; }
     .diag-item .desc { font-size: 0.85em; color: var(--text-muted); line-height: 1.6; }
-    .diag-item a {
-      color: var(--price-blue); text-decoration: underline;
-      font-weight: 700; word-break: break-all;
+    .diag-item a { color: var(--price-blue); text-decoration: underline; font-weight: 700; word-break: break-all; }
+
+    /* ============ وضع الشاشة الكبيرة (Kiosk) ============ */
+    .exit-kiosk-btn {
+      display: none;
+      position: fixed;
+      top: 15px;
+      left: 15px;
+      z-index: 9999;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: var(--danger);
+      color: white;
+      font-size: 1.5em;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      border: 3px solid white;
+    }
+
+    body.kiosk-mode .exit-kiosk-btn { display: flex; }
+    body.kiosk-mode header,
+    body.kiosk-mode .dashboard-summary,
+    body.kiosk-mode .tabs,
+    body.kiosk-mode #cloudStatus,
+    body.kiosk-mode .filter-row,
+    body.kiosk-mode #pricesSection h2 .no-print,
+    body.kiosk-mode .search-row > div:last-child,
+    body.kiosk-mode #settingsSection {
+      display: none !important;
+    }
+    body.kiosk-mode .container {
+      max-width: 100%;
+      padding: 8px;
+      margin: 8px auto;
+    }
+    body.kiosk-mode #pricesSection .card {
+      border: none;
+      box-shadow: none;
+      padding: 16px;
+    }
+    body.kiosk-mode #pricesSection h2 {
+      font-size: 2em;
+      text-align: center;
+      margin-bottom: 20px;
+      border-bottom: none;
+      justify-content: center;
+      color: var(--primary);
+    }
+    body.kiosk-mode .search-toolbar { margin-bottom: 20px; }
+    body.kiosk-mode .search-container input {
+      font-size: 1.5em;
+      padding: 22px 60px 22px 60px;
+      border-width: 2px;
+      border-radius: 12px;
+    }
+    body.kiosk-mode .scan-search-btn {
+      width: 50px !important;
+      height: 50px !important;
+      font-size: 1.4em !important;
+    }
+    body.kiosk-mode .clear-search-btn {
+      font-size: 1.5em;
+    }
+    body.kiosk-mode .product-name {
+      font-size: 1.3em;
+    }
+    body.kiosk-mode .price-box {
+      font-size: 1.15em;
+      padding: 12px 16px;
+    }
+    body.kiosk-mode th {
+      font-size: 1.15em;
+      padding: 18px 16px;
+    }
+    body.kiosk-mode td {
+      padding: 18px 16px;
+    }
+    body.kiosk-mode .stock-badge {
+      font-size: 1.1em;
+      padding: 8px 16px;
     }
 
     @media print {
       header, .tabs, .dashboard-summary, #cloudStatus,
       .search-toolbar, .admin-only, .no-print,
-      #toastContainer, .modal, .action-btn, .quick-qty-btn {
+      #toastContainer, .modal, .action-btn, .quick-qty-btn,
+      .exit-kiosk-btn {
         display: none !important;
       }
       body { background: #fff !important; color: #000 !important; }
@@ -433,6 +514,17 @@
       th, td { padding: 6px 8px !important; border: 1px solid #ccc !important; }
     }
 
+    /* ============ تابلت ============ */
+    @media (max-width: 1024px) and (min-width: 769px) {
+      .container { padding: 0 16px; }
+      .theme-grid { grid-template-columns: repeat(4, 1fr); }
+      .font-grid { grid-template-columns: repeat(3, 1fr); }
+      .dashboard-summary { grid-template-columns: repeat(3, 1fr); }
+      th, td { padding: 12px 10px; font-size: 0.95em; }
+      .price-box { font-size: 0.9em; padding: 6px 10px; }
+    }
+
+    /* ============ جوال ============ */
     @media (max-width: 768px) {
       header { padding: 14px 16px; font-size: 17px; }
       .container { padding: 0 12px; margin: 16px auto; }
@@ -465,6 +557,7 @@
       .theme-grid { grid-template-columns: repeat(3, 1fr); }
       .font-grid { grid-template-columns: repeat(2, 1fr); }
       .style-grid { grid-template-columns: 1fr; }
+      body.kiosk-mode .search-container input { font-size: 1.2em; padding: 16px 50px 16px 50px; }
     }
   </style>
 </head>
@@ -472,10 +565,14 @@
 
 <div id="toastContainer"></div>
 
+<!-- زر الخروج من وضع العرض -->
+<button class="exit-kiosk-btn" onclick="toggleKiosk()" title="خروج من وضع العرض">✕</button>
+
 <header id="appHeader">
   <div>📦 نظام إدارة المخزن وعرض الأسعار - محلات الدباغ</div>
   <div class="header-actions">
-    <button id="adminToggleBtn" onclick="openAdminPinModal()" class="btn-admin" style="width:auto; padding:8px 16px; font-size:0.9em;">🔒 وضع التعديل</button>
+    <button id="kioskBtn" onclick="toggleKiosk()" class="btn-secondary no-print" style="width:auto; padding:8px 16px; font-size:0.9em;" title="عرض ملء الشاشة">📺 عرض</button>
+    <button id="adminToggleBtn" onclick="handleAdminClick()" class="btn-admin no-print" style="width:auto; padding:8px 16px; font-size:0.9em;">🔐 دخول الأدمن</button>
     <button onclick="window.print()" class="btn-secondary no-print" style="width:auto; padding:8px 16px; font-size:0.9em;">🖨️ طباعة</button>
   </div>
 </header>
@@ -501,14 +598,14 @@
   <div class="tabs">
     <button class="tab-btn active" data-tab="prices" onclick="switchTab('prices')">🔍 عرض الأسعار والمخزون</button>
     <button class="tab-btn admin-only" data-tab="addProduct" onclick="switchTab('addProduct')">➕ إضافة مادة جديدة</button>
-    <button class="tab-btn" data-tab="settings" onclick="switchTab('settings')">⚙️ الضبط والمظهر</button>
+    <button class="tab-btn admin-only" data-tab="settings" onclick="switchTab('settings')">⚙️ الضبط والمظهر</button>
   </div>
 
   <div id="pricesSection" class="tab-content active">
     <div class="card">
       <h2>
         <span>🔍 دليل المواد والأسعار والمخزون</span>
-        <button onclick="exportCsv()" class="btn-secondary no-print" style="width:auto; font-size:0.85em; padding:6px 14px;">📥 تصدير Excel</button>
+        <button onclick="exportCsv()" class="btn-secondary no-print admin-only" style="width:auto; font-size:0.85em; padding:6px 14px;">📥 تصدير Excel</button>
       </h2>
 
       <div class="search-toolbar no-print">
@@ -540,17 +637,7 @@
 
       <div class="table-wrapper">
         <table>
-          <thead>
-            <tr>
-              <th>المادة / التاريخ</th>
-              <th>الباركود</th>
-              <th>أسعار الباكيت</th>
-              <th>مخزون الباكيت</th>
-              <th>أسعار الكارتون</th>
-              <th>مخزون الكارتون</th>
-              <th class="admin-only">إجراءات</th>
-            </tr>
-          </thead>
+          <thead id="pricesThead"></thead>
           <tbody id="pricesTable"></tbody>
         </table>
       </div>
@@ -627,65 +714,57 @@
         </div>
       </div>
 
-      <h2 style="font-size: 1.1em; margin-top:10px;">🔐 تغيير رمز الأمان (PIN)</h2>
-      <div style="background:var(--stripe-bg); padding:16px; border-radius:10px; border:1px solid var(--border-color);">
-        <form id="changePinForm" onsubmit="updateAdminPin(event)">
-          <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:12px;">
-            <div>
-              <label>الرمز الحالي</label>
-              <input type="password" id="currentPin" placeholder="الحالي..." required />
-            </div>
-            <div>
-              <label>الرمز الجديد</label>
-              <input type="password" id="newPin" placeholder="الجديد..." required minlength="4" />
-            </div>
-            <div>
-              <label>تأكيد الرمز</label>
-              <input type="password" id="confirmPin" placeholder="أعد الإدخال..." required minlength="4" />
-            </div>
-          </div>
-          <button type="submit" class="btn-price" style="margin-top:8px;">💾 حفظ الرمز الجديد</button>
-        </form>
-      </div>
-
       <h2 style="font-size: 1.1em; margin-top:20px;">💾 النسخ الاحتياطي والاسترجاع</h2>
       <div style="background:var(--stripe-bg); padding:16px; border-radius:10px; border:1px solid var(--border-color);">
         <p style="margin:0 0 14px; color:var(--text-muted); font-size:0.9em;">احفظ نسخة من جميع بيانات المخزن في ملف JSON آمن.</p>
         <div style="display:flex; gap:10px; flex-wrap:wrap;">
           <button onclick="exportBackup()" class="btn-success" style="flex:1; min-width:150px;">📦 تصدير نسخة احتياطية</button>
-          <button onclick="triggerImportBackup()" class="btn-price admin-only" style="flex:1; min-width:150px;">📥 استرجاع نسخة</button>
+          <button onclick="triggerImportBackup()" class="btn-price" style="flex:1; min-width:150px;">📥 استرجاع نسخة</button>
         </div>
         <input type="file" id="backupFileInput" accept=".json,application/json" style="display:none;" onchange="handleBackupFile(event)" />
       </div>
 
       <h2 style="font-size: 1.1em; margin-top:20px;">🔧 تشخيص الاتصال</h2>
       <div style="background:var(--stripe-bg); padding:16px; border-radius:10px; border:1px solid var(--border-color);">
-        <p style="margin:0 0 14px; color:var(--text-muted); font-size:0.9em;">
-          إذا واجهت مشكلة في الاتصال، اضغط الزر أدناه لعرض تشخيص كامل.
-        </p>
         <button onclick="showDiagnostic()" class="btn-secondary" style="width:auto; padding:10px 20px;">
           🔍 عرض تشخيص الاتصال
         </button>
       </div>
 
-      <button onclick="resetSettings()" class="btn-secondary" style="margin-top:22px;">🔄 استعادة الإعدادات الافتراضية</button>
+      <h2 style="font-size: 1.1em; margin-top:20px;">🚪 تسجيل الخروج</h2>
+      <div style="background:var(--danger-bg); padding:16px; border-radius:10px; border:1px solid var(--danger);">
+        <p style="margin:0 0 14px; color:var(--text-muted); font-size:0.9em;">
+          عند تسجيل الخروج، تعود لوضع العرض العادي (بدون صلاحيات تعديل).
+        </p>
+        <button onclick="logoutAdmin()" class="btn-danger" style="width:auto; padding:10px 20px;">
+          🚪 تسجيل الخروج من حساب الأدمن
+        </button>
+      </div>
     </div>
   </div>
 </div>
 
 <!-- المودالات -->
-<div id="adminPinModal" class="modal">
+<div id="loginModal" class="modal">
   <div class="modal-content">
     <div class="modal-header">
-      <h3>🔐 تفعيل وضع التعديل</h3>
-      <button class="modal-close" onclick="closeModal('adminPinModal')">✕</button>
+      <h3>🔐 تسجيل دخول الأدمن</h3>
+      <button class="modal-close" onclick="closeModal('loginModal')">✕</button>
     </div>
-    <label for="adminPinInput">رمز الأدمن السري</label>
-    <input type="password" id="adminPinInput" placeholder="أدخل الرمز..." autocomplete="off" onkeypress="if(event.key==='Enter') submitAdminPin()" />
+    <p style="color:var(--text-muted); font-size:0.85em; margin:0 0 16px; line-height:1.7;">
+      أدخل بريد الأدمن وكلمة المرور للوصول لصلاحيات التعديل.
+    </p>
+    <label for="loginEmail">📧 البريد الإلكتروني</label>
+    <input type="email" id="loginEmail" placeholder="admin@example.com" autocomplete="username" />
+    <label for="loginPassword">🔑 كلمة المرور</label>
+    <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password" onkeypress="if(event.key==='Enter') submitLogin()" />
     <div class="modal-actions">
-      <button class="btn-secondary" onclick="closeModal('adminPinModal')">إلغاء</button>
-      <button class="btn-price" onclick="submitAdminPin()">تفعيل</button>
+      <button class="btn-secondary" onclick="closeModal('loginModal')">إلغاء</button>
+      <button class="btn-price" onclick="submitLogin()" id="loginSubmitBtn">🔓 دخول</button>
     </div>
+    <p style="font-size:0.75em; color:var(--text-muted); margin-top:14px; text-align:center; line-height:1.6;">
+      💡 لإنشاء حساب أدمن: Firebase Console → Authentication → Users → Add user
+    </p>
   </div>
 </div>
 
@@ -797,10 +876,6 @@
         <div style="font-size:0.85em; color:var(--text-muted); margin-top:4px;">يحذف جميع البيانات الحالية ويستبدلها بمحتوى الملف.</div>
       </div>
     </label>
-    <label style="display:flex; align-items:center; gap:10px; padding:10px; cursor:pointer; margin-bottom:16px;">
-      <input type="checkbox" id="restoreSettingsCheck" checked style="width:auto; margin:0;" />
-      <span style="font-weight:700; font-size:0.9em;">🎨 استرجاع الإعدادات (اللون، الخط، إلخ)</span>
-    </label>
     <div class="modal-actions">
       <button class="btn-secondary" onclick="closeModal('backupImportModal')">إلغاء</button>
       <button id="importExecuteBtn" class="btn-success" onclick="executeImport()">✅ تنفيذ الاسترجاع</button>
@@ -818,10 +893,7 @@ const DEFAULTS = {
   FONT: 'Tajawal',
   FONT_SIZE: '15.5px',
   STYLE: 'classic',
-  LOW_STOCK: 5,
-  ADMIN_PIN: '1234',
-  PIN_KEY: 'admin_pin',
-  SESSION_KEY: 'admin_session_until'
+  LOW_STOCK: 5
 };
 
 const COLOR_THEMES = {
@@ -883,12 +955,13 @@ let auth = null;
 let currentData = { prices: {} };
 let currentFilter = 'all';
 let isAdmin = false;
+let isAuthReady = false;
 let searchDebounceTimer = null;
 let html5QrCode = null;
 let confirmCallback = null;
 let pendingBackup = null;
 let scannerMode = 'add';
-let authReady = false;
+let isKiosk = false;
 let lastConnectionError = null;
 
 /* ==================================================================
@@ -919,10 +992,11 @@ function showConfirm(title, message, onConfirm) {
 }
 
 /* ==================================================================
-   3. بناء الشبكات
+   3. بناء الشبكات (الثيمات والخطوط والأنماط)
    ================================================================== */
 function buildThemeGrid() {
   const grid = document.getElementById('themeGrid');
+  if (!grid) return;
   grid.innerHTML = Object.entries(COLOR_THEMES).map(([key, t]) => `
     <div class="theme-swatch" data-theme="${key}" onclick="changeColorSetting('${key}')"
          style="background: linear-gradient(135deg, ${t.primary}, ${t.price});">
@@ -934,6 +1008,7 @@ function buildThemeGrid() {
 
 function buildFontGrid() {
   const grid = document.getElementById('fontGrid');
+  if (!grid) return;
   grid.innerHTML = FONT_OPTIONS.map(f => `
     <div class="font-swatch" data-font="${f.value}" onclick="changeFontSetting('${f.value}')">
       <div class="sample" style="font-family: '${f.value}', sans-serif;">مرحبا</div>
@@ -944,6 +1019,7 @@ function buildFontGrid() {
 
 function buildStyleGrid() {
   const grid = document.getElementById('styleGrid');
+  if (!grid) return;
   grid.innerHTML = STYLE_OPTIONS.map(s => `
     <div class="style-swatch" data-style="${s.value}" onclick="changeStyleSetting('${s.value}')">
       <div class="icon">${s.icon}</div>
@@ -972,9 +1048,6 @@ function highlightActiveStyle(style) {
 /* ==================================================================
    4. الإعدادات
    ================================================================== */
-function getAdminPin() {
-  return localStorage.getItem(DEFAULTS.PIN_KEY) || DEFAULTS.ADMIN_PIN;
-}
 function getLowStockThreshold() {
   return Number(localStorage.getItem('low_stock_threshold')) || DEFAULTS.LOW_STOCK;
 }
@@ -994,16 +1067,16 @@ function loadSettings() {
   document.documentElement.style.setProperty('--font-size-base', fontSize);
   document.documentElement.style.setProperty('--low-stock-threshold', lowStock);
 
-  document.getElementById('themeSelect').value = theme;
-  document.getElementById('fontSizeSelect').value = fontSize;
-  document.getElementById('lowStockThreshold').value = lowStock;
+  const themeSel = document.getElementById('themeSelect');
+  const fsSel = document.getElementById('fontSizeSelect');
+  const lstInp = document.getElementById('lowStockThreshold');
+  if (themeSel) themeSel.value = theme;
+  if (fsSel) fsSel.value = fontSize;
+  if (lstInp) lstInp.value = lowStock;
 
   highlightActiveTheme(color);
   highlightActiveFont(font);
   highlightActiveStyle(style);
-
-  const sessionUntil = Number(localStorage.getItem(DEFAULTS.SESSION_KEY) || 0);
-  if (sessionUntil > Date.now()) setAdminMode(true, false);
 }
 
 function changeThemeSetting(val) {
@@ -1071,63 +1144,88 @@ function resetSettings() {
 }
 
 /* ==================================================================
-   5. نظام الأدمن
+   5. نظام الأدمن (Email/Password)
    ================================================================== */
-function openAdminPinModal() {
-  if (isAdmin) { setAdminMode(false); return; }
-  document.getElementById('adminPinInput').value = '';
-  openModal('adminPinModal');
-  setTimeout(() => document.getElementById('adminPinInput').focus(), 100);
-}
-
-function submitAdminPin() {
-  const pin = document.getElementById('adminPinInput').value;
-  if (pin === getAdminPin()) {
-    setAdminMode(true);
-    closeModal('adminPinModal');
+function handleAdminClick() {
+  if (isAdmin) {
+    logoutAdmin();
   } else {
-    showToast("❌ رمز غير صحيح", "error");
-    document.getElementById('adminPinInput').value = '';
-    document.getElementById('adminPinInput').focus();
+    document.getElementById('loginEmail').value = '';
+    document.getElementById('loginPassword').value = '';
+    openModal('loginModal');
+    setTimeout(() => document.getElementById('loginEmail').focus(), 100);
   }
 }
 
-function setAdminMode(enabled, announce = true) {
+async function submitLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const btn = document.getElementById('loginSubmitBtn');
+
+  if (!email || !password) {
+    return showToast("⚠️ أدخل البريد وكلمة المرور", "warning");
+  }
+
+  btn.disabled = true;
+  btn.textContent = '⏳ جاري الدخول...';
+
+  try {
+    await auth.signInWithEmailAndPassword(email, password);
+    closeModal('loginModal');
+    showToast("✅ مرحباً بك في وضع الأدمن", "success");
+  } catch (err) {
+    let msg = "خطأ في تسجيل الدخول";
+    if (err.code === 'auth/user-not-found') msg = "❌ البريد غير مسجل";
+    else if (err.code === 'auth/wrong-password') msg = "❌ كلمة المرور خاطئة";
+    else if (err.code === 'auth/invalid-email') msg = "❌ صيغة البريد غير صحيحة";
+    else if (err.code === 'auth/too-many-requests') msg = "⚠️ محاولات كثيرة، حاول لاحقاً";
+    else msg = "❌ " + err.message;
+    showToast(msg, "error");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🔓 دخول';
+  }
+}
+
+async function logoutAdmin() {
+  showConfirm("تسجيل الخروج", "هل تريد تسجيل الخروج من حساب الأدمن؟", async () => {
+    try {
+      await auth.signOut();
+      await auth.signInAnonymously();
+      showToast("👋 تم تسجيل الخروج", "info");
+    } catch (err) {
+      showToast("❌ " + err.message, "error");
+    }
+  });
+}
+
+function updateAdminUI(enabled) {
   isAdmin = enabled;
   document.body.classList.toggle('is-admin', enabled);
   const btn = document.getElementById('adminToggleBtn');
   const header = document.getElementById('appHeader');
 
   if (enabled) {
-    btn.innerText = "👑 وضع الأدمن (نشط)";
+    btn.innerText = "👑 الأدمن (خروج)";
     btn.style.background = "var(--success)";
+    btn.className = "btn-success no-print";
     header.classList.add('admin-active');
-    localStorage.setItem(DEFAULTS.SESSION_KEY, Date.now() + 60 * 60 * 1000);
-    if (announce) { showToast("✅ تم تفعيل وضع الأدمن", "success"); switchTab('prices'); renderPrices(); }
   } else {
-    btn.innerText = "🔒 وضع التعديل";
+    btn.innerText = "🔐 دخول الأدمن";
     btn.style.background = "var(--brass)";
+    btn.className = "btn-admin no-print";
     header.classList.remove('admin-active');
-    localStorage.removeItem(DEFAULTS.SESSION_KEY);
-    if (announce) { showToast("تم الخروج من وضع التعديل", "info"); switchTab('prices'); renderPrices(); }
   }
-}
 
-function updateAdminPin(e) {
-  e.preventDefault();
-  const curr = document.getElementById('currentPin').value;
-  const newP = document.getElementById('newPin').value;
-  const conf = document.getElementById('confirmPin').value;
-  if (curr !== getAdminPin()) return showToast("❌ الرمز الحالي غير صحيح", "error");
-  if (newP !== conf) return showToast("❌ الرمز الجديد غير متطابق", "error");
-  if (newP.length < 4) return showToast("⚠️ الرمز يجب أن يكون 4 أرقام+", "warning");
-  localStorage.setItem(DEFAULTS.PIN_KEY, newP);
-  showToast("🔑 تم تغيير الرمز بنجاح", "success");
-  document.getElementById('changePinForm').reset();
+  // إعادة رسم الجدول (لإظهار/إخفاء الكلفة)
+  renderPrices();
+
+  // إذا خرج الأدمن، انتقل لتبويب الأسعار
+  if (!enabled) switchTab('prices');
 }
 
 /* ==================================================================
-   6. Firebase — مع إجبار التخزين المحلي (لتوافق Safari)
+   6. Firebase — مصادقة (Anonymous + Email/Password)
    ================================================================== */
 function checkEnvironment() {
   const issues = [];
@@ -1135,7 +1233,7 @@ function checkEnvironment() {
     issues.push({
       ok: false, icon: '🌐',
       title: 'التطبيق يعمل من ملف محلي (file://)',
-      desc: 'المصادقة الآمنة لا تعمل من ملف محلي. ارفع الملف على استضافة (Netlify Drop) أو استخدم Live Server.'
+      desc: 'المصادقة لا تعمل من ملف محلي. ارفع الملف على استضافة (Netlify Drop) أو استخدم Live Server.'
     });
   } else {
     issues.push({ ok: true, icon: '🌐', title: 'البروتوكول: ' + location.protocol, desc: 'البروتوكول مناسب.' });
@@ -1146,7 +1244,7 @@ function checkEnvironment() {
     issues.push({ ok: true, icon: '📦', title: 'مكتبة Firebase محملة', desc: 'OK' });
   }
   if (typeof firebase.auth !== 'function') {
-    issues.push({ ok: false, icon: '🔑', title: 'مكتبة Firebase Auth غير محملة', desc: 'تأكد من وجود وسم firebase-auth في رأس الصفحة.' });
+    issues.push({ ok: false, icon: '🔑', title: 'مكتبة Firebase Auth غير محملة', desc: 'تأكد من تحميل مكتبة المصادقة في رأس الصفحة.' });
   } else {
     issues.push({ ok: true, icon: '🔑', title: 'مكتبة Firebase Auth محملة', desc: 'OK' });
   }
@@ -1167,28 +1265,31 @@ function initFirebase() {
     auth = firebase.auth();
 
     auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
-      .then(() => {
-        return auth.signInAnonymously();
-      })
-      .catch((error) => {
-        lastConnectionError = error;
-        status.innerText = "🔴 فشل المصادقة: " + error.code;
-        status.className = "offline";
-        console.error("Auth error:", error);
-        showToast("❌ فشل المصادقة: " + error.code, "error");
-        setTimeout(() => showDiagnostic(), 500);
-      });
+      .catch(() => {});
 
     auth.onAuthStateChanged((user) => {
-      if (user) {
-        authReady = true;
-        status.innerText = "🟡 تأكيد الصلاحيات...";
-        status.className = "warning";
-        setTimeout(() => connectWithRetry(0), 300);
+      if (user && !user.isAnonymous) {
+        // أدمن
+        updateAdminUI(true);
+        isAuthReady = true;
+        connectWithRetry(0);
+      } else if (user && user.isAnonymous) {
+        // مستخدم عادي (عرض فقط)
+        updateAdminUI(false);
+        isAuthReady = true;
+        connectWithRetry(0);
       } else {
-        authReady = false;
-        status.innerText = "🔴 غير مصادق";
-        status.className = "offline";
+        // لا يوجد مستخدم → دخول مجهول تلقائي
+        isAuthReady = false;
+        status.innerText = "🔄 جاري تسجيل الدخول المجهول...";
+        status.className = "warning";
+        auth.signInAnonymously().catch((error) => {
+          lastConnectionError = error;
+          status.innerText = "🔴 فشل المصادقة: " + error.code;
+          status.className = "offline";
+          showToast("❌ فشل المصادقة: " + error.code, "error");
+          setTimeout(() => showDiagnostic(), 500);
+        });
       }
     });
   } catch (e) {
@@ -1196,19 +1297,18 @@ function initFirebase() {
     status.innerText = "🔴 خطأ في التهيئة: " + e.message;
     status.className = "offline";
     console.error("Firebase init error:", e);
-    showToast("❌ خطأ في تهيئة Firebase", "error");
   }
 }
 
 function connectWithRetry(attempt) {
   const status = document.getElementById('cloudStatus');
-  const MAX_RETRIES = 8;
-  const INITIAL_DELAY = 1500;
+  const MAX_RETRIES = 6;
+  const INITIAL_DELAY = 1000;
 
   if (db) { try { db.off(); } catch (e) {} }
   db = firebase.database().ref("simple_price_debts_v4");
 
-  const delay = attempt === 0 ? 1500 : (INITIAL_DELAY * Math.pow(1.8, attempt));
+  const delay = attempt === 0 ? 500 : (INITIAL_DELAY * Math.pow(1.6, attempt));
 
   status.innerText = `🟡 جاري تأكيد الصلاحيات... (${attempt + 1}/${MAX_RETRIES})`;
   status.className = "warning";
@@ -1216,7 +1316,6 @@ function connectWithRetry(attempt) {
   setTimeout(() => {
     db.once("value")
       .then((snapshot) => {
-        authReady = true;
         lastConnectionError = null;
         status.innerText = "🟢 متصل ومؤمّن - مزامنة تلقائية";
         status.className = "online";
@@ -1243,10 +1342,9 @@ function connectWithRetry(attempt) {
         if (attempt < MAX_RETRIES) {
           connectWithRetry(attempt + 1);
         } else {
-          authReady = false;
           status.innerText = "🔴 فشل الاتصال: " + (error.code || error.message);
           status.className = "offline";
-          showToast("❌ تعذر الاتصال بقاعدة البيانات - راجع التشخيص", "error");
+          showToast("❌ تعذر الاتصال - راجع التشخيص", "error");
           setTimeout(() => showDiagnostic(), 500);
         }
       });
@@ -1271,12 +1369,13 @@ function showDiagnostic() {
   });
 
   if (currentUser) {
+    const role = currentUser.isAnonymous ? '👤 مستخدم عادي (عرض فقط)' : '👑 أدمن';
     html += `
       <div class="diag-item ok">
         <div class="icon">✅</div>
         <div class="body">
           <div class="title">🔑 المصادقة ناجحة</div>
-          <div class="desc">UID: <code>${currentUser.uid.slice(0, 12)}...</code><br>مجهول: ${currentUser.isAnonymous ? 'نعم' : 'لا'}</div>
+          <div class="desc">الدور: ${role}<br>${currentUser.email ? 'البريد: ' + currentUser.email : 'UID: ' + currentUser.uid.slice(0, 12) + '...'}</div>
         </div>
       </div>
     `;
@@ -1295,7 +1394,7 @@ function showDiagnostic() {
     `;
   }
 
-  if (authReady && db) {
+  if (db && lastConnectionError === null) {
     html += `
       <div class="diag-item ok">
         <div class="icon">✅</div>
@@ -1323,11 +1422,11 @@ function showDiagnostic() {
 
   html += `
     <div style="margin-top:16px; padding:14px; background:var(--warning-bg); border-radius:8px; border:1px solid var(--warning); font-size:0.9em; line-height:1.8;">
-      <strong style="color:var(--warning);">📋 خطوات الحل السريعة:</strong><br>
-      1. تأكد من تفعيل <strong>Anonymous</strong> في Firebase Authentication<br>
-      2. تأكد من نشر القواعد في Realtime Database → Rules<br>
-      3. افتح التطبيق عبر <code>https://</code> أو <code>http://localhost</code><br>
-      4. أعد تحميل الصفحة (Ctrl+Shift+R)
+      <strong style="color:var(--warning);">📋 خطوات الحل:</strong><br>
+      1. تفعيل <strong>Anonymous</strong> و <strong>Email/Password</strong> في Firebase Authentication<br>
+      2. إنشاء حساب أدمن من تبويب Users<br>
+      3. نشر القواعد في Realtime Database<br>
+      4. فتح التطبيق عبر https أو localhost
     </div>
   `;
 
@@ -1336,8 +1435,8 @@ function showDiagnostic() {
 }
 
 function ensureAuth() {
-  if (!authReady || !db) {
-    showToast("⚠️ الاتصال الآمن لم يُكتمل بعد. انتظر لحظة أو راجع التشخيص.", "warning");
+  if (!isAuthReady || !db) {
+    showToast("⚠️ الاتصال الآمن لم يُكتمل بعد", "warning");
     return false;
   }
   return true;
@@ -1374,7 +1473,8 @@ function updateDashboard() {
   }, 0);
   document.getElementById('dashPricesCount').textContent = prices.length.toLocaleString('ar-IQ');
   document.getElementById('dashLowStockCount').textContent = lowStock.toLocaleString('ar-IQ');
-  document.getElementById('dashTotalValue').textContent = formatIQD(totalValue);
+  const tvEl = document.getElementById('dashTotalValue');
+  if (tvEl) tvEl.textContent = formatIQD(totalValue);
 }
 
 /* ==================================================================
@@ -1415,11 +1515,37 @@ function setFilter(filter) {
 }
 
 /* ==================================================================
-   11. عرض الجدول
+   11. عرض الجدول — مع إظهار/إخفاء الأعمدة حسب الصلاحية
    ================================================================== */
 function renderPrices() {
+  const thead = document.getElementById('pricesThead');
   const tbody = document.getElementById('pricesTable');
   if (!tbody) return;
+
+  // بناء رأس الجدول حسب صلاحية المستخدم
+  if (thead) {
+    thead.innerHTML = isAdmin ? `
+      <tr>
+        <th>المادة / التاريخ</th>
+        <th>الباركود</th>
+        <th>أسعار الباكيت<br><small style="font-weight:600; opacity:0.8;">كلفة | بيع | ربح</small></th>
+        <th>مخزون الباكيت</th>
+        <th>أسعار الكارتون<br><small style="font-weight:600; opacity:0.8;">كلفة | بيع | ربح</small></th>
+        <th>مخزون الكارتون</th>
+        <th>إجراءات</th>
+      </tr>
+    ` : `
+      <tr>
+        <th>المادة</th>
+        <th>الباركود</th>
+        <th>سعر الباكيت</th>
+        <th>مخزون الباكيت</th>
+        <th>سعر الكارتون</th>
+        <th>مخزون الكارتون</th>
+      </tr>
+    `;
+  }
+
   const query = (document.getElementById('searchPrice')?.value || '').trim().toLowerCase();
   const sortBy = document.getElementById('sortBySelect')?.value || 'newest';
   const threshold = getLowStockThreshold();
@@ -1454,8 +1580,9 @@ function renderPrices() {
     }
   });
 
+  const colspan = isAdmin ? 7 : 6;
   if (!entries.length) {
-    tbody.innerHTML = `<tr><td colspan="7" style="padding:30px; color:var(--text-muted); font-weight:700;">لا توجد مواد مطابقة.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="${colspan}" style="padding:30px; color:var(--text-muted); font-weight:700;">لا توجد مواد مطابقة.</td></tr>`;
     return;
   }
 
@@ -1469,22 +1596,15 @@ function renderPrices() {
     const pStock = Number(p.packetStock) || 0;
     const cStock = Number(p.cartonStock) || 0;
     const getBadgeClass = (qty) => qty === 0 ? 'stock-out' : (qty <= threshold ? 'stock-low' : 'stock-ok');
+
     const quickControls = (type) => isAdmin ? `
       <button class="quick-qty-btn" onclick="adjustQty('${id}','${type}',1)" title="زيادة">+</button>
       <button class="quick-qty-btn" onclick="adjustQty('${id}','${type}',-1)" title="نقصان">-</button>
       <button class="quick-qty-btn" onclick="openStockModal('${id}','${type}')" title="تعديل مخصص">✎</button>
     ` : '';
-    const actionCell = isAdmin ? `
-      <td class="admin-only action-cell" data-label="إجراءات">
-        <button class="action-btn btn-secondary" onclick="openEditModal('${id}')">✏️ تعديل</button>
-        <button class="action-btn btn-danger" onclick="confirmDelete('${id}')">🗑️ حذف</button>
-      </td>` : '';
-    return `<tr>
-      <td data-label="المادة">
-        <div class="product-name">${escapeHtml(p.name)}</div>
-        <div class="product-meta">${escapeHtml(p.updatedAt || p.createdAt || '')}</div>
-      </td>
-      <td data-label="الباركود" style="font-family:'IBM Plex Mono', monospace; font-weight:700;">${escapeHtml(p.code || '—')}</td>
+
+    // خلايا أسعار الباكيت
+    const packetCells = isAdmin ? `
       <td data-label="أسعار الباكيت">
         <div class="price-box">
           <span class="price-cost">كلفة: ${formatIQD(packetCost)}</span><br>
@@ -1496,6 +1616,19 @@ function renderPrices() {
         <span class="stock-badge ${getBadgeClass(pStock)}">${pStock}</span>
         ${quickControls('packet')}
       </td>
+    ` : `
+      <td data-label="سعر الباكيت">
+        <div class="price-box">
+          <span class="price-sell" style="font-size:1.15em;">${formatIQD(packetSell)}</span>
+        </div>
+      </td>
+      <td data-label="مخزون الباكيت">
+        <span class="stock-badge ${getBadgeClass(pStock)}">${pStock}</span>
+      </td>
+    `;
+
+    // خلايا أسعار الكارتون
+    const cartonCells = isAdmin ? `
       <td data-label="أسعار الكارتون">
         <div class="price-box">
           <span class="price-cost">كلفة: ${formatIQD(cartonCost)}</span><br>
@@ -1507,6 +1640,31 @@ function renderPrices() {
         <span class="stock-badge ${getBadgeClass(cStock)}">${cStock}</span>
         ${quickControls('carton')}
       </td>
+    ` : `
+      <td data-label="سعر الكارتون">
+        <div class="price-box">
+          <span class="price-sell" style="font-size:1.15em;">${formatIQD(cartonSell)}</span>
+        </div>
+      </td>
+      <td data-label="مخزون الكارتون">
+        <span class="stock-badge ${getBadgeClass(cStock)}">${cStock}</span>
+      </td>
+    `;
+
+    const actionCell = isAdmin ? `
+      <td class="action-cell" data-label="إجراءات">
+        <button class="action-btn btn-secondary" onclick="openEditModal('${id}')">✏️ تعديل</button>
+        <button class="action-btn btn-danger" onclick="confirmDelete('${id}')">🗑️ حذف</button>
+      </td>` : '';
+
+    return `<tr>
+      <td data-label="المادة">
+        <div class="product-name">${escapeHtml(p.name)}</div>
+        <div class="product-meta">${escapeHtml(p.updatedAt || p.createdAt || '')}</div>
+      </td>
+      <td data-label="الباركود" style="font-family:'IBM Plex Mono', monospace; font-weight:700;">${escapeHtml(p.code || '—')}</td>
+      ${packetCells}
+      ${cartonCells}
       ${actionCell}
     </tr>`;
   }).join('');
@@ -1559,7 +1717,7 @@ async function submitStockUpdate() {
    ================================================================== */
 document.getElementById('priceForm').addEventListener('submit', async function(e) {
   e.preventDefault();
-  if (!isAdmin) return showToast("يجب تفعيل وضع الأدمن أولاً", "warning");
+  if (!isAdmin) return showToast("يجب تسجيل الدخول كأدمن أولاً", "warning");
   if (!ensureAuth()) return;
   const nameInput = document.getElementById('pName').value.trim();
   const codeInput = document.getElementById('pCode').value.trim();
@@ -1604,7 +1762,7 @@ document.getElementById('pName').addEventListener('input', function() { this.cla
    14. تعديل منتج
    ================================================================== */
 function openEditModal(id) {
-  if (!isAdmin) return showToast("يجب تفعيل وضع الأدمن", "warning");
+  if (!isAdmin) return showToast("يجب تسجيل الدخول كأدمن", "warning");
   const p = currentData.prices[id];
   if (!p) return;
   document.getElementById('editId').value = id;
@@ -1642,7 +1800,7 @@ document.getElementById('editForm').addEventListener('submit', async function(e)
    15. حذف منتج
    ================================================================== */
 function confirmDelete(id) {
-  if (!isAdmin) return showToast("يجب تفعيل وضع الأدمن", "warning");
+  if (!isAdmin) return showToast("يجب تسجيل الدخول كأدمن", "warning");
   const p = currentData.prices[id];
   if (!p) return;
   showConfirm("تأكيد الحذف", `هل تريد حذف "${p.name}" نهائياً؟`, async () => {
@@ -1668,255 +1826,4 @@ function exportCsv() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `دليل_أسعار_الدباغ_${new Date().toISOString().slice(0, 10)}.csv`;
-  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
-  showToast("📥 تم تصدير الملف", "success");
-}
-
-/* ==================================================================
-   17. الباركود
-   ================================================================== */
-async function startScanner(mode = 'add') {
-  if (typeof Html5Qrcode === 'undefined') return showToast("مكتبة الباركود غير محملة", "error");
-  scannerMode = mode;
-
-  const titleEl = document.querySelector('#scannerModal h3');
-  if (titleEl) titleEl.textContent = mode === 'search' ? '📷 امسح الباركود للبحث' : '📷 قراءة الباركود';
-
-  openModal('scannerModal');
-  try {
-    html5QrCode = new Html5Qrcode("interactive");
-    await html5QrCode.start(
-      { facingMode: "environment" },
-      { fps: 10, qrbox: { width: 250, height: 150 } },
-      (decodedText) => {
-        if (scannerMode === 'search') {
-          handleBarcodeSearch(decodedText);
-        } else {
-          document.getElementById('pCode').value = decodedText;
-          showToast("✅ تم قراءة الباركود", "success");
-        }
-        stopScanner();
-      },
-      () => {}
-    );
-  } catch (err) {
-    closeModal('scannerModal');
-    showToast("تعذر تشغيل الكاميرا: " + err, "error");
-    html5QrCode = null;
-  }
-}
-
-async function stopScanner() {
-  if (html5QrCode) {
-    try { if (html5QrCode.isScanning) await html5QrCode.stop(); } catch (e) {}
-    try { await html5QrCode.clear(); } catch (e) {}
-    html5QrCode = null;
-  }
-  closeModal('scannerModal');
-}
-
-function handleBarcodeSearch(barcode) {
-  const barcodeClean = String(barcode).trim();
-  const products = Object.values(currentData.prices || {});
-  const exactMatch = products.find(p => (p.code || '').trim() === barcodeClean);
-
-  switchTab('prices');
-
-  const searchInput = document.getElementById('searchPrice');
-  searchInput.value = barcodeClean;
-  document.getElementById('clearSearchBtn').style.display = 'block';
-
-  currentFilter = 'all';
-  document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-  document.getElementById('chip-all')?.classList.add('active');
-
-  renderPrices();
-
-  if (exactMatch) {
-    showToast(`✅ ${exactMatch.name} — ${formatIQD(exactMatch.packetSell)}`, "success");
-    setTimeout(() => {
-      const rows = document.querySelectorAll('#pricesTable tr');
-      for (const row of rows) {
-        const cells = row.querySelectorAll('td');
-        if (cells.length < 2) continue;
-        const codeCell = cells[1]?.textContent?.trim() || '';
-        if (codeCell === barcodeClean) {
-          row.style.animation = 'barcodeHighlight 2s ease';
-          row.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          break;
-        }
-      }
-    }, 120);
-  } else {
-    showToast(`⚠️ لا توجد مادة بهذا الباركود: ${barcodeClean}`, "warning");
-  }
-}
-
-/* ==================================================================
-   18. النسخ الاحتياطي
-   ================================================================== */
-function sanitizeProduct(p) {
-  return {
-    name: String(p?.name || '').trim(),
-    code: String(p?.code || '').trim(),
-    packetCost: Math.max(0, Number(p?.packetCost) || 0),
-    packetSell: Math.max(0, Number(p?.packetSell) || 0),
-    packetStock: Math.max(0, Math.floor(Number(p?.packetStock) || 0)),
-    cartonCost: Math.max(0, Number(p?.cartonCost) || 0),
-    cartonSell: Math.max(0, Number(p?.cartonSell) || 0),
-    cartonStock: Math.max(0, Math.floor(Number(p?.cartonStock) || 0)),
-    createdAt: String(p?.createdAt || new Date().toLocaleString('ar-IQ')),
-    updatedAt: String(p?.updatedAt || new Date().toLocaleString('ar-IQ'))
-  };
-}
-
-async function exportBackup() {
-  try {
-    const backup = {
-      version: '1.0', app: 'محلات الدباغ - نظام إدارة المخزن',
-      exportedAt: new Date().toISOString(),
-      data: { prices: currentData.prices || {} },
-      settings: {
-        theme: localStorage.getItem('app_theme') || DEFAULTS.THEME,
-        color: localStorage.getItem('app_color') || DEFAULTS.COLOR,
-        font: localStorage.getItem('app_font') || DEFAULTS.FONT,
-        fontSize: localStorage.getItem('app_fontsize') || DEFAULTS.FONT_SIZE,
-        style: localStorage.getItem('app_style') || DEFAULTS.STYLE,
-        lowStockThreshold: getLowStockThreshold()
-      }
-    };
-    const json = JSON.stringify(backup, null, 2);
-    const blob = new Blob([json], { type: 'application/json;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const now = new Date();
-    const date = now.toISOString().slice(0, 10);
-    const time = now.toTimeString().slice(0, 5).replace(':', '-');
-    const count = Object.keys(currentData.prices || {}).length;
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `نسخة_احتياطية_الدباغ_${date}_${time}.json`;
-    document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
-    showToast(`📦 تم تصدير ${count} مادة بنجاح`, "success");
-  } catch (err) { showToast("تعذر التصدير: " + err.message, "error"); }
-}
-
-function triggerImportBackup() {
-  if (!isAdmin) return showToast("يجب تفعيل وضع الأدمن", "warning");
-  document.getElementById('backupFileInput').click();
-}
-
-async function handleBackupFile(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  event.target.value = '';
-  if (!file.name.toLowerCase().endsWith('.json')) return showToast("⚠️ الملف يجب أن يكون JSON", "error");
-  if (file.size > 10 * 1024 * 1024) return showToast("⚠️ الملف كبير جداً (الحد 10MB)", "error");
-  try {
-    const text = await file.text();
-    const backup = JSON.parse(text);
-    if (!backup || typeof backup !== 'object') return showToast("❌ بنية الملف غير صالحة", "error");
-    if (!backup.data || typeof backup.data.prices !== 'object' || backup.data.prices === null) return showToast("❌ الملف لا يحتوي على بيانات صالحة", "error");
-    const count = Object.keys(backup.data.prices).length;
-    if (count === 0) return showToast("⚠️ الملف لا يحتوي على مواد", "warning");
-    pendingBackup = backup;
-    const exportedDate = backup.exportedAt ? new Date(backup.exportedAt).toLocaleString('ar-IQ') : 'غير معروف';
-    document.getElementById('backupInfo').innerHTML = `
-      <strong>📄 معلومات الملف:</strong><br>
-      <span style="color:var(--text-muted);">تاريخ التصدير:</span> <strong>${escapeHtml(exportedDate)}</strong><br>
-      <span style="color:var(--text-muted);">عدد المواد:</span> <strong style="color:var(--success);">${count}</strong><br>
-      <span style="color:var(--text-muted);">المواد الحالية:</span> <strong style="color:var(--price-blue);">${Object.keys(currentData.prices || {}).length}</strong>
-    `;
-    document.querySelector('input[name="importMode"][value="merge"]').checked = true;
-    openModal('backupImportModal');
-  } catch (err) { showToast("❌ تعذر قراءة الملف: " + err.message, "error"); }
-}
-
-async function executeImport() {
-  if (!pendingBackup) return showToast("البيانات غير جاهزة", "error");
-  if (!ensureAuth()) return;
-  const mode = document.querySelector('input[name="importMode"]:checked')?.value || 'merge';
-  const restoreSettings = document.getElementById('restoreSettingsCheck').checked;
-  const prices = pendingBackup.data.prices || {};
-  const count = Object.keys(prices).length;
-  const btn = document.getElementById('importExecuteBtn');
-  btn.disabled = true;
-  btn.textContent = '⏳ جاري التنفيذ...';
-  try {
-    if (mode === 'replace') {
-      const sanitized = {};
-      for (const [id, p] of Object.entries(prices)) sanitized[id] = sanitizeProduct(p);
-      await db.child('prices').set(sanitized);
-      showToast(`✅ تم استبدال البيانات بـ ${count} مادة`, "success");
-    } else {
-      let added = 0, updated = 0;
-      const existingList = Object.entries(currentData.prices || {});
-      for (const [, product] of Object.entries(prices)) {
-        const sanitized = sanitizeProduct(product);
-        if (!sanitized.name) continue;
-        const match = existingList.find(([, ep]) => {
-          const epName = (ep.name || '').trim().toLowerCase();
-          const epCode = (ep.code || '').trim();
-          return (epName && sanitized.name.toLowerCase() === epName) || (epCode && sanitized.code && epCode === sanitized.code);
-        });
-        if (match) { await db.child('prices').child(match[0]).update(sanitized); updated++; }
-        else { await db.child('prices').push().set(sanitized); added++; }
-      }
-      showToast(`✅ الدمج اكتمل: ${added} جديد، ${updated} محدّث`, "success");
-    }
-    if (restoreSettings && pendingBackup.settings) {
-      const s = pendingBackup.settings;
-      if (s.theme) localStorage.setItem('app_theme', s.theme);
-      if (s.color) localStorage.setItem('app_color', s.color);
-      if (s.font) localStorage.setItem('app_font', s.font);
-      if (s.fontSize) localStorage.setItem('app_fontsize', s.fontSize);
-      if (s.style) localStorage.setItem('app_style', s.style);
-      if (s.lowStockThreshold) localStorage.setItem('low_stock_threshold', s.lowStockThreshold);
-      loadSettings();
-    }
-    closeModal('backupImportModal');
-    pendingBackup = null;
-  } catch (err) { showToast("❌ تعذر الاسترجاع: " + err.message, "error"); }
-  finally { btn.disabled = false; btn.textContent = '✅ تنفيذ الاسترجاع'; }
-}
-
-/* ==================================================================
-   19. المودالات والإغلاق
-   ================================================================== */
-document.querySelectorAll('.modal').forEach(modal => {
-  modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('show'); });
-});
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') document.querySelectorAll('.modal.show').forEach(m => m.classList.remove('show'));
-});
-
-/* ==================================================================
-   20. إدارة الاتصال مع دورة حياة الصفحة (لحل مشكلة Safari)
-   ================================================================== */
-window.addEventListener('pagehide', () => {
-  if (db) {
-    console.log('Page hide: closing database connection.');
-    try { db.off(); } catch(e) {}
-  }
-});
-
-window.addEventListener('pageshow', (event) => {
-  if (event.persisted && auth && auth.currentUser) {
-    console.log('Page show (persisted): reconnecting to database.');
-    connectWithRetry(0);
-  }
-});
-
-/* ==================================================================
-   21. التهيئة
-   ================================================================== */
-window.addEventListener('load', () => {
-  buildThemeGrid();
-  buildFontGrid();
-  buildStyleGrid();
-  loadSettings();
-  initFirebase();
-});
-</script>
-</body>
-</html>
+  a.download = `دليل_أسعار_الدباغ_${
