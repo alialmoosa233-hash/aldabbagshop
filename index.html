@@ -14,6 +14,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=Cairo:wght@400;600;700;800&family=Almarai:wght@400;700;800&family=Noto+Kufi+Arabic:wght@400;600;700;800&family=Readex+Pro:wght@400;600;700&family=IBM+Plex+Sans+Arabic:wght@400;600;700&family=Amiri:wght@400;700&family=Rubik:wght@400;600;700&family=Changa:wght@400;600;700&family=El+Messiri:wght@400;600;700&family=Cairo+Play:wght@400;700;900&family=Lalezar&family=IBM+Plex+Mono:wght@600;700&display=swap" rel="stylesheet">
 
   <style>
+    /* ... (جميع الأنماط كما هي بدون تغيير) ... */
     :root {
       --bg-main: #F1F5F9;
       --card-bg: #FFFFFF;
@@ -889,7 +890,6 @@ let confirmCallback = null;
 let pendingBackup = null;
 let scannerMode = 'add';
 let authReady = false;
-let connectionAttempt = 0;
 let lastConnectionError = null;
 
 /* ==================================================================
@@ -1128,88 +1128,65 @@ function updateAdminPin(e) {
 }
 
 /* ==================================================================
-   6. 🔐 Firebase — مع كشف البروتوكول وإعادة المحاولة
+   6. 🔐 Firebase — مع إجبار التخزين المحلي (لتوافق Safari)
    ================================================================== */
 function checkEnvironment() {
   const issues = [];
-
-  // كشف file://
   if (location.protocol === 'file:') {
     issues.push({
-      ok: false,
-      icon: '🌐',
+      ok: false, icon: '🌐',
       title: 'التطبيق يعمل من ملف محلي (file://)',
-      desc: 'المصادقة الآمنة (Firebase Auth) لا تعمل من ملف محلي. الحل: ارفع الملف على استضافة (Netlify Drop مجاني) أو استخدم Live Server في VS Code (http://localhost:5500).'
+      desc: 'المصادقة الآمنة لا تعمل من ملف محلي. ارفع الملف على استضافة (Netlify Drop) أو استخدم Live Server.'
     });
   } else {
-    issues.push({
-      ok: true,
-      icon: '🌐',
-      title: 'البروتوكول: ' + location.protocol,
-      desc: 'البروتوكول مناسب للمصادقة الآمنة.'
-    });
+    issues.push({ ok: true, icon: '🌐', title: 'البروتوكول: ' + location.protocol, desc: 'البروتوكول مناسب.' });
   }
-
-  // كشف توفر SDKs
   if (typeof firebase === 'undefined') {
-    issues.push({
-      ok: false,
-      icon: '📦',
-      title: 'مكتبة Firebase غير محملة',
-      desc: 'تحقق من اتصالك بالإنترنت.'
-    });
+    issues.push({ ok: false, icon: '📦', title: 'مكتبة Firebase غير محملة', desc: 'تحقق من اتصالك بالإنترنت.' });
   } else {
     issues.push({ ok: true, icon: '📦', title: 'مكتبة Firebase محملة', desc: 'OK' });
   }
-
   if (typeof firebase.auth !== 'function') {
-    issues.push({
-      ok: false,
-      icon: '🔑',
-      title: 'مكتبة Firebase Auth غير محملة',
-      desc: 'تأكد من وجود <script src=".../firebase-auth.js"></script> في رأس الصفحة.'
-    });
+    issues.push({ ok: false, icon: '🔑', title: 'مكتبة Firebase Auth غير محملة', desc: 'تأكد من وجود firebase-auth.js.' });
   } else {
     issues.push({ ok: true, icon: '🔑', title: 'مكتبة Firebase Auth محملة', desc: 'OK' });
   }
-
   return issues;
 }
 
 function initFirebase() {
   const status = document.getElementById('cloudStatus');
-
-  // 1) فحص البيئة
   const envIssues = checkEnvironment();
-  const envFailed = envIssues.some(i => !i.ok);
-
-  if (envFailed) {
-    status.innerText = "🟡 تحذير: بيئة التشغيل غير مناسبة للمصادقة";
+  if (envIssues.some(i => !i.ok)) {
+    status.innerText = "🟡 تحذير: بيئة التشغيل غير مناسبة";
     status.className = "warning";
-    showToast("⚠️ افتح التطبيق عبر https أو localhost لتفعيل الحماية", "warning");
+    showToast("⚠️ افتح التطبيق عبر https أو localhost", "warning");
   }
 
   try {
     firebase.initializeApp(firebaseConfig);
     auth = firebase.auth();
 
-    // 2) محاولة تسجيل الدخول المجهول
-    auth.signInAnonymously().catch((error) => {
-      lastConnectionError = error;
-      status.innerText = "🔴 فشل المصادقة: " + error.code;
-      status.className = "offline";
-      console.error("Auth error:", error);
-      showToast("❌ فشل المصادقة: " + error.code + " - راجع التشخيص", "error");
-      setTimeout(() => showDiagnostic(), 500);
-    });
+    // ✅ إجبار Firebase على استخدام LocalStorage (لتوافق Safari)
+    auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
+      .then(() => {
+        // 🔐 ثم محاولة تسجيل الدخول المجهول
+        return auth.signInAnonymously();
+      })
+      .catch((error) => {
+        lastConnectionError = error;
+        status.innerText = "🔴 فشل المصادقة: " + error.code;
+        status.className = "offline";
+        console.error("Auth error:", error);
+        showToast("❌ فشل المصادقة: " + error.code, "error");
+        setTimeout(() => showDiagnostic(), 500);
+      });
 
-    // 3) عند نجاح المصادقة، ننتظر قليلاً قبل قراءة البيانات
     auth.onAuthStateChanged((user) => {
       if (user) {
         authReady = true;
         status.innerText = "🟡 تأكيد الصلاحيات...";
         status.className = "warning";
-        // تأخير بسيط لضمان تحديث التوكن في قاعدة البيانات
         setTimeout(() => connectWithRetry(0), 300);
       } else {
         authReady = false;
@@ -1226,73 +1203,66 @@ function initFirebase() {
   }
 }
 
-/* 🔄 الاتصال بقاعدة البيانات مع إعادة محاولة تلقائية */
+/* 🔄 الاتصال بقاعدة البيانات مع إعادة محاولة */
 function connectWithRetry(attempt) {
   const status = document.getElementById('cloudStatus');
-  const MAX_RETRIES = 5;
+  const MAX_RETRIES = 8;
+  const INITIAL_DELAY = 1500;
 
-  // إزالة المستمعين السابقين
-  if (db) {
-    try { db.off(); } catch (e) {}
-  }
+  if (db) { try { db.off(); } catch (e) {} }
   db = firebase.database().ref("simple_price_debts_v4");
 
-  console.log(`Attempt ${attempt + 1} to connect to database...`);
+  const delay = attempt === 0 ? 1500 : (INITIAL_DELAY * Math.pow(1.8, attempt));
 
-  // استخدام once للاختبار الأول
-  db.once("value")
-    .then((snapshot) => {
-      // ✅ نجح
-      authReady = true;
-      lastConnectionError = null;
-      status.innerText = "🟢 متصل ومؤمّن - مزامنة تلقائية";
-      status.className = "online";
+  status.innerText = `🟡 جاري تأكيد الصلاحيات... (${attempt + 1}/${MAX_RETRIES})`;
+  status.className = "warning";
 
-      const val = snapshot.val() || {};
-      currentData.prices = val.prices || {};
-      renderPrices();
-      updateDashboard();
+  setTimeout(() => {
+    db.once("value")
+      .then((snapshot) => {
+        authReady = true;
+        lastConnectionError = null;
+        status.innerText = "🟢 متصل ومؤمّن - مزامنة تلقائية";
+        status.className = "online";
 
-      // الآن نضع المستمع الدائم
-      db.on("value", (snap) => {
-        const v = snap.val() || {};
-        currentData.prices = v.prices || {};
+        const val = snapshot.val() || {};
+        currentData.prices = val.prices || {};
         renderPrices();
         updateDashboard();
-      }, (err) => {
-        console.error("Live listener error:", err);
-        status.innerText = "🔴 فشل التحديث المباشر: " + err.code;
-        status.className = "offline";
-      });
-    })
-    .catch((error) => {
-      lastConnectionError = error;
-      console.error(`Attempt ${attempt + 1} failed:`, error.code, error.message);
 
-      if (attempt < MAX_RETRIES) {
-        const delay = 500 * Math.pow(2, attempt); // 500ms, 1s, 2s, 4s, 8s
-        status.innerText = `🟡 تأكيد الصلاحيات... (${attempt + 1}/${MAX_RETRIES})`;
-        status.className = "warning";
-        setTimeout(() => connectWithRetry(attempt + 1), delay);
-      } else {
-        // فشل نهائي
-        authReady = false;
-        status.innerText = "🔴 فشل الاتصال: " + (error.code || error.message);
-        status.className = "offline";
-        showToast("❌ تعذر الاتصال بقاعدة البيانات - راجع التشخيص", "error");
-        setTimeout(() => showDiagnostic(), 500);
-      }
-    });
+        db.on("value", (snap) => {
+          const v = snap.val() || {};
+          currentData.prices = v.prices || {};
+          renderPrices();
+          updateDashboard();
+        }, (err) => {
+          console.error("Live listener error:", err);
+          status.innerText = "🔴 فشل التحديث المباشر: " + err.code;
+          status.className = "offline";
+        });
+      })
+      .catch((error) => {
+        lastConnectionError = error;
+        console.error(`Attempt ${attempt + 1} failed:`, error.code, error.message);
+        if (attempt < MAX_RETRIES) {
+          connectWithRetry(attempt + 1);
+        } else {
+          authReady = false;
+          status.innerText = "🔴 فشل الاتصال: " + (error.code || error.message);
+          status.className = "offline";
+          showToast("❌ تعذر الاتصال بقاعدة البيانات - راجع التشخيص", "error");
+          setTimeout(() => showDiagnostic(), 500);
+        }
+      });
+  }, delay);
 }
 
 /* 🩺 التشخيص الشامل */
 function showDiagnostic() {
   const envIssues = checkEnvironment();
   const currentUser = auth ? auth.currentUser : null;
-
   let html = '<div style="font-weight:800; margin-bottom:12px; color:var(--primary);">🔧 نتائج الفحص:</div>';
 
-  // فحوصات البيئة
   envIssues.forEach(issue => {
     html += `
       <div class="diag-item ${issue.ok ? 'ok' : 'fail'}">
@@ -1305,14 +1275,13 @@ function showDiagnostic() {
     `;
   });
 
-  // فحص المصادقة
   if (currentUser) {
     html += `
       <div class="diag-item ok">
         <div class="icon">✅</div>
         <div class="body">
           <div class="title">🔑 المصادقة ناجحة</div>
-          <div class="desc">UID: <code style="font-size:0.9em;">${currentUser.uid.slice(0, 12)}...</code><br>مجهول: ${currentUser.isAnonymous ? 'نعم' : 'لا'}</div>
+          <div class="desc">UID: <code>${currentUser.uid.slice(0, 12)}...</code><br>مجهول: ${currentUser.isAnonymous ? 'نعم' : 'لا'}</div>
         </div>
       </div>
     `;
@@ -1323,7 +1292,7 @@ function showDiagnostic() {
         <div class="body">
           <div class="title">🔑 لا يوجد مستخدم مصادق</div>
           <div class="desc">
-            تحقق من تفعيل <strong>Anonymous</strong> في Firebase Console:<br>
+            تحقق من تفعيل <strong>Anonymous</strong>:<br>
             <a href="https://console.firebase.google.com/project/gimi-fd7fe/authentication/providers" target="_blank">→ فتح صفحة المصادقة</a>
           </div>
         </div>
@@ -1331,7 +1300,6 @@ function showDiagnostic() {
     `;
   }
 
-  // فحص الاتصال بقاعدة البيانات
   if (authReady && db) {
     html += `
       <div class="diag-item ok">
@@ -1350,7 +1318,7 @@ function showDiagnostic() {
           <div class="title">🗄️ الاتصال بقاعدة البيانات فاشل</div>
           <div class="desc">
             ${lastConnectionError ? `<strong>الخطأ:</strong> <code>${lastConnectionError.code || lastConnectionError.message}</code><br>` : ''}
-            تحقق من نشر القواعد في Firebase Console:<br>
+            تحقق من نشر القواعد:<br>
             <a href="https://console.firebase.google.com/project/gimi-fd7fe/database/simple_price_debts_v4/rules" target="_blank">→ فتح صفحة القواعد</a>
           </div>
         </div>
@@ -1358,13 +1326,12 @@ function showDiagnostic() {
     `;
   }
 
-  // إرشادات الحل
   html += `
     <div style="margin-top:16px; padding:14px; background:var(--warning-bg); border-radius:8px; border:1px solid var(--warning); font-size:0.9em; line-height:1.8;">
       <strong style="color:var(--warning);">📋 خطوات الحل السريعة:</strong><br>
       1. تأكد من تفعيل <strong>Anonymous</strong> في Firebase Authentication<br>
       2. تأكد من نشر القواعد في Realtime Database → Rules<br>
-      3. افتح التطبيق عبر <code>https://</code> أو <code>http://localhost</code> (وليس <code>file://</code>)<br>
+      3. افتح التطبيق عبر <code>https://</code> أو <code>http://localhost</code><br>
       4. أعد تحميل الصفحة (Ctrl+Shift+R)
     </div>
   `;
@@ -1373,7 +1340,6 @@ function showDiagnostic() {
   openModal('diagnosticModal');
 }
 
-/* حماية الكتابة */
 function ensureAuth() {
   if (!authReady || !db) {
     showToast("⚠️ الاتصال الآمن لم يُكتمل بعد. انتظر لحظة أو راجع التشخيص.", "warning");
@@ -1930,7 +1896,24 @@ document.addEventListener('keydown', (e) => {
 });
 
 /* ==================================================================
-   20. التهيئة
+   20. إدارة الاتصال مع دورة حياة الصفحة (لحل مشكلة Safari)
+   ================================================================== */
+window.addEventListener('pagehide', () => {
+  if (db) {
+    console.log('Page hide: closing database connection.');
+    try { db.off(); } catch(e) {}
+  }
+});
+
+window.addEventListener('pageshow', (event) => {
+  if (event.persisted && auth && auth.currentUser) {
+    console.log('Page show (persisted): reconnecting to database.');
+    connectWithRetry(0);
+  }
+});
+
+/* ==================================================================
+   21. التهيئة
    ================================================================== */
 window.addEventListener('load', () => {
   buildThemeGrid();
