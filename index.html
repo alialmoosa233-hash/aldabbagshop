@@ -14,7 +14,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=Cairo:wght@400;600;700;800&family=Almarai:wght@400;700;800&family=Noto+Kufi+Arabic:wght@400;600;700;800&family=Readex+Pro:wght@400;600;700&family=IBM+Plex+Sans+Arabic:wght@400;600;700&family=Amiri:wght@400;700&family=Rubik:wght@400;600;700&family=Changa:wght@400;600;700&family=El+Messiri:wght@400;600;700&family=Cairo+Play:wght@400;700;900&family=Lalezar&family=IBM+Plex+Mono:wght@600;700&display=swap" rel="stylesheet">
 
   <style>
-    /* ... (جميع الأنماط كما هي بدون تغيير) ... */
     :root {
       --bg-main: #F1F5F9;
       --card-bg: #FFFFFF;
@@ -1128,7 +1127,7 @@ function updateAdminPin(e) {
 }
 
 /* ==================================================================
-   6. 🔐 Firebase — مع إجبار التخزين المحلي (لتوافق Safari)
+   6. Firebase — مع إجبار التخزين المحلي (لتوافق Safari)
    ================================================================== */
 function checkEnvironment() {
   const issues = [];
@@ -1147,7 +1146,7 @@ function checkEnvironment() {
     issues.push({ ok: true, icon: '📦', title: 'مكتبة Firebase محملة', desc: 'OK' });
   }
   if (typeof firebase.auth !== 'function') {
-    issues.push({ ok: false, icon: '🔑', title: 'مكتبة Firebase Auth غير محملة', desc: 'تأكد من وجود firebase-auth.js.' });
+    issues.push({ ok: false, icon: '🔑', title: 'مكتبة Firebase Auth غير محملة', desc: 'تأكد من وجود وسم firebase-auth في رأس الصفحة.' });
   } else {
     issues.push({ ok: true, icon: '🔑', title: 'مكتبة Firebase Auth محملة', desc: 'OK' });
   }
@@ -1167,10 +1166,8 @@ function initFirebase() {
     firebase.initializeApp(firebaseConfig);
     auth = firebase.auth();
 
-    // ✅ إجبار Firebase على استخدام LocalStorage (لتوافق Safari)
     auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
       .then(() => {
-        // 🔐 ثم محاولة تسجيل الدخول المجهول
         return auth.signInAnonymously();
       })
       .catch((error) => {
@@ -1203,7 +1200,6 @@ function initFirebase() {
   }
 }
 
-/* 🔄 الاتصال بقاعدة البيانات مع إعادة محاولة */
 function connectWithRetry(attempt) {
   const status = document.getElementById('cloudStatus');
   const MAX_RETRIES = 8;
@@ -1257,7 +1253,6 @@ function connectWithRetry(attempt) {
   }, delay);
 }
 
-/* 🩺 التشخيص الشامل */
 function showDiagnostic() {
   const envIssues = checkEnvironment();
   const currentUser = auth ? auth.currentUser : null;
