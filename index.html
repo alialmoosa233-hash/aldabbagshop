@@ -7,13 +7,13 @@
   <title>نظام إدارة المخزن وعرض الأسعار - محلات الدباغ</title>
 
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=Cairo:wght@400;600;700;800&family=Almarai:wght@400;700;800&family=Noto+Kufi+Arabic:wght@400;600;700;800&family=Readex+Pro:wght@400;600;700&family=IBM+Plex+Sans+Arabic:wght@400;600;700&family=Amiri:wght@400;700&family=Rubik:wght@400;600;700&family=Changa:wght@400;600;700&family=El+Messiri:wght@400;600;700&family=Cairo+Play:wght@400;700;900&family=Lalezar&family=IBM+Plex+Mono:wght@600;700&display=swap" rel="stylesheet">
 
   <style>
-    /* ============ المتغيرات ============ */
     :root {
       --bg-main: #F1F5F9;
       --card-bg: #FFFFFF;
@@ -58,7 +58,6 @@
       --warning-bg: rgba(217, 119, 6, 0.15);
     }
 
-    /* ============ أنماط التصميم ============ */
     body.style-modern {
       --radius: 20px;
       --radius-sm: 14px;
@@ -67,7 +66,6 @@
     }
     body.style-modern .card { padding: 28px; }
     body.style-modern button { border-radius: 14px; }
-    body.style-modern .dash-card { border-inline-start-width: 6px; }
 
     body.style-flat {
       --radius: 4px;
@@ -77,11 +75,6 @@
     }
     body.style-flat .card { border-width: 2px; }
     body.style-flat button { border-radius: 3px; }
-    body.style-flat header { border-bottom-width: 5px; }
-    body.style-flat .dash-card { border-width: 2px; border-inline-start-width: 6px; }
-    body.style-flat .stock-badge,
-    body.style-flat .filter-btn { border-radius: 4px; }
-    body.style-flat .price-box { border-radius: 3px; }
 
     * { box-sizing: border-box; }
 
@@ -96,7 +89,6 @@
       transition: background-color 0.3s ease, color 0.3s ease;
     }
 
-    /* ============ الرأس ============ */
     header {
       background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
       color: #F8FAFC; padding: 18px 30px; font-size: 21px; font-weight: 800;
@@ -104,7 +96,6 @@
       display: flex; justify-content: space-between; align-items: center;
       flex-wrap: wrap; gap: 14px;
       box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-      transition: border-color 0.3s ease;
     }
     header.admin-active { border-bottom-color: var(--success); }
     .header-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
@@ -117,10 +108,10 @@
       border: 1px dashed var(--border-color);
       font-family: 'IBM Plex Mono', monospace;
       box-shadow: var(--shadow-sm);
-      transition: all 0.3s;
     }
     #cloudStatus.online { color: var(--success); border-color: var(--success); }
     #cloudStatus.offline { color: var(--danger); border-color: var(--danger); }
+    #cloudStatus.warning { color: var(--warning); border-color: var(--warning); }
 
     .dashboard-summary {
       display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
@@ -151,8 +142,7 @@
     .tab-btn.active { color: #FFF; background: var(--primary); border-color: var(--primary); }
 
     .tab-content { display: none; }
-    .tab-content.active { display: block; animation: fadeIn 0.25s ease; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+    .tab-content.active { display: block; }
 
     .admin-only { display: none !important; }
     body.is-admin .admin-only { display: block !important; }
@@ -171,10 +161,7 @@
       align-items: center; color: var(--primary); flex-wrap: wrap; gap: 10px;
     }
 
-    label {
-      font-size: 0.9em; font-weight: 700; display: block;
-      margin-bottom: 6px; color: var(--text-muted);
-    }
+    label { font-size: 0.9em; font-weight: 700; display: block; margin-bottom: 6px; color: var(--text-muted); }
 
     input, select, textarea {
       width: 100%; padding: 12px 16px; margin-bottom: 14px;
@@ -187,7 +174,7 @@
       border-color: var(--price-blue);
       box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
     }
-    input.invalid { border-color: var(--danger); box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15); }
+    input.invalid { border-color: var(--danger); }
 
     button {
       width: 100%; padding: 12px 18px; border: none;
@@ -196,7 +183,7 @@
       transition: all 0.2s;
     }
     button:hover:not(:disabled) { opacity: 0.93; transform: translateY(-1px); }
-    button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    button:disabled { opacity: 0.6; cursor: not-allowed; }
 
     .btn-price { background: var(--price-blue); }
     .btn-success { background: var(--success); }
@@ -204,28 +191,17 @@
     .btn-admin { background: var(--brass); color: #FFF; }
     .btn-danger { background: var(--danger); }
 
-    /* ============ شبكة الثيمات ============ */
     .theme-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-      gap: 10px;
-      margin-bottom: 24px;
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 10px; margin-bottom: 24px;
     }
     .theme-swatch {
-      padding: 12px 8px;
-      border-radius: 10px;
-      text-align: center;
-      border: 3px solid transparent;
-      cursor: pointer;
-      font-weight: 800;
-      font-size: 0.82em;
-      transition: all 0.2s;
-      color: #FFF;
-      text-shadow: 0 1px 2px rgba(0,0,0,0.35);
-      min-height: 74px;
-      display: flex; flex-direction: column;
-      justify-content: center; align-items: center; gap: 4px;
-      position: relative;
+      padding: 12px 8px; border-radius: 10px; text-align: center;
+      border: 3px solid transparent; cursor: pointer; font-weight: 800;
+      font-size: 0.82em; transition: all 0.2s; color: #FFF;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.35); min-height: 74px;
+      display: flex; flex-direction: column; justify-content: center;
+      align-items: center; gap: 4px; position: relative;
     }
     .theme-swatch:hover { transform: translateY(-3px) scale(1.02); box-shadow: var(--shadow-md); z-index: 1; }
     .theme-swatch.active {
@@ -233,100 +209,64 @@
       box-shadow: 0 0 0 3px var(--text-main), 0 4px 12px rgba(0,0,0,0.2);
     }
     .theme-swatch.active::after {
-      content: '✓';
-      position: absolute;
-      top: 4px; left: 6px;
-      font-size: 1em; font-weight: 900;
-      background: #FFF; color: #000;
+      content: '✓'; position: absolute; top: 4px; left: 6px;
+      font-size: 1em; font-weight: 900; background: #FFF; color: #000;
       width: 20px; height: 20px; line-height: 20px;
-      border-radius: 50%; text-align: center;
-      text-shadow: none;
+      border-radius: 50%; text-align: center; text-shadow: none;
     }
     .theme-swatch .emoji { font-size: 1.4em; }
 
-    /* ============ شبكة الخطوط ============ */
     .font-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-      gap: 10px;
-      margin-bottom: 24px;
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 10px; margin-bottom: 24px;
     }
     .font-swatch {
-      padding: 14px 12px;
-      border-radius: 10px;
-      text-align: center;
-      border: 2px solid var(--border-color);
-      cursor: pointer;
-      background: var(--card-bg);
-      color: var(--text-main);
-      transition: all 0.2s;
+      padding: 14px 12px; border-radius: 10px; text-align: center;
+      border: 2px solid var(--border-color); cursor: pointer;
+      background: var(--card-bg); color: var(--text-main); transition: all 0.2s;
     }
-    .font-swatch:hover { border-color: var(--primary); transform: translateY(-2px); box-shadow: var(--shadow-sm); }
+    .font-swatch:hover { border-color: var(--primary); transform: translateY(-2px); }
     .font-swatch.active {
-      border-color: var(--primary);
-      background: rgba(37, 99, 235, 0.08);
+      border-color: var(--primary); background: rgba(37, 99, 235, 0.08);
       box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
     }
-    .font-swatch .sample { font-size: 1.5em; font-weight: 700; margin-bottom: 6px; line-height: 1.2; }
+    .font-swatch .sample { font-size: 1.5em; font-weight: 700; margin-bottom: 6px; }
     .font-swatch .name { font-size: 0.78em; color: var(--text-muted); font-weight: 700; }
 
-    /* ============ شبكة الأنماط ============ */
     .style-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-      margin-bottom: 24px;
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 10px; margin-bottom: 24px;
     }
     .style-swatch {
-      padding: 16px 12px;
-      border-radius: 10px;
-      text-align: center;
-      border: 2px solid var(--border-color);
-      cursor: pointer;
-      background: var(--card-bg);
-      color: var(--text-main);
-      transition: all 0.2s;
-      font-weight: 700;
+      padding: 16px 12px; border-radius: 10px; text-align: center;
+      border: 2px solid var(--border-color); cursor: pointer;
+      background: var(--card-bg); color: var(--text-main);
+      transition: all 0.2s; font-weight: 700;
     }
     .style-swatch:hover { border-color: var(--primary); transform: translateY(-2px); }
     .style-swatch.active {
-      border-color: var(--primary);
-      background: rgba(37, 99, 235, 0.08);
+      border-color: var(--primary); background: rgba(37, 99, 235, 0.08);
       box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
     }
     .style-swatch .icon { font-size: 1.8em; margin-bottom: 6px; }
     .style-swatch .name { font-size: 0.9em; font-weight: 800; }
     .style-swatch .desc { font-size: 0.72em; color: var(--text-muted); margin-top: 4px; font-weight: 600; }
 
-    /* ============ البحث والفلترة ============ */
     .search-toolbar { display: flex; flex-direction: column; gap: 12px; margin-bottom: 18px; }
     .search-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
     .search-container { position: relative; flex: 1; min-width: 200px; }
     .search-container input { margin: 0; padding-left: 38px; padding-right: 48px; }
 
     .scan-search-btn {
-      position: absolute;
-      right: 6px;
-      top: 50%;
-      transform: translateY(-50%);
-      background: var(--primary);
-      border: none;
-      color: #fff;
-      width: 34px;
-      height: 34px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 1.05em;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 0;
-      transition: all 0.2s;
+      position: absolute; right: 6px; top: 50%;
+      transform: translateY(-50%); background: var(--primary);
+      border: none; color: #fff; width: 34px !important; height: 34px;
+      border-radius: 6px; cursor: pointer; font-size: 1.05em;
+      display: flex; align-items: center; justify-content: center;
+      padding: 0; transition: all 0.2s;
       box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-      width: 34px !important;
     }
     .scan-search-btn:hover { background: var(--price-blue); transform: translateY(-50%) scale(1.08); }
-    .scan-search-btn:active { transform: translateY(-50%) scale(0.95); }
 
     .clear-search-btn {
       position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
@@ -348,13 +288,11 @@
       box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
 
-    /* تأثير إبراز عند العثور على المنتج */
     @keyframes barcodeHighlight {
       0%, 100% { background: transparent; }
       15%, 85% { background: rgba(37, 99, 235, 0.18); }
     }
 
-    /* ============ الجدول ============ */
     .table-wrapper {
       overflow-x: auto; margin-top: 12px;
       border-radius: var(--radius); border: 1px solid var(--border-color);
@@ -414,7 +352,6 @@
       border-radius: 6px; font-weight: 700;
     }
 
-    /* ============ الإشعارات ============ */
     #toastContainer {
       position: fixed; bottom: 20px; left: 20px; z-index: 10000;
       display: flex; flex-direction: column; gap: 10px; pointer-events: none;
@@ -434,7 +371,6 @@
     @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes fadeOut { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(20px); } }
 
-    /* ============ المودالات ============ */
     .modal {
       display: none; position: fixed; z-index: 1000;
       left: 0; top: 0; width: 100%; height: 100%;
@@ -448,9 +384,7 @@
       border-top: 4px solid var(--brass);
       box-shadow: var(--shadow-md);
       max-height: 90vh; overflow-y: auto;
-      animation: modalIn 0.25s ease;
     }
-    @keyframes modalIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
     .modal-content.danger { border-top-color: var(--danger); }
     .modal-content.success { border-top-color: var(--success); }
 
@@ -468,7 +402,23 @@
     .modal-actions { display: flex; gap: 10px; margin-top: 16px; }
     .modal-actions button { flex: 1; }
 
-    /* ============ الطباعة ============ */
+    .diag-item {
+      padding: 10px 14px; margin-bottom: 10px;
+      border-radius: 8px; border: 1px solid var(--border-color);
+      display: flex; gap: 10px; align-items: flex-start;
+      background: var(--stripe-bg);
+    }
+    .diag-item.ok { border-color: var(--success); background: var(--success-bg); }
+    .diag-item.fail { border-color: var(--danger); background: var(--danger-bg); }
+    .diag-item .icon { font-size: 1.3em; flex-shrink: 0; }
+    .diag-item .body { flex: 1; }
+    .diag-item .title { font-weight: 800; margin-bottom: 4px; }
+    .diag-item .desc { font-size: 0.85em; color: var(--text-muted); line-height: 1.6; }
+    .diag-item a {
+      color: var(--price-blue); text-decoration: underline;
+      font-weight: 700; word-break: break-all;
+    }
+
     @media print {
       header, .tabs, .dashboard-summary, #cloudStatus,
       .search-toolbar, .admin-only, .no-print,
@@ -477,21 +427,16 @@
       }
       body { background: #fff !important; color: #000 !important; }
       .container { max-width: 100%; padding: 0; margin: 0; }
-      .card { border: 1px solid #ddd; box-shadow: none; page-break-inside: avoid; }
+      .card { border: 1px solid #ddd; box-shadow: none; }
       table { font-size: 11px; }
       th { background: #eee !important; color: #000 !important; }
       th, td { padding: 6px 8px !important; border: 1px solid #ccc !important; }
-      .price-box { background: #f9f9f9 !important; border-color: #ccc !important; }
-      .tab-content { display: none !important; }
-      .tab-content.active { display: block !important; }
     }
 
-    /* ============ الجوال ============ */
     @media (max-width: 768px) {
       header { padding: 14px 16px; font-size: 17px; }
       .container { padding: 0 12px; margin: 16px auto; }
       .card { padding: 16px; }
-
       .table-wrapper { border: none; box-shadow: none; }
       table, thead, tbody, th, td, tr { display: block; }
       thead { display: none; }
@@ -500,9 +445,7 @@
         border-radius: var(--radius);
         margin-bottom: 12px; padding: 12px;
         background: var(--card-bg);
-        box-shadow: var(--shadow-sm);
       }
-      tbody tr:nth-child(even) { background: var(--card-bg); }
       td {
         border: none; padding: 8px 0;
         display: flex; justify-content: space-between; align-items: center;
@@ -516,13 +459,9 @@
       td.action-cell { justify-content: center; padding-top: 12px; border-top: 1px dashed var(--border-color); margin-top: 8px; }
       td.action-cell::before { content: ""; display: none; }
       .price-box { min-width: 180px; }
-      .filter-btn { font-size: 0.8em; padding: 6px 10px; }
-      .search-row select { min-width: 100%; }
       .dashboard-summary { grid-template-columns: 1fr; }
       .tabs { gap: 4px; }
       .tab-btn { min-width: 100px; font-size: 0.9em; padding: 10px; }
-      .modal-content { padding: 18px; }
-      h2 { font-size: 1.1em; }
       .theme-grid { grid-template-columns: repeat(3, 1fr); }
       .font-grid { grid-template-columns: repeat(2, 1fr); }
       .style-grid { grid-template-columns: 1fr; }
@@ -542,7 +481,7 @@
 </header>
 
 <div class="container">
-  <div id="cloudStatus">🔄 جاري مزامنة البيانات...</div>
+  <div id="cloudStatus">🔄 جاري الاتصال والمصادقة...</div>
 
   <div class="dashboard-summary">
     <div class="dash-card" onclick="setFilter('all')">
@@ -565,7 +504,6 @@
     <button class="tab-btn" data-tab="settings" onclick="switchTab('settings')">⚙️ الضبط والمظهر</button>
   </div>
 
-  <!-- عرض الأسعار -->
   <div id="pricesSection" class="tab-content active">
     <div class="card">
       <h2>
@@ -577,8 +515,8 @@
         <div class="search-row">
           <div class="search-container">
             <input type="text" id="searchPrice" placeholder="🔍 ابحث بالاسم، الباركود، أو السعر..." oninput="handleSearchInput()" />
-            <button class="scan-search-btn" onclick="startScanner('search')" title="مسح باركود للبحث" aria-label="مسح باركود للبحث">📷</button>
-            <button id="clearSearchBtn" class="clear-search-btn" onclick="clearSearch()" aria-label="مسح البحث">✕</button>
+            <button class="scan-search-btn" onclick="startScanner('search')" title="مسح باركود للبحث">📷</button>
+            <button id="clearSearchBtn" class="clear-search-btn" onclick="clearSearch()">✕</button>
           </div>
           <div style="min-width:180px;">
             <select id="sortBySelect" onchange="renderPrices()">
@@ -619,7 +557,6 @@
     </div>
   </div>
 
-  <!-- إضافة مادة -->
   <div id="addProductSection" class="tab-content">
     <div class="card" style="max-width: 680px; margin: 0 auto;">
       <h2>➕ إضافة مادة جديدة إلى الدليل</h2>
@@ -630,7 +567,7 @@
         <label for="pCode">الباركود / الكود</label>
         <div style="display:flex; gap:8px;">
           <input type="text" id="pCode" placeholder="امسح أو أدخل الكود..." style="margin-bottom:14px;" />
-          <button type="button" onclick="startScanner('add')" class="btn-price" style="width:50px; height:46px; padding:0; display:flex; align-items:center; justify-content:center; font-size:1.2em;" aria-label="مسح الباركود">📷</button>
+          <button type="button" onclick="startScanner('add')" class="btn-price" style="width:50px; height:46px; padding:0; display:flex; align-items:center; justify-content:center; font-size:1.2em;">📷</button>
         </div>
 
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; background:var(--stripe-bg); padding:16px; border-radius:var(--radius-sm); border:1px solid var(--border-color); margin-bottom:18px;">
@@ -652,7 +589,6 @@
     </div>
   </div>
 
-  <!-- الإعدادات -->
   <div id="settingsSection" class="tab-content">
     <div class="card" style="max-width: 950px; margin: 0 auto;">
       <h2>⚙️ إعدادات المظهر والنمط</h2>
@@ -691,7 +627,7 @@
         </div>
       </div>
 
-      <h2 style="font-size: 1.1em; margin-top:10px;">🔐 تغيير رمز الأمان (PIN للأدمن)</h2>
+      <h2 style="font-size: 1.1em; margin-top:10px;">🔐 تغيير رمز الأمان (PIN)</h2>
       <div style="background:var(--stripe-bg); padding:16px; border-radius:10px; border:1px solid var(--border-color);">
         <form id="changePinForm" onsubmit="updateAdminPin(event)">
           <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:12px;">
@@ -720,7 +656,16 @@
           <button onclick="triggerImportBackup()" class="btn-price admin-only" style="flex:1; min-width:150px;">📥 استرجاع نسخة</button>
         </div>
         <input type="file" id="backupFileInput" accept=".json,application/json" style="display:none;" onchange="handleBackupFile(event)" />
-        <p style="margin:12px 0 0; font-size:0.8em; color:var(--text-muted);">💡 خذ نسخة احتياطية دورياً واحفظها في مكان آمن.</p>
+      </div>
+
+      <h2 style="font-size: 1.1em; margin-top:20px;">🔧 تشخيص الاتصال</h2>
+      <div style="background:var(--stripe-bg); padding:16px; border-radius:10px; border:1px solid var(--border-color);">
+        <p style="margin:0 0 14px; color:var(--text-muted); font-size:0.9em;">
+          إذا واجهت مشكلة في الاتصال، اضغط الزر أدناه لعرض تشخيص كامل.
+        </p>
+        <button onclick="showDiagnostic()" class="btn-secondary" style="width:auto; padding:10px 20px;">
+          🔍 عرض تشخيص الاتصال
+        </button>
       </div>
 
       <button onclick="resetSettings()" class="btn-secondary" style="margin-top:22px;">🔄 استعادة الإعدادات الافتراضية</button>
@@ -740,6 +685,19 @@
     <div class="modal-actions">
       <button class="btn-secondary" onclick="closeModal('adminPinModal')">إلغاء</button>
       <button class="btn-price" onclick="submitAdminPin()">تفعيل</button>
+    </div>
+  </div>
+</div>
+
+<div id="diagnosticModal" class="modal">
+  <div class="modal-content" style="max-width: 620px;">
+    <div class="modal-header">
+      <h3>🔧 تشخيص الاتصال</h3>
+      <button class="modal-close" onclick="closeModal('diagnosticModal')">✕</button>
+    </div>
+    <div id="diagnosticContent"></div>
+    <div class="modal-actions">
+      <button class="btn-price" onclick="closeModal('diagnosticModal')">حسناً</button>
     </div>
   </div>
 </div>
@@ -866,7 +824,6 @@ const DEFAULTS = {
   SESSION_KEY: 'admin_session_until'
 };
 
-/* 🎨 20 ثيماً لونياً */
 const COLOR_THEMES = {
   blue:      { name: 'أزرق ملكي',     emoji: '🏛️', primary: '#1E3A8A', price: '#2563EB', brass: '#D97706', bg: '#F1F5F9' },
   emerald:   { name: 'زمردي',         emoji: '🌲', primary: '#065F46', price: '#059669', brass: '#D97706', bg: '#F0FDF4' },
@@ -890,7 +847,6 @@ const COLOR_THEMES = {
   graphite:  { name: 'جرافيت',        emoji: '⚫', primary: '#27272A', price: '#52525B', brass: '#EAB308', bg: '#FAFAFA' }
 };
 
-/* 🔤 12 خط عربي */
 const FONT_OPTIONS = [
   { value: 'Tajawal',           name: 'تجوال' },
   { value: 'Cairo',             name: 'كايرو' },
@@ -906,7 +862,6 @@ const FONT_OPTIONS = [
   { value: 'Lalezar',           name: 'لاله زار' }
 ];
 
-/* ✨ 3 أنماط تصميم */
 const STYLE_OPTIONS = [
   { value: 'classic', name: 'كلاسيكي', icon: '🎩', desc: 'أنيق ومتوازن' },
   { value: 'modern',  name: 'حديث',    icon: '✨', desc: 'حواف ناعمة' },
@@ -924,6 +879,7 @@ const firebaseConfig = {
 };
 
 let db = null;
+let auth = null;
 let currentData = { prices: {} };
 let currentFilter = 'all';
 let isAdmin = false;
@@ -932,6 +888,9 @@ let html5QrCode = null;
 let confirmCallback = null;
 let pendingBackup = null;
 let scannerMode = 'add';
+let authReady = false;
+let connectionAttempt = 0;
+let lastConnectionError = null;
 
 /* ==================================================================
    2. الإشعارات والمودالات
@@ -961,7 +920,7 @@ function showConfirm(title, message, onConfirm) {
 }
 
 /* ==================================================================
-   3. بناء شبكات الثيمات والخطوط والأنماط
+   3. بناء الشبكات
    ================================================================== */
 function buildThemeGrid() {
   const grid = document.getElementById('themeGrid');
@@ -1169,28 +1128,258 @@ function updateAdminPin(e) {
 }
 
 /* ==================================================================
-   6. Firebase
+   6. 🔐 Firebase — مع كشف البروتوكول وإعادة المحاولة
    ================================================================== */
+function checkEnvironment() {
+  const issues = [];
+
+  // كشف file://
+  if (location.protocol === 'file:') {
+    issues.push({
+      ok: false,
+      icon: '🌐',
+      title: 'التطبيق يعمل من ملف محلي (file://)',
+      desc: 'المصادقة الآمنة (Firebase Auth) لا تعمل من ملف محلي. الحل: ارفع الملف على استضافة (Netlify Drop مجاني) أو استخدم Live Server في VS Code (http://localhost:5500).'
+    });
+  } else {
+    issues.push({
+      ok: true,
+      icon: '🌐',
+      title: 'البروتوكول: ' + location.protocol,
+      desc: 'البروتوكول مناسب للمصادقة الآمنة.'
+    });
+  }
+
+  // كشف توفر SDKs
+  if (typeof firebase === 'undefined') {
+    issues.push({
+      ok: false,
+      icon: '📦',
+      title: 'مكتبة Firebase غير محملة',
+      desc: 'تحقق من اتصالك بالإنترنت.'
+    });
+  } else {
+    issues.push({ ok: true, icon: '📦', title: 'مكتبة Firebase محملة', desc: 'OK' });
+  }
+
+  if (typeof firebase.auth !== 'function') {
+    issues.push({
+      ok: false,
+      icon: '🔑',
+      title: 'مكتبة Firebase Auth غير محملة',
+      desc: 'تأكد من وجود <script src=".../firebase-auth.js"></script> في رأس الصفحة.'
+    });
+  } else {
+    issues.push({ ok: true, icon: '🔑', title: 'مكتبة Firebase Auth محملة', desc: 'OK' });
+  }
+
+  return issues;
+}
+
 function initFirebase() {
   const status = document.getElementById('cloudStatus');
+
+  // 1) فحص البيئة
+  const envIssues = checkEnvironment();
+  const envFailed = envIssues.some(i => !i.ok);
+
+  if (envFailed) {
+    status.innerText = "🟡 تحذير: بيئة التشغيل غير مناسبة للمصادقة";
+    status.className = "warning";
+    showToast("⚠️ افتح التطبيق عبر https أو localhost لتفعيل الحماية", "warning");
+  }
+
   try {
     firebase.initializeApp(firebaseConfig);
-    db = firebase.database().ref("simple_price_debts_v4");
-    db.on("value", (snapshot) => {
-      status.innerText = "🟢 متصل بالسحابة - مزامنة تلقائية";
+    auth = firebase.auth();
+
+    // 2) محاولة تسجيل الدخول المجهول
+    auth.signInAnonymously().catch((error) => {
+      lastConnectionError = error;
+      status.innerText = "🔴 فشل المصادقة: " + error.code;
+      status.className = "offline";
+      console.error("Auth error:", error);
+      showToast("❌ فشل المصادقة: " + error.code + " - راجع التشخيص", "error");
+      setTimeout(() => showDiagnostic(), 500);
+    });
+
+    // 3) عند نجاح المصادقة، ننتظر قليلاً قبل قراءة البيانات
+    auth.onAuthStateChanged((user) => {
+      if (user) {
+        authReady = true;
+        status.innerText = "🟡 تأكيد الصلاحيات...";
+        status.className = "warning";
+        // تأخير بسيط لضمان تحديث التوكن في قاعدة البيانات
+        setTimeout(() => connectWithRetry(0), 300);
+      } else {
+        authReady = false;
+        status.innerText = "🔴 غير مصادق";
+        status.className = "offline";
+      }
+    });
+  } catch (e) {
+    lastConnectionError = e;
+    status.innerText = "🔴 خطأ في التهيئة: " + e.message;
+    status.className = "offline";
+    console.error("Firebase init error:", e);
+    showToast("❌ خطأ في تهيئة Firebase", "error");
+  }
+}
+
+/* 🔄 الاتصال بقاعدة البيانات مع إعادة محاولة تلقائية */
+function connectWithRetry(attempt) {
+  const status = document.getElementById('cloudStatus');
+  const MAX_RETRIES = 5;
+
+  // إزالة المستمعين السابقين
+  if (db) {
+    try { db.off(); } catch (e) {}
+  }
+  db = firebase.database().ref("simple_price_debts_v4");
+
+  console.log(`Attempt ${attempt + 1} to connect to database...`);
+
+  // استخدام once للاختبار الأول
+  db.once("value")
+    .then((snapshot) => {
+      // ✅ نجح
+      authReady = true;
+      lastConnectionError = null;
+      status.innerText = "🟢 متصل ومؤمّن - مزامنة تلقائية";
       status.className = "online";
+
       const val = snapshot.val() || {};
       currentData.prices = val.prices || {};
       renderPrices();
       updateDashboard();
-    }, (error) => {
-      status.innerText = "🔴 فشل الاتصال: " + error.message;
-      status.className = "offline";
+
+      // الآن نضع المستمع الدائم
+      db.on("value", (snap) => {
+        const v = snap.val() || {};
+        currentData.prices = v.prices || {};
+        renderPrices();
+        updateDashboard();
+      }, (err) => {
+        console.error("Live listener error:", err);
+        status.innerText = "🔴 فشل التحديث المباشر: " + err.code;
+        status.className = "offline";
+      });
+    })
+    .catch((error) => {
+      lastConnectionError = error;
+      console.error(`Attempt ${attempt + 1} failed:`, error.code, error.message);
+
+      if (attempt < MAX_RETRIES) {
+        const delay = 500 * Math.pow(2, attempt); // 500ms, 1s, 2s, 4s, 8s
+        status.innerText = `🟡 تأكيد الصلاحيات... (${attempt + 1}/${MAX_RETRIES})`;
+        status.className = "warning";
+        setTimeout(() => connectWithRetry(attempt + 1), delay);
+      } else {
+        // فشل نهائي
+        authReady = false;
+        status.innerText = "🔴 فشل الاتصال: " + (error.code || error.message);
+        status.className = "offline";
+        showToast("❌ تعذر الاتصال بقاعدة البيانات - راجع التشخيص", "error");
+        setTimeout(() => showDiagnostic(), 500);
+      }
     });
-  } catch (e) {
-    status.innerText = "🔴 خطأ في التهيئة: " + e.message;
-    status.className = "offline";
+}
+
+/* 🩺 التشخيص الشامل */
+function showDiagnostic() {
+  const envIssues = checkEnvironment();
+  const currentUser = auth ? auth.currentUser : null;
+
+  let html = '<div style="font-weight:800; margin-bottom:12px; color:var(--primary);">🔧 نتائج الفحص:</div>';
+
+  // فحوصات البيئة
+  envIssues.forEach(issue => {
+    html += `
+      <div class="diag-item ${issue.ok ? 'ok' : 'fail'}">
+        <div class="icon">${issue.ok ? '✅' : '❌'}</div>
+        <div class="body">
+          <div class="title">${issue.icon} ${issue.title}</div>
+          <div class="desc">${issue.desc}</div>
+        </div>
+      </div>
+    `;
+  });
+
+  // فحص المصادقة
+  if (currentUser) {
+    html += `
+      <div class="diag-item ok">
+        <div class="icon">✅</div>
+        <div class="body">
+          <div class="title">🔑 المصادقة ناجحة</div>
+          <div class="desc">UID: <code style="font-size:0.9em;">${currentUser.uid.slice(0, 12)}...</code><br>مجهول: ${currentUser.isAnonymous ? 'نعم' : 'لا'}</div>
+        </div>
+      </div>
+    `;
+  } else {
+    html += `
+      <div class="diag-item fail">
+        <div class="icon">❌</div>
+        <div class="body">
+          <div class="title">🔑 لا يوجد مستخدم مصادق</div>
+          <div class="desc">
+            تحقق من تفعيل <strong>Anonymous</strong> في Firebase Console:<br>
+            <a href="https://console.firebase.google.com/project/gimi-fd7fe/authentication/providers" target="_blank">→ فتح صفحة المصادقة</a>
+          </div>
+        </div>
+      </div>
+    `;
   }
+
+  // فحص الاتصال بقاعدة البيانات
+  if (authReady && db) {
+    html += `
+      <div class="diag-item ok">
+        <div class="icon">✅</div>
+        <div class="body">
+          <div class="title">🗄️ الاتصال بقاعدة البيانات يعمل</div>
+          <div class="desc">تم تحميل ${Object.keys(currentData.prices || {}).length} مادة بنجاح.</div>
+        </div>
+      </div>
+    `;
+  } else {
+    html += `
+      <div class="diag-item fail">
+        <div class="icon">❌</div>
+        <div class="body">
+          <div class="title">🗄️ الاتصال بقاعدة البيانات فاشل</div>
+          <div class="desc">
+            ${lastConnectionError ? `<strong>الخطأ:</strong> <code>${lastConnectionError.code || lastConnectionError.message}</code><br>` : ''}
+            تحقق من نشر القواعد في Firebase Console:<br>
+            <a href="https://console.firebase.google.com/project/gimi-fd7fe/database/simple_price_debts_v4/rules" target="_blank">→ فتح صفحة القواعد</a>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  // إرشادات الحل
+  html += `
+    <div style="margin-top:16px; padding:14px; background:var(--warning-bg); border-radius:8px; border:1px solid var(--warning); font-size:0.9em; line-height:1.8;">
+      <strong style="color:var(--warning);">📋 خطوات الحل السريعة:</strong><br>
+      1. تأكد من تفعيل <strong>Anonymous</strong> في Firebase Authentication<br>
+      2. تأكد من نشر القواعد في Realtime Database → Rules<br>
+      3. افتح التطبيق عبر <code>https://</code> أو <code>http://localhost</code> (وليس <code>file://</code>)<br>
+      4. أعد تحميل الصفحة (Ctrl+Shift+R)
+    </div>
+  `;
+
+  document.getElementById('diagnosticContent').innerHTML = html;
+  openModal('diagnosticModal');
+}
+
+/* حماية الكتابة */
+function ensureAuth() {
+  if (!authReady || !db) {
+    showToast("⚠️ الاتصال الآمن لم يُكتمل بعد. انتظر لحظة أو راجع التشخيص.", "warning");
+    return false;
+  }
+  return true;
 }
 
 /* ==================================================================
@@ -1367,6 +1556,7 @@ function renderPrices() {
    ================================================================== */
 async function adjustQty(id, type, amount) {
   if (!isAdmin) return;
+  if (!ensureAuth()) return;
   const p = currentData.prices[id];
   if (!p) return;
   const field = type === 'packet' ? 'packetStock' : 'cartonStock';
@@ -1391,6 +1581,7 @@ function openStockModal(id, type) {
 }
 
 async function submitStockUpdate() {
+  if (!ensureAuth()) return;
   const input = document.getElementById('stockNewQty');
   const id = input.dataset.id;
   const field = input.dataset.field;
@@ -1408,7 +1599,7 @@ async function submitStockUpdate() {
 document.getElementById('priceForm').addEventListener('submit', async function(e) {
   e.preventDefault();
   if (!isAdmin) return showToast("يجب تفعيل وضع الأدمن أولاً", "warning");
-  if (!db) return showToast("قاعدة البيانات غير متصلة", "error");
+  if (!ensureAuth()) return;
   const nameInput = document.getElementById('pName').value.trim();
   const codeInput = document.getElementById('pCode').value.trim();
   if (!nameInput) {
@@ -1469,6 +1660,7 @@ function openEditModal(id) {
 
 document.getElementById('editForm').addEventListener('submit', async function(e) {
   e.preventDefault();
+  if (!ensureAuth()) return;
   const id = document.getElementById('editId').value;
   const name = document.getElementById('editName').value.trim();
   if (!name) return showToast("⚠️ اسم المادة مطلوب", "warning");
@@ -1493,6 +1685,7 @@ function confirmDelete(id) {
   const p = currentData.prices[id];
   if (!p) return;
   showConfirm("تأكيد الحذف", `هل تريد حذف "${p.name}" نهائياً؟`, async () => {
+    if (!ensureAuth()) return;
     try {
       await db.child("prices").child(id).remove();
       showToast("🗑️ تم الحذف بنجاح", "success");
@@ -1520,7 +1713,7 @@ function exportCsv() {
 }
 
 /* ==================================================================
-   17. الباركود — مع وضعين: بحث / إضافة
+   17. الباركود
    ================================================================== */
 async function startScanner(mode = 'add') {
   if (typeof Html5Qrcode === 'undefined') return showToast("مكتبة الباركود غير محملة", "error");
@@ -1562,7 +1755,6 @@ async function stopScanner() {
   closeModal('scannerModal');
 }
 
-/* 🔍 البحث بالباركود من شاشة الأسعار */
 function handleBarcodeSearch(barcode) {
   const barcodeClean = String(barcode).trim();
   const products = Object.values(currentData.prices || {});
@@ -1573,9 +1765,7 @@ function handleBarcodeSearch(barcode) {
   const searchInput = document.getElementById('searchPrice');
   searchInput.value = barcodeClean;
   document.getElementById('clearSearchBtn').style.display = 'block';
-  document.getElementById('clearSearchBtn').classList.add('visible');
 
-  // إعادة التصفية إلى "الكل" لضمان ظهور النتيجة
   currentFilter = 'all';
   document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
   document.getElementById('chip-all')?.classList.add('active');
@@ -1675,7 +1865,6 @@ async function handleBackupFile(event) {
       <span style="color:var(--text-muted);">تاريخ التصدير:</span> <strong>${escapeHtml(exportedDate)}</strong><br>
       <span style="color:var(--text-muted);">عدد المواد:</span> <strong style="color:var(--success);">${count}</strong><br>
       <span style="color:var(--text-muted);">المواد الحالية:</span> <strong style="color:var(--price-blue);">${Object.keys(currentData.prices || {}).length}</strong>
-      ${backup.settings ? '<br><span style="color:var(--text-muted);">✔ يحتوي إعدادات مظهر</span>' : ''}
     `;
     document.querySelector('input[name="importMode"][value="merge"]').checked = true;
     openModal('backupImportModal');
@@ -1683,7 +1872,8 @@ async function handleBackupFile(event) {
 }
 
 async function executeImport() {
-  if (!pendingBackup || !db) return showToast("البيانات غير جاهزة", "error");
+  if (!pendingBackup) return showToast("البيانات غير جاهزة", "error");
+  if (!ensureAuth()) return;
   const mode = document.querySelector('input[name="importMode"]:checked')?.value || 'merge';
   const restoreSettings = document.getElementById('restoreSettingsCheck').checked;
   const prices = pendingBackup.data.prices || {};
