@@ -1826,4 +1826,271 @@ function exportCsv() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `دليل_أسعار_الدباغ_${
+  a.download = `دليل_أسعار_الدباغ_${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+  showToast("📥 تم تصدير الملف", "success");
+}
+
+/* ==================================================================
+   17. الباركود
+   ================================================================== */
+async function startScanner(mode = 'add') {
+  if (typeof Html5Qrcode === 'undefined') return showToast("مكتبة الباركود غير محملة", "error");
+  scannerMode = mode;
+
+  const titleEl = document.querySelector('#scannerModal h3');
+  if (titleEl) titleEl.textContent = mode === 'search' ? '📷 امسح الباركود للبحث' : '📷 قراءة الباركود';
+
+  openModal('scannerModal');
+  try {
+    html5QrCode = new Html5Qrcode("interactive");
+    await html5QrCode.start(
+      { facingMode: "environment" },
+      { fps: 10, qrbox: { width: 250, height: 150 } },
+      (decodedText) => {
+        if (scannerMode === 'search') {
+          handleBarcodeSearch(decodedText);
+        } else {
+          document.getElementById('pCode').value = decodedText;
+          showToast("✅ تم قراءة الباركود", "success");
+        }
+        stopScanner();
+      },
+      () => {}
+    );
+  } catch (err) {
+    closeModal('scannerModal');
+    showToast("تعذر تشغيل الكاميرا: " + err, "error");
+    html5QrCode = null;
+  }
+}
+
+async function stopScanner() {
+  if (html5QrCode) {
+    try { if (html5QrCode.isScanning) await html5QrCode.stop(); } catch (e) {}
+    try { await html5QrCode.clear(); } catch (e) {}
+    html5QrCode = null;
+  }
+  closeModal('scannerModal');
+}
+
+function handleBarcodeSearch(barcode) {
+  const barcodeClean = String(barcode).trim();
+  const products = Object.values(currentData.prices || {});
+  const exactMatch = products.find(p => (p.code || '').trim() === barcodeClean);
+
+  switchTab('prices');
+
+  const searchInput = document.getElementById('searchPrice');
+  searchInput.value = barcodeClean;
+  document.getElementById('clearSearchBtn').style.display = 'block';
+
+  currentFilter = 'all';
+  document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+  document.getElementById('chip-all')?.classList.add('active');
+
+  renderPrices();
+
+  if (exactMatch) {
+    showToast(`✅ ${exactMatch.name} — ${formatIQD(exactMatch.packetSell)}`, "success");
+    setTimeout(() => {
+      const rows = document.querySelectorAll('#pricesTable tr');
+      for (const row of rows) {
+        const cells = row.querySelectorAll('td');
+        if (cells.length < 2) continue;
+        const codeCell = cells[1]?.textContent?.trim() || '';
+        if (codeCell === barcodeClean) {
+          row.style.animation = 'barcodeHighlight 2s ease';
+          row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          break;
+        }
+      }
+    }, 120);
+  } else {
+    showToast(`⚠️ لا توجد مادة بهذا الباركود: ${barcodeClean}`, "warning");
+  }
+}
+
+/* ==================================================================
+   18. النسخ الاحتياطي
+   ================================================================== */
+function sanitizeProduct(p) {
+  return {
+    name: String(p?.name || '').trim(),
+    code: String(p?.code || '').trim(),
+    packetCost: Math.max(0, Number(p?.packetCost) || 0),
+    packetSell: Math.max(0, Number(p?.packetSell) || 0),
+    packetStock: Math.max(0, Math.floor(Number(p?.packetStock) || 0)),
+    cartonCost: Math.max(0, Number(p?.cartonCost) || 0),
+    cartonSell: Math.max(0, Number(p?.cartonSell) || 0),
+    cartonStock: Math.max(0, Math.floor(Number(p?.cartonStock) || 0)),
+    createdAt: String(p?.createdAt || new Date().toLocaleString('ar-IQ')),
+    updatedAt: String(p?.updatedAt || new Date().toLocaleString('ar-IQ'))
+  };
+}
+
+async function exportBackup() {
+  try {
+    const backup = {
+      version: '1.0', app: 'محلات الدباغ - نظام إدارة المخزن',
+      exportedAt: new Date().toISOString(),
+      data: { prices: currentData.prices || {} },
+      settings: {
+        theme: localStorage.getItem('app_theme') || DEFAULTS.THEME,
+        color: localStorage.getItem('app_color') || DEFAULTS.COLOR,
+        font: localStorage.getItem('app_font') || DEFAULTS.FONT,
+        fontSize: localStorage.getItem('app_fontsize') || DEFAULTS.FONT_SIZE,
+        style: localStorage.getItem('app_style') || DEFAULTS.STYLE,
+        lowStockThreshold: getLowStockThreshold()
+      }
+    };
+    const json = JSON.stringify(backup, null, 2);
+    const blob = new Blob([json], { type: 'application/json;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const now = new Date();
+    const date = now.toISOString().slice(0, 10);
+    const time = now.toTimeString().slice(0, 5).replace(':', '-');
+    const count = Object.keys(currentData.prices || {}).length;
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `نسخة_احتياطية_الدباغ_${date}_${time}.json`;
+    document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+    showToast(`📦 تم تصدير ${count} مادة بنجاح`, "success");
+  } catch (err) { showToast("تعذر التصدير: " + err.message, "error"); }
+}
+
+function triggerImportBackup() {
+  if (!isAdmin) return showToast("يجب تسجيل الدخول كأدمن", "warning");
+  document.getElementById('backupFileInput').click();
+}
+
+async function handleBackupFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  event.target.value = '';
+  if (!file.name.toLowerCase().endsWith('.json')) return showToast("⚠️ الملف يجب أن يكون JSON", "error");
+  if (file.size > 10 * 1024 * 1024) return showToast("⚠️ الملف كبير جداً (الحد 10MB)", "error");
+  try {
+    const text = await file.text();
+    const backup = JSON.parse(text);
+    if (!backup || typeof backup !== 'object') return showToast("❌ بنية الملف غير صالحة", "error");
+    if (!backup.data || typeof backup.data.prices !== 'object' || backup.data.prices === null) return showToast("❌ الملف لا يحتوي على بيانات صالحة", "error");
+    const count = Object.keys(backup.data.prices).length;
+    if (count === 0) return showToast("⚠️ الملف لا يحتوي على مواد", "warning");
+    pendingBackup = backup;
+    const exportedDate = backup.exportedAt ? new Date(backup.exportedAt).toLocaleString('ar-IQ') : 'غير معروف';
+    document.getElementById('backupInfo').innerHTML = `
+      <strong>📄 معلومات الملف:</strong><br>
+      <span style="color:var(--text-muted);">تاريخ التصدير:</span> <strong>${escapeHtml(exportedDate)}</strong><br>
+      <span style="color:var(--text-muted);">عدد المواد:</span> <strong style="color:var(--success);">${count}</strong><br>
+      <span style="color:var(--text-muted);">المواد الحالية:</span> <strong style="color:var(--price-blue);">${Object.keys(currentData.prices || {}).length}</strong>
+    `;
+    document.querySelector('input[name="importMode"][value="merge"]').checked = true;
+    openModal('backupImportModal');
+  } catch (err) { showToast("❌ تعذر قراءة الملف: " + err.message, "error"); }
+}
+
+async function executeImport() {
+  if (!pendingBackup) return showToast("البيانات غير جاهزة", "error");
+  if (!ensureAuth()) return;
+  if (!isAdmin) return showToast("يجب تسجيل الدخول كأدمن", "warning");
+  const mode = document.querySelector('input[name="importMode"]:checked')?.value || 'merge';
+  const prices = pendingBackup.data.prices || {};
+  const count = Object.keys(prices).length;
+  const btn = document.getElementById('importExecuteBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ جاري التنفيذ...';
+  try {
+    if (mode === 'replace') {
+      const sanitized = {};
+      for (const [id, p] of Object.entries(prices)) sanitized[id] = sanitizeProduct(p);
+      await db.child('prices').set(sanitized);
+      showToast(`✅ تم استبدال البيانات بـ ${count} مادة`, "success");
+    } else {
+      let added = 0, updated = 0;
+      const existingList = Object.entries(currentData.prices || {});
+      for (const [, product] of Object.entries(prices)) {
+        const sanitized = sanitizeProduct(product);
+        if (!sanitized.name) continue;
+        const match = existingList.find(([, ep]) => {
+          const epName = (ep.name || '').trim().toLowerCase();
+          const epCode = (ep.code || '').trim();
+          return (epName && sanitized.name.toLowerCase() === epName) || (epCode && sanitized.code && epCode === sanitized.code);
+        });
+        if (match) { await db.child('prices').child(match[0]).update(sanitized); updated++; }
+        else { await db.child('prices').push().set(sanitized); added++; }
+      }
+      showToast(`✅ الدمج اكتمل: ${added} جديد، ${updated} محدّث`, "success");
+    }
+    closeModal('backupImportModal');
+    pendingBackup = null;
+  } catch (err) { showToast("❌ تعذر الاسترجاع: " + err.message, "error"); }
+  finally { btn.disabled = false; btn.textContent = '✅ تنفيذ الاسترجاع'; }
+}
+
+/* ==================================================================
+   19. وضع الشاشة الكبيرة (Kiosk)
+   ================================================================== */
+function toggleKiosk() {
+  isKiosk = !isKiosk;
+  document.body.classList.toggle('kiosk-mode', isKiosk);
+
+  if (isKiosk) {
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch(() => {});
+    }
+    showToast("📺 وضع العرض الكبير — اضغط زر ✕ للخروج", "info");
+  } else {
+    if (document.exitFullscreen && document.fullscreenElement) {
+      document.exitFullscreen().catch(() => {});
+    }
+  }
+}
+
+document.addEventListener('fullscreenchange', () => {
+  if (!document.fullscreenElement && isKiosk) {
+    isKiosk = false;
+    document.body.classList.remove('kiosk-mode');
+  }
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    if (isKiosk) toggleKiosk();
+    document.querySelectorAll('.modal.show').forEach(m => m.classList.remove('show'));
+  }
+});
+
+/* ==================================================================
+   20. المودالات والإغلاق
+   ================================================================== */
+document.querySelectorAll('.modal').forEach(modal => {
+  modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('show'); });
+});
+
+/* ==================================================================
+   21. إدارة الاتصال مع دورة حياة الصفحة
+   ================================================================== */
+window.addEventListener('pagehide', () => {
+  if (db) { try { db.off(); } catch(e) {} }
+});
+
+window.addEventListener('pageshow', (event) => {
+  if (event.persisted && auth && auth.currentUser) {
+    connectWithRetry(0);
+  }
+});
+
+/* ==================================================================
+   22. التهيئة
+   ================================================================== */
+window.addEventListener('load', () => {
+  buildThemeGrid();
+  buildFontGrid();
+  buildStyleGrid();
+  loadSettings();
+  initFirebase();
+});
+</script>
+</body>
+</html>
