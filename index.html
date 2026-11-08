@@ -2208,3 +2208,122 @@ async function deleteAnnouncement(id) {
   if (!ann) return;
   showConfirm('حذف الإعلان', 'حذف "' + (ann.text || '').substring(0, 40) + '..." نهائياً؟', async () => {
     try {
+      await db.child('announcements').child(id).remove();
+      showToast('🗑️ تم الحذف', 'success');
+    } catch (err) {
+      showToast('تعذر الحذف: ' + err.message, 'error');
+    }
+  });
+}
+
+function editAnnouncement(id) {
+  if (!isAdmin) return;
+  const ann = announcements[id];
+  if (!ann) return;
+  document.getElementById('annEditId').value = id;
+  document.getElementById('annText').value = ann.text || '';
+  document.getElementById('annType').value = ann.type || 'info';
+
+  const expEl = document.getElementById('annExpiry');
+  if (ann.expiresAt && ann.expiresAt > Date.now()) {
+    const days = Math.round((ann.expiresAt - Date.now()) / (24 * 60 * 60 * 1000));
+    expEl.value = String(days);
+  } else {
+    expEl.value = '';
+  }
+
+  document.getElementById('annSaveBtn').textContent = '💾 حفظ التعديل';
+  document.getElementById('annText').focus();
+}
+
+function renderAnnouncementManager() {
+  const list = document.getElementById('annList');
+  if (!list) return;
+
+  const now = Date.now();
+  const entries = Object.entries(announcements)
+    .sort((a, b) => (b[1].createdAt || 0) - (a[1].createdAt || 0));
+
+  if (!entries.length) {
+    list.innerHTML = '<div style="text-align:center; padding:30px; color:var(--text-muted);">لا توجد إعلانات بعد<br>أضف أول إعلان من الأعلى ↑</div>';
+    return;
+  }
+
+  const typeNames = {
+    'info': '📢 معلومة',
+    'price-up': '📈 ارتفع',
+    'price-down': '📉 انخفض',
+    'warning': '⚠️ تنبيه',
+    'urgent': '🚨 عاجل'
+  };
+
+  list.innerHTML = entries.map(([id, a]) => {
+    const isExpired = a.expiresAt && a.expiresAt < now;
+    const cls = !a.active ? 'inactive' : (isExpired ? 'expired' : '');
+    const statusBadge = isExpired
+      ? '<span class="ann-badge ann-badge-expired">انتهى</span>'
+      : (a.active
+        ? '<span class="ann-badge ann-badge-active">نشط</span>'
+        : '<span class="ann-badge ann-badge-inactive">موقوف</span>');
+
+    const typeBadge = '<span class="ann-type-badge ann-type-' + (a.type || 'info') + '">' + (typeNames[a.type] || 'معلومة') + '</span>';
+
+    let expiryText = '';
+    if (a.expiresAt) {
+      if (a.expiresAt < now) {
+        expiryText = ' • انتهى في ' + new Date(a.expiresAt).toLocaleDateString('ar-IQ');
+      } else {
+        expiryText = ' • ينتهي ' + new Date(a.expiresAt).toLocaleDateString('ar-IQ');
+      }
+    }
+
+    const createdText = a.createdAt ? new Date(a.createdAt).toLocaleDateString('ar-IQ') : '';
+
+    return '<div class="ann-item ' + cls + '">' +
+      '<div class="ann-item-body">' +
+        '<div class="ann-item-text">' + escapeHtml(a.text) + '</div>' +
+        '<div class="ann-item-meta">' + typeBadge + statusBadge + ' • ' + createdText + expiryText + '</div>' +
+        '<div class="ann-item-actions">' +
+          '<button onclick="editAnnouncement(\'' + id + '\')" class="btn-secondary" style="width:auto; padding:5px 12px; font-size:0.8em;">✏️ تعديل</button>' +
+          '<button onclick="toggleAnnouncement(\'' + id + '\')" class="' + (a.active ? 'btn-secondary' : 'btn-success') + '" style="width:auto; padding:5px 12px; font-size:0.8em;">' + (a.active ? '⏸️ إيقاف' : '▶️ تفعيل') + '</button>' +
+          '<button onclick="deleteAnnouncement(\'' + id + '\')" class="btn-danger" style="width:auto; padding:5px 12px; font-size:0.8em;">🗑️ حذف</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+/* ================= المودالات ================= */
+document.querySelectorAll('.modal').forEach(function(modal) {
+  modal.addEventListener('click', function(e) { if (e.target === modal) modal.classList.remove('show'); });
+});
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    if (isKiosk) toggleKiosk();
+    document.querySelectorAll('.modal.show').forEach(function(m) { m.classList.remove('show'); });
+    if (chatIsOpen) closeChat();
+  }
+});
+
+/* ================= دورة حياة الصفحة ================= */
+window.addEventListener('pagehide', function() {
+  if (db) { try { db.off(); } catch (e) {} }
+  if (auth && auth.currentUser && db) {
+    try { db.child('chat/presence/' + auth.currentUser.uid).remove(); } catch (e) {}
+  }
+});
+window.addEventListener('pageshow', function(event) {
+  if (event.persisted && auth && auth.currentUser) connectWithRetry(0);
+});
+
+/* ================= التهيئة ================= */
+window.addEventListener('load', function() {
+  buildThemeGrid();
+  buildFontGrid();
+  buildStyleGrid();
+  loadSettings();
+  initFirebase();
+});
+</script>
+</body>
+</html>
