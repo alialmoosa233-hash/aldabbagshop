@@ -11,16 +11,6 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
-  <script>
-    console.log('%c[BOOT-1] ✅ سكريبت التشخيص يعمل', 'color:green; font-weight:bold');
-    window.addEventListener('DOMContentLoaded', () => {
-      console.log('%c[BOOT-2] ✅ DOM جاهز', 'color:green; font-weight:bold');
-      console.log('[BOOT-3] firebase:', typeof firebase);
-      console.log('[BOOT-4] firebase.auth:', typeof firebase !== 'undefined' ? typeof firebase.auth : 'N/A');
-      console.log('[BOOT-5] Html5Qrcode:', typeof Html5Qrcode);
-    });
-  </script>
-
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=Cairo:wght@400;600;700;800&family=Almarai:wght@400;700;800&family=Noto+Kufi+Arabic:wght@400;600;700;800&family=Readex+Pro:wght@400;600;700&family=IBM+Plex+Sans+Arabic:wght@400;600;700&family=Amiri:wght@400;700&family=Rubik:wght@400;600;700&family=Changa:wght@400;600;700&family=El+Messiri:wght@400;600;700&family=Cairo+Play:wght@400;700;900&family=Lalezar&family=IBM+Plex+Mono:wght@600;700&display=swap" rel="stylesheet">
 
   <style>
@@ -356,6 +346,101 @@
       background: var(--price-blue); color: #fff; font-weight: 800; border: none; cursor: pointer;
     }
 
+    /* ═══════ الإعلانات العلوية ═══════ */
+    .ann-banner {
+      padding: 14px 18px;
+      font-weight: 800;
+      font-size: 1em;
+      border-radius: var(--radius);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: var(--shadow-sm);
+      animation: annFadeIn 0.4s ease;
+      position: relative;
+      line-height: 1.5;
+    }
+    @keyframes annFadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+
+    .ann-info      { background: #EFF6FF; color: #1E40AF; border: 2px solid #3B82F6; }
+    .ann-price-up  { background: #FEF2F2; color: #991B1B; border: 2px solid #DC2626; }
+    .ann-price-down{ background: #ECFDF5; color: #065F46; border: 2px solid #059669; }
+    .ann-warning   { background: #FFF7ED; color: #9A3412; border: 2px solid #EA580C; }
+    .ann-urgent    {
+      background: #FEF2F2; color: #991B1B; border: 2px solid #DC2626;
+      animation: annPulse 1.5s infinite;
+    }
+    @keyframes annPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4); }
+      50% { box-shadow: 0 0 0 10px rgba(220, 38, 38, 0); }
+    }
+
+    .ann-icon { font-size: 1.4em; flex-shrink: 0; }
+    .ann-text { flex: 1; }
+
+    .ann-manage-btn {
+      background: rgba(255,255,255,0.7);
+      border: 1px solid currentColor;
+      color: inherit;
+      width: 32px !important;
+      height: 32px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 0.9em;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      flex-shrink: 0;
+    }
+    body.is-admin .ann-manage-btn { display: flex; }
+
+    body.dark-mode .ann-info      { background: rgba(59, 130, 246, 0.15); color: #93C5FD; }
+    body.dark-mode .ann-price-up  { background: rgba(220, 38, 38, 0.15); color: #FCA5A5; }
+    body.dark-mode .ann-price-down{ background: rgba(5, 150, 105, 0.15); color: #6EE7B7; }
+    body.dark-mode .ann-warning   { background: rgba(234, 88, 12, 0.15); color: #FDBA74; }
+    body.dark-mode .ann-urgent    { background: rgba(220, 38, 38, 0.2); color: #FCA5A5; }
+
+    body.kiosk-mode .ann-banner { font-size: 1.3em; padding: 18px 24px; margin-bottom: 20px; }
+    body.kiosk-mode .ann-manage-btn { display: none !important; }
+
+    .ann-item {
+      padding: 12px 14px;
+      border: 2px solid var(--border-color);
+      border-radius: 10px;
+      margin-bottom: 10px;
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      background: var(--stripe-bg);
+    }
+    .ann-item.inactive { opacity: 0.55; }
+    .ann-item.expired { opacity: 0.45; border-style: dashed; }
+    .ann-item-body { flex: 1; }
+    .ann-item-text { font-weight: 700; margin-bottom: 4px; line-height: 1.5; }
+    .ann-item-meta { font-size: 0.75em; color: var(--text-muted); margin-bottom: 6px; }
+    .ann-item-actions { display: flex; gap: 4px; flex-wrap: wrap; }
+    .ann-badge {
+      display: inline-block; padding: 2px 8px; border-radius: 10px;
+      font-size: 0.7em; font-weight: 800; margin-inline-start: 6px;
+    }
+    .ann-badge-active   { background: var(--success-bg); color: var(--success); }
+    .ann-badge-inactive { background: var(--danger-bg); color: var(--danger); }
+    .ann-badge-expired  { background: var(--warning-bg); color: var(--warning); }
+
+    .ann-type-badge {
+      display: inline-block; padding: 2px 8px; border-radius: 10px;
+      font-size: 0.7em; font-weight: 800;
+    }
+    .ann-type-info      { background: #DBEAFE; color: #1E40AF; }
+    .ann-type-price-up  { background: #FEE2E2; color: #991B1B; }
+    .ann-type-price-down{ background: #D1FAE5; color: #065F46; }
+    .ann-type-warning   { background: #FFEDD5; color: #9A3412; }
+    .ann-type-urgent    { background: #FEE2E2; color: #991B1B; }
+
+    .ann-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
     @media (max-width: 1024px) and (min-width: 769px) {
       .container { padding: 0 16px; }
       .theme-grid { grid-template-columns: repeat(4, 1fr); }
@@ -366,7 +451,7 @@
     @media print {
       header, .tabs, .dashboard-summary, #cloudStatus, .search-toolbar,
       .admin-only, .no-print, #toastContainer, .modal, .action-btn,
-      .quick-qty-btn, .exit-kiosk-btn, #chatFab { display: none !important; }
+      .quick-qty-btn, .exit-kiosk-btn, #chatFab, #announcementBanner { display: none !important; }
       body { background: #fff !important; color: #000 !important; }
       .container { max-width: 100%; padding: 0; margin: 0; }
       .card { border: 1px solid #ddd; box-shadow: none; }
@@ -399,6 +484,7 @@
       .chat-panel { height: 100vh; max-height: 100vh; border-radius: 0; max-width: 100%; }
       #chatModal { padding: 0; }
       #chatFab { bottom: 15px; right: 15px; width: 54px; height: 54px; font-size: 1.4em; }
+      .ann-form-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -417,6 +503,15 @@
 </header>
 
 <div class="container">
+  <!-- 📢 الإعلانات العلوية -->
+  <div id="announcementBanner" style="display:none;">
+    <div id="announcementContent" class="ann-banner ann-info">
+      <span class="ann-icon">📢</span>
+      <span class="ann-text"></span>
+      <button class="ann-manage-btn" onclick="openAnnouncementManager()" title="إدارة الإعلانات">⚙️</button>
+    </div>
+  </div>
+
   <div id="cloudStatus">🔄 جاري الاتصال والمصادقة...</div>
 
   <div class="dashboard-summary">
@@ -543,6 +638,17 @@
           <input type="number" id="lowStockThreshold" min="1" max="100" onchange="changeLowStockThreshold(this.value)" />
         </div>
       </div>
+
+      <h2 style="font-size: 1.1em; margin-top:20px;">📢 الإعلانات العلوية</h2>
+      <div style="background:var(--stripe-bg); padding:16px; border-radius:10px; border:1px solid var(--border-color);">
+        <p style="margin:0 0 12px; font-size:0.9em; color:var(--text-muted); line-height:1.7;">
+          أضف إعلانات تظهر أعلى الشاشة للعملاء والموظفين — مثل "سعر الرز ارتفع" أو "خصم على المواد الغذائية".
+        </p>
+        <button onclick="openAnnouncementManager()" class="btn-price" style="width:auto; padding:10px 20px;">
+          🛠️ إدارة الإعلانات
+        </button>
+      </div>
+
       <h2 style="font-size: 1.1em; margin-top:20px;">💾 النسخ الاحتياطي والاسترجاع</h2>
       <div style="background:var(--stripe-bg); padding:16px; border-radius:10px; border:1px solid var(--border-color);">
         <div style="display:flex; gap:10px; flex-wrap:wrap;">
@@ -587,6 +693,52 @@
       <input type="text" id="chatInput" placeholder="اكتب رسالة..." maxlength="500" onkeypress="if(event.key==='Enter') sendChatMessage()" />
       <button onclick="sendChatMessage()">📤</button>
     </div>
+  </div>
+</div>
+
+<!-- ═══════ مودال إدارة الإعلانات ═══════ -->
+<div id="announcementManagerModal" class="modal">
+  <div class="modal-content" style="max-width: 600px;">
+    <div class="modal-header">
+      <h3>📢 إدارة الإعلانات</h3>
+      <button class="modal-close" onclick="closeModal('announcementManagerModal')">✕</button>
+    </div>
+
+    <div style="background:var(--stripe-bg); padding:14px; border-radius:10px; margin-bottom:16px;">
+      <p style="font-weight:800; margin:0 0 10px; color:var(--primary);">➕ إضافة إعلان جديد</p>
+      <input type="hidden" id="annEditId" />
+      <label>📝 نص الإعلان (حتى 200 حرف)</label>
+      <input type="text" id="annText" placeholder="مثال: سعر الرز ارتفع 1000 دينار" maxlength="200" />
+      <div class="ann-form-grid">
+        <div>
+          <label>🎨 نوع الإعلان</label>
+          <select id="annType">
+            <option value="info">📢 معلومة (أزرق)</option>
+            <option value="price-up">📈 سعر ارتفع (أحمر)</option>
+            <option value="price-down">📉 سعر انخفض (أخضر)</option>
+            <option value="warning">⚠️ تنبيه (برتقالي)</option>
+            <option value="urgent">🚨 عاجل (نابض)</option>
+          </select>
+        </div>
+        <div>
+          <label>⏰ مدة العرض</label>
+          <select id="annExpiry">
+            <option value="">بدون انتهاء</option>
+            <option value="1">يوم واحد</option>
+            <option value="3">3 أيام</option>
+            <option value="7">أسبوع</option>
+            <option value="30">شهر</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:flex; gap:8px; margin-top:8px;">
+        <button onclick="saveAnnouncement()" id="annSaveBtn" class="btn-price" style="flex:1;">💾 حفظ الإعلان</button>
+        <button onclick="resetAnnForm()" class="btn-secondary" style="width:auto; padding:11px 20px;">↺</button>
+      </div>
+    </div>
+
+    <p style="font-weight:800; margin:0 0 10px; color:var(--primary);">📋 الإعلانات الحالية</p>
+    <div id="annList" style="max-height:400px; overflow-y:auto;"></div>
   </div>
 </div>
 
@@ -719,10 +871,7 @@
 
 <script>
 /* ================= الثوابت ================= */
-const DEFAULTS = {
-  THEME: 'light', COLOR: 'blue', FONT: 'Tajawal', FONT_SIZE: '15.5px',
-  STYLE: 'classic', LOW_STOCK: 5
-};
+const DEFAULTS = { THEME: 'light', COLOR: 'blue', FONT: 'Tajawal', FONT_SIZE: '15.5px', STYLE: 'classic', LOW_STOCK: 5 };
 
 const COLOR_THEMES = {
   blue:      { name: 'أزرق ملكي',     emoji: '🏛️', primary: '#1E3A8A', price: '#2563EB', brass: '#D97706', bg: '#F1F5F9' },
@@ -748,18 +897,12 @@ const COLOR_THEMES = {
 };
 
 const FONT_OPTIONS = [
-  { value: 'Tajawal', name: 'تجوال' },
-  { value: 'Cairo', name: 'كايرو' },
-  { value: 'Almarai', name: 'المراعي' },
-  { value: 'Noto Kufi Arabic', name: 'كوفي حديث' },
-  { value: 'Readex Pro', name: 'ريدكس' },
-  { value: 'IBM Plex Sans Arabic', name: 'IBM بليكس' },
-  { value: 'Amiri', name: 'أميري' },
-  { value: 'Rubik', name: 'روبيك' },
-  { value: 'Changa', name: 'تشانغا' },
-  { value: 'El Messiri', name: 'المسيري' },
-  { value: 'Cairo Play', name: 'كايرو بلاي' },
-  { value: 'Lalezar', name: 'لاله زار' }
+  { value: 'Tajawal', name: 'تجوال' }, { value: 'Cairo', name: 'كايرو' },
+  { value: 'Almarai', name: 'المراعي' }, { value: 'Noto Kufi Arabic', name: 'كوفي حديث' },
+  { value: 'Readex Pro', name: 'ريدكس' }, { value: 'IBM Plex Sans Arabic', name: 'IBM بليكس' },
+  { value: 'Amiri', name: 'أميري' }, { value: 'Rubik', name: 'روبيك' },
+  { value: 'Changa', name: 'تشانغا' }, { value: 'El Messiri', name: 'المسيري' },
+  { value: 'Cairo Play', name: 'كايرو بلاي' }, { value: 'Lalezar', name: 'لاله زار' }
 ];
 
 const STYLE_OPTIONS = [
@@ -792,11 +935,16 @@ let scannerMode = 'add';
 let isKiosk = false;
 let lastConnectionError = null;
 
-/* ═══════ دردشة — متغيرات ═══════ */
+/* دردشة */
 let chatUser = null;
 let chatInitialized = false;
 let chatUnread = 0;
 let chatIsOpen = false;
+
+/* إعلانات */
+let announcements = {};
+let annRotationTimer = null;
+let annCurrentIndex = 0;
 
 /* ================= الإشعارات والمودالات ================= */
 function showToast(message, type = 'info') {
@@ -906,7 +1054,6 @@ function loadSettings() {
   highlightActiveFont(font);
   highlightActiveStyle(style);
 
-  // تحميل اسم الدردشة
   const chatNameEl = document.getElementById('chatNameInput');
   if (chatNameEl) chatNameEl.value = localStorage.getItem('chat_name') || '';
 }
@@ -975,7 +1122,7 @@ function resetSettings() {
   });
 }
 
-/* ================= نظام الأدمن (Email/Password) ================= */
+/* ================= الأدمن ================= */
 function handleAdminClick() {
   if (isAdmin) {
     logoutAdmin();
@@ -1074,20 +1221,16 @@ function checkEnvironment() {
 
 function initFirebase() {
   const status = document.getElementById('cloudStatus');
-  console.log('[Firebase] بدء التهيئة...');
   if (status) { status.innerText = "🔄 1/4 — تهيئة Firebase..."; status.className = "warning"; }
 
   try {
     firebase.initializeApp(firebaseConfig);
-    console.log('[Firebase] initializeApp ✓');
     auth = firebase.auth();
-    console.log('[Firebase] auth instance ✓');
 
     let authStateFired = false;
     const fallbackTimer = setTimeout(() => {
       if (!authStateFired) {
         if (status) { status.innerText = "🔴 المصادقة لا تستجيب"; status.className = "offline"; }
-        console.error('[Firebase] onAuthStateChanged لم يُستدعى خلال 8 ثوانٍ');
         showToast("⚠️ المصادقة لا تستجيب - افتح Console", "error");
         setTimeout(showDiagnostic, 500);
       }
@@ -1096,34 +1239,32 @@ function initFirebase() {
     auth.onAuthStateChanged((user) => {
       authStateFired = true;
       clearTimeout(fallbackTimer);
-      console.log('[Firebase] auth state:', user ? (user.isAnonymous ? 'مجهول' : 'أدمن') : 'لا يوجد');
 
       if (user) {
         isAuthReady = true;
         updateAdminUI(!user.isAnonymous);
         connectWithRetry(0);
 
-        // ⬇️ تجهيز الدردشة إذا كان الاسم محفوظاً
+        // 📢 تهيئة الإعلانات
+        setTimeout(() => setupAnnouncementsListener(), 800);
+
+        // 💬 تجهيز الدردشة
         if (localStorage.getItem('chat_name')) {
           setTimeout(() => setupChatListeners(), 1500);
         }
       } else {
         if (status) { status.innerText = "🔄 2/4 — تسجيل دخول مجهول..."; status.className = "warning"; }
         auth.signInAnonymously()
-          .then(() => console.log('[Firebase] signInAnonymously ✓'))
           .catch((error) => {
             lastConnectionError = error;
             if (status) { status.innerText = "🔴 فشل المصادقة: " + error.code; status.className = "offline"; }
-            console.error('[Firebase] signInAnonymously فشل:', error.code);
             showToast("❌ فشل المصادقة: " + error.code, "error");
           });
       }
     });
-    console.log('[Firebase] onAuthStateChanged مُسجَّل ✓');
   } catch (e) {
     lastConnectionError = e;
     if (status) { status.innerText = "🔴 خطأ في التهيئة: " + e.message; status.className = "offline"; }
-    console.error('[Firebase] خطأ:', e);
   }
 }
 
@@ -1781,7 +1922,6 @@ function changeChatName() {
   const input = document.getElementById('chatNameInput');
   if (input) input.value = trimmed;
   if (chatUser) chatUser.name = trimmed;
-  // حدّث الـ presence
   if (auth && auth.currentUser && db) {
     db.child('chat/presence/' + auth.currentUser.uid).update({ name: trimmed, time: Date.now() });
   }
@@ -1803,12 +1943,8 @@ function setupChatListeners() {
   chatInitialized = true;
 
   const uid = auth.currentUser.uid;
-  chatUser = {
-    uid: uid,
-    name: localStorage.getItem('chat_name') || 'مجهول'
-  };
+  chatUser = { uid: uid, name: localStorage.getItem('chat_name') || 'مجهول' };
 
-  // تتبع من هو متصل الآن
   const presenceRef = db.child('chat/presence/' + uid);
   const connectedRef = firebase.database().ref('.info/connected');
   connectedRef.on('value', (snap) => {
@@ -1818,7 +1954,6 @@ function setupChatListeners() {
     }
   });
 
-  // عرض عدد المتصلين
   db.child('chat/presence').on('value', (snap) => {
     const val = snap.val() || {};
     const count = Object.keys(val).length;
@@ -1826,12 +1961,10 @@ function setupChatListeners() {
     if (el) el.textContent = count + ' متصل';
   });
 
-  // جلب آخر 100 رسالة
   db.child('chat/messages').orderByChild('time').limitToLast(100).on('child_added', (snap) => {
     const msg = snap.val();
     if (!msg) return;
     appendChatMessage(snap.key, msg);
-
     if (!chatIsOpen && msg.uid !== chatUser.uid) {
       chatUnread++;
       updateChatBadge();
@@ -1848,10 +1981,7 @@ function setupChatListeners() {
 function openChat() {
   const name = ensureChatName();
   if (!name) return;
-  if (!chatInitialized && auth && auth.currentUser) {
-    setupChatListeners();
-  }
-
+  if (!chatInitialized && auth && auth.currentUser) setupChatListeners();
   chatIsOpen = true;
   chatUnread = 0;
   updateChatBadge();
@@ -1882,15 +2012,11 @@ function updateChatBadge() {
 function appendChatMessage(key, msg) {
   const container = document.getElementById('chatMessages');
   if (!container) return;
-
   const empty = container.querySelector('.chat-msg-empty');
   if (empty) empty.remove();
-
   const isMine = chatUser && msg.uid === chatUser.uid;
   let time = '';
-  try { time = new Date(msg.time).toLocaleTimeString('ar-IQ', { hour: '2-digit', minute: '2-digit' }); }
-  catch (e) { time = ''; }
-
+  try { time = new Date(msg.time).toLocaleTimeString('ar-IQ', { hour: '2-digit', minute: '2-digit' }); } catch (e) {}
   const div = document.createElement('div');
   div.id = 'msg_' + key;
   div.className = 'chat-msg ' + (isMine ? 'mine' : 'theirs');
@@ -1900,7 +2026,6 @@ function appendChatMessage(key, msg) {
       '<span class="chat-msg-time">' + time + '</span>' +
     '</div>' +
     '<div class="chat-msg-body">' + escapeHtml(msg.text || '') + '</div>';
-
   container.appendChild(div);
   if (chatIsOpen) scrollChatToBottom();
 }
@@ -1910,32 +2035,17 @@ function sendChatMessage() {
   if (!input) return;
   const text = input.value.trim();
   if (!text) return;
-  if (text.length > 500) {
-    showToast('⚠️ الرسالة طويلة جداً', 'warning');
-    return;
-  }
-
+  if (text.length > 500) return showToast('⚠️ الرسالة طويلة جداً', 'warning');
   if (!chatUser) {
     const name = ensureChatName();
     if (!name) return;
     if (!chatInitialized && auth && auth.currentUser) setupChatListeners();
-    if (!chatUser) {
-      chatUser = { uid: 'guest_' + Date.now(), name: name };
-    }
+    if (!chatUser) chatUser = { uid: 'guest_' + Date.now(), name: name };
   }
-
-  if (!db) {
-    showToast('⚠️ غير متصل بقاعدة البيانات', 'warning');
-    return;
-  }
-
+  if (!db) return showToast('⚠️ غير متصل بقاعدة البيانات', 'warning');
   db.child('chat/messages').push({
-    uid: chatUser.uid,
-    name: chatUser.name,
-    text: text,
-    time: Date.now()
+    uid: chatUser.uid, name: chatUser.name, text: text, time: Date.now()
   }).catch(err => showToast('تعذر الإرسال: ' + err.message, 'error'));
-
   input.value = '';
   input.focus();
 }
@@ -1960,42 +2070,141 @@ function playChatBeep() {
   } catch (e) {}
 }
 
-/* ================= المودالات ================= */
-document.querySelectorAll('.modal').forEach(function(modal) {
-  modal.addEventListener('click', function(e) { if (e.target === modal) modal.classList.remove('show'); });
-});
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') {
-    if (isKiosk) toggleKiosk();
-    document.querySelectorAll('.modal.show').forEach(function(m) { m.classList.remove('show'); });
-    if (chatIsOpen) closeChat();
-  }
-});
+/* ================= الإعلانات العلوية ================= */
+function setupAnnouncementsListener() {
+  if (!db) return;
+  db.child('announcements').on('value', (snap) => {
+    announcements = snap.val() || {};
+    renderAnnouncementBanner();
+    if (isAdmin) renderAnnouncementManager();
+  });
+}
 
-/* ================= دورة حياة الصفحة ================= */
-window.addEventListener('pagehide', function() {
-  if (db) { try { db.off(); } catch (e) {} }
-  if (auth && auth.currentUser && db) {
-    try { db.child('chat/presence/' + auth.currentUser.uid).remove(); } catch (e) {}
-  }
-});
-window.addEventListener('pageshow', function(event) {
-  if (event.persisted && auth && auth.currentUser) connectWithRetry(0);
-});
+function getActiveAnnouncements() {
+  const now = Date.now();
+  return Object.entries(announcements)
+    .filter(([id, a]) => a.active === true && (!a.expiresAt || a.expiresAt > now))
+    .sort((a, b) => (b[1].createdAt || 0) - (a[1].createdAt || 0));
+}
 
-/* ================= التهيئة ================= */
-window.addEventListener('load', function() {
-  console.log('%c[BOOT-6] ✅ Main script loaded successfully', 'color:green; font-weight:bold');
-  console.log('[BOOT-7] startScanner:', typeof startScanner);
-  console.log('[BOOT-8] setFilter:', typeof setFilter);
-  console.log('[BOOT-9] toggleKiosk:', typeof toggleKiosk);
-  console.log('[BOOT-10] openChat:', typeof openChat);
-  buildThemeGrid();
-  buildFontGrid();
-  buildStyleGrid();
-  loadSettings();
-  initFirebase();
-});
-</script>
-</body>
-</html>
+function renderAnnouncementBanner() {
+  const banner = document.getElementById('announcementBanner');
+  if (!banner) return;
+
+  const active = getActiveAnnouncements();
+  if (!active.length) {
+    banner.style.display = 'none';
+    if (annRotationTimer) { clearInterval(annRotationTimer); annRotationTimer = null; }
+    return;
+  }
+
+  banner.style.display = 'block';
+  annCurrentIndex = 0;
+  showAnnouncement(active[0]);
+
+  if (annRotationTimer) clearInterval(annRotationTimer);
+  if (active.length > 1) {
+    annRotationTimer = setInterval(() => {
+      annCurrentIndex = (annCurrentIndex + 1) % active.length;
+      showAnnouncement(active[annCurrentIndex]);
+    }, 5000);
+  }
+}
+
+function showAnnouncement(pair) {
+  const [, ann] = pair;
+  const content = document.getElementById('announcementContent');
+  if (!content) return;
+
+  const icons = { 'info': '📢', 'price-up': '📈', 'price-down': '📉', 'warning': '⚠️', 'urgent': '🚨' };
+
+  content.className = 'ann-banner ann-' + (ann.type || 'info');
+  content.innerHTML =
+    '<span class="ann-icon">' + (icons[ann.type] || '📢') + '</span>' +
+    '<span class="ann-text">' + escapeHtml(ann.text) + '</span>' +
+    '<button class="ann-manage-btn" onclick="openAnnouncementManager()" title="إدارة">⚙️</button>';
+}
+
+function openAnnouncementManager() {
+  if (!isAdmin) return showToast('يجب تسجيل الدخول كأدمن', 'warning');
+  resetAnnForm();
+  renderAnnouncementManager();
+  openModal('announcementManagerModal');
+}
+
+function resetAnnForm() {
+  const idEl = document.getElementById('annEditId');
+  const textEl = document.getElementById('annText');
+  const typeEl = document.getElementById('annType');
+  const expEl = document.getElementById('annExpiry');
+  const btn = document.getElementById('annSaveBtn');
+  if (idEl) idEl.value = '';
+  if (textEl) textEl.value = '';
+  if (typeEl) typeEl.value = 'info';
+  if (expEl) expEl.value = '';
+  if (btn) btn.textContent = '💾 حفظ الإعلان';
+}
+
+async function saveAnnouncement() {
+  if (!isAdmin || !ensureAuth()) return;
+  const idEl = document.getElementById('annEditId');
+  const textEl = document.getElementById('annText');
+  const typeEl = document.getElementById('annType');
+  const expEl = document.getElementById('annExpiry');
+
+  const text = textEl.value.trim();
+  if (!text) return showToast('⚠️ أدخل نص الإعلان', 'warning');
+  if (text.length > 200) return showToast('⚠️ النص طويل جداً (200 حرف كحد أقصى)', 'warning');
+
+  const type = typeEl.value;
+  const expiryDays = Number(expEl.value) || 0;
+  const now = Date.now();
+  const expiresAt = expiryDays > 0 ? now + (expiryDays * 24 * 60 * 60 * 1000) : null;
+
+  const btn = document.getElementById('annSaveBtn');
+  btn.disabled = true;
+  const original = btn.textContent;
+  btn.textContent = '⏳...';
+
+  try {
+    const editId = idEl.value;
+    if (editId) {
+      await db.child('announcements').child(editId).update({
+        text, type, expiresAt: expiresAt, updatedAt: now
+      });
+      showToast('✅ تم تحديث الإعلان', 'success');
+    } else {
+      await db.child('announcements').push({
+        text, type, active: true, expiresAt: expiresAt, createdAt: now, updatedAt: now
+      });
+      showToast('✅ تم إضافة الإعلان', 'success');
+    }
+    resetAnnForm();
+  } catch (err) {
+    showToast('تعذر الحفظ: ' + err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = original;
+  }
+}
+
+async function toggleAnnouncement(id) {
+  if (!isAdmin) return;
+  const ann = announcements[id];
+  if (!ann) return;
+  try {
+    await db.child('announcements').child(id).update({
+      active: !ann.active, updatedAt: Date.now()
+    });
+    showToast(ann.active ? '⏸️ تم إيقاف الإعلان' : '▶️ تم تفعيل الإعلان', 'success');
+  } catch (err) {
+    showToast('تعذر التحديث: ' + err.message, 'error');
+  }
+}
+
+async function deleteAnnouncement(id) {
+  if (!isAdmin) return;
+  const ann = announcements[id];
+  if (!ann) return;
+  showConfirm('حذف الإعلان', 'حذف "' + (ann.text || '').substring(0, 40) + '..." نهائياً؟', async () => {
+    try {
