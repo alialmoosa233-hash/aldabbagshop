@@ -6,9 +6,98 @@
   <meta name="theme-color" content="#1E3A8A" />
   <title>نظام إدارة المخزن وعرض الأسعار - محلات الدباغ</title>
 
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  <!-- ✅ Firebase v10 مع طبقة توافق v8 -->
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+    import { getAuth, signInAnonymously, onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+    import { getDatabase, ref, onValue, push, set, update, remove, child, query, orderByChild, limitToLast, limitToFirst, onChildAdded, onChildRemoved, onDisconnect, get as dbGet, startAt, endAt, equalTo } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyC-QqnQTbbyVFS8QFkf4CYZTcURcr9nBW0",
+      authDomain: "gimi-fd7fe.firebaseapp.com",
+      databaseURL: "https://gimi-fd7fe-default-rtdb.firebaseio.com",
+      projectId: "gimi-fd7fe",
+      storageBucket: "gimi-fd7fe.firebasestorage.app",
+      messagingSenderId: "642364940251",
+      appId: "1:642364940251:web:6dd47f47d500ae9ed791fe"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const realAuth = getAuth(app);
+    const database = getDatabase(app);
+
+    function makeRefFactory() {
+      const subs = [];
+      function track(u) { if (u) subs.push(u); return u; }
+
+      function makeRef(v10Ref) {
+        return {
+          child: (path) => makeRef(child(v10Ref, path)),
+          push: (value) => {
+            const newRef = push(v10Ref);
+            const nw = makeRef(newRef);
+            if (value !== undefined) nw.set(value);
+            return nw;
+          },
+          set: (value) => set(v10Ref, value),
+          update: (values) => update(v10Ref, values),
+          remove: () => remove(v10Ref),
+          on: (event, cb, errCb) => {
+            if (event === 'value') return track(onValue(v10Ref, cb, errCb));
+            if (event === 'child_added') return track(onChildAdded(v10Ref, cb));
+            if (event === 'child_removed') return track(onChildRemoved(v10Ref, cb));
+            return track(() => {});
+          },
+          off: () => { subs.forEach(u => u()); subs.length = 0; },
+          once: () => dbGet(v10Ref),
+          onDisconnect: () => {
+            const od = onDisconnect(v10Ref);
+            return { remove: () => od.remove(), set: (v) => od.set(v), cancel: () => od.cancel() };
+          },
+          orderByChild: (path) => makeQuery(query(v10Ref, orderByChild(path))),
+          limitToLast: (n) => makeQuery(query(v10Ref, limitToLast(n))),
+          limitToFirst: (n) => makeQuery(query(v10Ref, limitToFirst(n))),
+          startAt: (v) => makeQuery(query(v10Ref, startAt(v))),
+          endAt: (v) => makeQuery(query(v10Ref, endAt(v))),
+          equalTo: (v) => makeQuery(query(v10Ref, equalTo(v)))
+        };
+      }
+
+      function makeQuery(v10Query) {
+        return {
+          on: (event, cb) => {
+            if (event === 'value') return track(onValue(v10Query, cb));
+            if (event === 'child_added') return track(onChildAdded(v10Query, cb));
+            if (event === 'child_removed') return track(onChildRemoved(v10Query, cb));
+            return track(() => {});
+          },
+          orderByChild: (p) => makeQuery(query(v10Query, orderByChild(p))),
+          limitToLast: (n) => makeQuery(query(v10Query, limitToLast(n))),
+          limitToFirst: (n) => makeQuery(query(v10Query, limitToFirst(n)))
+        };
+      }
+
+      return makeRef;
+    }
+
+    window.firebase = {
+      initializeApp: () => app,
+      auth: () => ({
+        get currentUser() { return realAuth.currentUser; },
+        signInAnonymously: () => signInAnonymously(realAuth),
+        signInWithEmailAndPassword: (email, password) => signInWithEmailAndPassword(realAuth, email, password),
+        signOut: () => signOut(realAuth),
+        onAuthStateChanged: (cb) => onAuthStateChanged(realAuth, cb),
+        setPersistence: () => Promise.resolve()
+      }),
+      database: () => ({
+        ref: (path) => makeRefFactory()(path ? ref(database, path) : ref(database))
+      })
+    };
+
+    console.log('%c[Module] ✅ Firebase v10.12.0 ready with v8 shim', 'color:green;font-weight:bold');
+  </script>
+
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=Cairo:wght@400;600;700;800&family=Almarai:wght@400;700;800&family=Noto+Kufi+Arabic:wght@400;600;700;800&family=Readex+Pro:wght@400;600;700&family=IBM+Plex+Sans+Arabic:wght@400;600;700&family=Amiri:wght@400;700&family=Rubik:wght@400;600;700&family=Changa:wght@400;600;700&family=El+Messiri:wght@400;600;700&family=Cairo+Play:wght@400;700;900&family=Lalezar&family=IBM+Plex+Mono:wght@600;700&display=swap" rel="stylesheet">
@@ -276,7 +365,7 @@
     body.kiosk-mode th { font-size: 1.15em; }
     body.kiosk-mode .stock-badge { font-size: 1.1em; padding: 8px 16px; }
 
-    /* ═══════ دردشة الفريق ═══════ */
+    /* دردشة */
     #chatFab {
       position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px;
       border-radius: 50%; background: var(--price-blue); color: #fff; font-size: 1.6em;
@@ -285,7 +374,6 @@
       transition: all 0.2s; padding: 0;
     }
     #chatFab:hover { transform: scale(1.08); background: var(--primary); }
-    #chatFab:active { transform: scale(0.95); }
     .chat-badge {
       position: absolute; top: -4px; right: -4px; background: var(--danger); color: #fff;
       font-size: 0.65em; font-weight: 800; min-width: 22px; height: 22px; border-radius: 50%;
@@ -302,143 +390,74 @@
       display: flex; justify-content: space-between; align-items: center;
       font-weight: 800; flex-shrink: 0;
     }
-    .chat-header h3 {
-      margin: 0; font-size: 1.05em; color: #fff; display: flex; align-items: center;
-      gap: 8px; border: none; padding: 0;
-    }
+    .chat-header h3 { margin: 0; font-size: 1.05em; color: #fff; display: flex; align-items: center; gap: 8px; border: none; padding: 0; }
     .chat-online {
       font-size: 0.72em; background: rgba(255,255,255,0.25); padding: 3px 8px;
       border-radius: 10px; font-weight: 700; font-family: 'IBM Plex Mono', monospace;
     }
-    .chat-close {
-      background: none; border: none; color: #fff; font-size: 1.5em;
-      cursor: pointer; padding: 0 4px; width: auto; line-height: 1;
-    }
+    .chat-close { background: none; border: none; color: #fff; font-size: 1.5em; cursor: pointer; padding: 0 4px; width: auto; line-height: 1; }
     .chat-messages {
       flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column;
       gap: 10px; background: var(--stripe-bg); -webkit-overflow-scrolling: touch;
     }
-    .chat-msg {
-      max-width: 80%; padding: 8px 12px; border-radius: 12px;
-      word-wrap: break-word; font-size: 0.95em; line-height: 1.5;
-    }
+    .chat-msg { max-width: 80%; padding: 8px 12px; border-radius: 12px; word-wrap: break-word; font-size: 0.95em; line-height: 1.5; }
     .chat-msg.mine { align-self: flex-start; background: var(--price-blue); color: #fff; border-bottom-right-radius: 4px; }
-    .chat-msg.theirs {
-      align-self: flex-end; background: var(--card-bg); color: var(--text-main);
-      border: 1px solid var(--border-color); border-bottom-left-radius: 4px;
-    }
-    .chat-msg-head {
-      display: flex; justify-content: space-between; gap: 8px;
-      font-size: 0.75em; opacity: 0.85; margin-bottom: 3px; font-weight: 700;
-    }
+    .chat-msg.theirs { align-self: flex-end; background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border-color); border-bottom-left-radius: 4px; }
+    .chat-msg-head { display: flex; justify-content: space-between; gap: 8px; font-size: 0.75em; opacity: 0.85; margin-bottom: 3px; font-weight: 700; }
     .chat-msg-name { font-weight: 800; }
     .chat-msg-time { font-family: 'IBM Plex Mono', monospace; }
     .chat-msg-empty { text-align: center; color: var(--text-muted); padding: 40px 20px; font-size: 0.9em; line-height: 1.8; }
-    .chat-input-row {
-      display: flex; gap: 8px; padding: 12px; background: var(--card-bg);
-      border-top: 1px solid var(--border-color); flex-shrink: 0;
-    }
-    .chat-input-row input {
-      flex: 1; margin: 0; padding: 10px 14px; border-radius: 20px; font-size: 16px;
-    }
-    .chat-input-row button {
-      width: auto; padding: 10px 18px; border-radius: 20px;
-      background: var(--price-blue); color: #fff; font-weight: 800; border: none; cursor: pointer;
-    }
+    .chat-input-row { display: flex; gap: 8px; padding: 12px; background: var(--card-bg); border-top: 1px solid var(--border-color); flex-shrink: 0; }
+    .chat-input-row input { flex: 1; margin: 0; padding: 10px 14px; border-radius: 20px; font-size: 16px; }
+    .chat-input-row button { width: auto; padding: 10px 18px; border-radius: 20px; background: var(--price-blue); color: #fff; font-weight: 800; border: none; cursor: pointer; }
 
-    /* ═══════ الإعلانات العلوية ═══════ */
+    /* إعلانات */
     .ann-banner {
-      padding: 14px 18px;
-      font-weight: 800;
-      font-size: 1em;
-      border-radius: var(--radius);
-      margin-bottom: 16px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      box-shadow: var(--shadow-sm);
-      animation: annFadeIn 0.4s ease;
-      position: relative;
-      line-height: 1.5;
+      padding: 14px 18px; font-weight: 800; font-size: 1em; border-radius: var(--radius);
+      margin-bottom: 16px; display: flex; align-items: center; gap: 12px;
+      box-shadow: var(--shadow-sm); animation: annFadeIn 0.4s ease;
+      position: relative; line-height: 1.5;
     }
     @keyframes annFadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
-
     .ann-info      { background: #EFF6FF; color: #1E40AF; border: 2px solid #3B82F6; }
     .ann-price-up  { background: #FEF2F2; color: #991B1B; border: 2px solid #DC2626; }
     .ann-price-down{ background: #ECFDF5; color: #065F46; border: 2px solid #059669; }
     .ann-warning   { background: #FFF7ED; color: #9A3412; border: 2px solid #EA580C; }
-    .ann-urgent    {
-      background: #FEF2F2; color: #991B1B; border: 2px solid #DC2626;
-      animation: annPulse 1.5s infinite;
-    }
-    @keyframes annPulse {
-      0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4); }
-      50% { box-shadow: 0 0 0 10px rgba(220, 38, 38, 0); }
-    }
-
+    .ann-urgent    { background: #FEF2F2; color: #991B1B; border: 2px solid #DC2626; animation: annPulse 1.5s infinite; }
+    @keyframes annPulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4); } 50% { box-shadow: 0 0 0 10px rgba(220, 38, 38, 0); } }
     .ann-icon { font-size: 1.4em; flex-shrink: 0; }
     .ann-text { flex: 1; }
-
     .ann-manage-btn {
-      background: rgba(255,255,255,0.7);
-      border: 1px solid currentColor;
-      color: inherit;
-      width: 32px !important;
-      height: 32px;
-      border-radius: 50%;
-      cursor: pointer;
-      font-size: 0.9em;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 0;
-      flex-shrink: 0;
+      background: rgba(255,255,255,0.7); border: 1px solid currentColor; color: inherit;
+      width: 32px !important; height: 32px; border-radius: 50%; cursor: pointer;
+      font-size: 0.9em; display: none; align-items: center; justify-content: center;
+      padding: 0; flex-shrink: 0;
     }
     body.is-admin .ann-manage-btn { display: flex; }
-
     body.dark-mode .ann-info      { background: rgba(59, 130, 246, 0.15); color: #93C5FD; }
     body.dark-mode .ann-price-up  { background: rgba(220, 38, 38, 0.15); color: #FCA5A5; }
     body.dark-mode .ann-price-down{ background: rgba(5, 150, 105, 0.15); color: #6EE7B7; }
     body.dark-mode .ann-warning   { background: rgba(234, 88, 12, 0.15); color: #FDBA74; }
     body.dark-mode .ann-urgent    { background: rgba(220, 38, 38, 0.2); color: #FCA5A5; }
-
     body.kiosk-mode .ann-banner { font-size: 1.3em; padding: 18px 24px; margin-bottom: 20px; }
     body.kiosk-mode .ann-manage-btn { display: none !important; }
-
-    .ann-item {
-      padding: 12px 14px;
-      border: 2px solid var(--border-color);
-      border-radius: 10px;
-      margin-bottom: 10px;
-      display: flex;
-      gap: 10px;
-      align-items: flex-start;
-      background: var(--stripe-bg);
-    }
+    .ann-item { padding: 12px 14px; border: 2px solid var(--border-color); border-radius: 10px; margin-bottom: 10px; display: flex; gap: 10px; align-items: flex-start; background: var(--stripe-bg); }
     .ann-item.inactive { opacity: 0.55; }
     .ann-item.expired { opacity: 0.45; border-style: dashed; }
     .ann-item-body { flex: 1; }
     .ann-item-text { font-weight: 700; margin-bottom: 4px; line-height: 1.5; }
     .ann-item-meta { font-size: 0.75em; color: var(--text-muted); margin-bottom: 6px; }
     .ann-item-actions { display: flex; gap: 4px; flex-wrap: wrap; }
-    .ann-badge {
-      display: inline-block; padding: 2px 8px; border-radius: 10px;
-      font-size: 0.7em; font-weight: 800; margin-inline-start: 6px;
-    }
+    .ann-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 0.7em; font-weight: 800; margin-inline-start: 6px; }
     .ann-badge-active   { background: var(--success-bg); color: var(--success); }
     .ann-badge-inactive { background: var(--danger-bg); color: var(--danger); }
     .ann-badge-expired  { background: var(--warning-bg); color: var(--warning); }
-
-    .ann-type-badge {
-      display: inline-block; padding: 2px 8px; border-radius: 10px;
-      font-size: 0.7em; font-weight: 800;
-    }
+    .ann-type-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 0.7em; font-weight: 800; }
     .ann-type-info      { background: #DBEAFE; color: #1E40AF; }
     .ann-type-price-up  { background: #FEE2E2; color: #991B1B; }
     .ann-type-price-down{ background: #D1FAE5; color: #065F46; }
     .ann-type-warning   { background: #FFEDD5; color: #9A3412; }
     .ann-type-urgent    { background: #FEE2E2; color: #991B1B; }
-
     .ann-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
     @media (max-width: 1024px) and (min-width: 769px) {
@@ -466,10 +485,7 @@
       .table-wrapper { border: none; box-shadow: none; }
       table, thead, tbody, th, td, tr { display: block; }
       thead { display: none; }
-      tbody tr {
-        border: 1px solid var(--border-color); border-radius: var(--radius);
-        margin-bottom: 12px; padding: 12px; background: var(--card-bg);
-      }
+      tbody tr { border: 1px solid var(--border-color); border-radius: var(--radius); margin-bottom: 12px; padding: 12px; background: var(--card-bg); }
       td { border: none; padding: 8px 0; display: flex; justify-content: space-between; align-items: center; text-align: right; }
       td::before { content: attr(data-label); font-weight: 800; color: var(--text-muted); font-size: 0.85em; margin-inline-end: 12px; }
       td.action-cell { justify-content: center; padding-top: 12px; border-top: 1px dashed var(--border-color); margin-top: 8px; }
@@ -503,7 +519,6 @@
 </header>
 
 <div class="container">
-  <!-- 📢 الإعلانات العلوية -->
   <div id="announcementBanner" style="display:none;">
     <div id="announcementContent" class="ann-banner ann-info">
       <span class="ann-icon">📢</span>
@@ -641,12 +656,8 @@
 
       <h2 style="font-size: 1.1em; margin-top:20px;">📢 الإعلانات العلوية</h2>
       <div style="background:var(--stripe-bg); padding:16px; border-radius:10px; border:1px solid var(--border-color);">
-        <p style="margin:0 0 12px; font-size:0.9em; color:var(--text-muted); line-height:1.7;">
-          أضف إعلانات تظهر أعلى الشاشة للعملاء والموظفين — مثل "سعر الرز ارتفع" أو "خصم على المواد الغذائية".
-        </p>
-        <button onclick="openAnnouncementManager()" class="btn-price" style="width:auto; padding:10px 20px;">
-          🛠️ إدارة الإعلانات
-        </button>
+        <p style="margin:0 0 12px; font-size:0.9em; color:var(--text-muted); line-height:1.7;">أضف إعلانات تظهر أعلى الشاشة للعملاء والموظفين — مثل "سعر الرز ارتفع" أو "خصم على المواد الغذائية".</p>
+        <button onclick="openAnnouncementManager()" class="btn-price" style="width:auto; padding:10px 20px;">🛠️ إدارة الإعلانات</button>
       </div>
 
       <h2 style="font-size: 1.1em; margin-top:20px;">💾 النسخ الاحتياطي والاسترجاع</h2>
@@ -673,13 +684,11 @@
   </div>
 </div>
 
-<!-- ═══════ زر الدردشة العائم ═══════ -->
 <button id="chatFab" onclick="openChat()" title="دردشة الفريق">
   💬
   <span id="chatUnreadBadge" class="chat-badge">0</span>
 </button>
 
-<!-- ═══════ نافذة الدردشة ═══════ -->
 <div id="chatModal" class="modal">
   <div class="chat-panel">
     <div class="chat-header">
@@ -696,14 +705,12 @@
   </div>
 </div>
 
-<!-- ═══════ مودال إدارة الإعلانات ═══════ -->
 <div id="announcementManagerModal" class="modal">
   <div class="modal-content" style="max-width: 600px;">
     <div class="modal-header">
       <h3>📢 إدارة الإعلانات</h3>
       <button class="modal-close" onclick="closeModal('announcementManagerModal')">✕</button>
     </div>
-
     <div style="background:var(--stripe-bg); padding:14px; border-radius:10px; margin-bottom:16px;">
       <p style="font-weight:800; margin:0 0 10px; color:var(--primary);">➕ إضافة إعلان جديد</p>
       <input type="hidden" id="annEditId" />
@@ -736,13 +743,11 @@
         <button onclick="resetAnnForm()" class="btn-secondary" style="width:auto; padding:11px 20px;">↺</button>
       </div>
     </div>
-
     <p style="font-weight:800; margin:0 0 10px; color:var(--primary);">📋 الإعلانات الحالية</p>
     <div id="annList" style="max-height:400px; overflow-y:auto;"></div>
   </div>
 </div>
 
-<!-- مودالات أخرى -->
 <div id="loginModal" class="modal">
   <div class="modal-content">
     <div class="modal-header">
@@ -911,15 +916,7 @@ const STYLE_OPTIONS = [
   { value: 'flat',    name: 'مسطح',    icon: '⬜', desc: 'بدون ظلال' }
 ];
 
-const firebaseConfig = {
-  apiKey: "AIzaSyC-QqnQTbbyVFS8QFkf4CYZTcURcr9nBW0",
-  authDomain: "gimi-fd7fe.firebaseapp.com",
-  databaseURL: "https://gimi-fd7fe-default-rtdb.firebaseio.com",
-  projectId: "gimi-fd7fe",
-  storageBucket: "gimi-fd7fe.firebasestorage.app",
-  messagingSenderId: "642364940251",
-  appId: "1:642364940251:web:6dd47f47d500ae9ed791fe"
-};
+/* firebaseConfig موجود في module script في الأعلى */
 
 let db = null;
 let auth = null;
@@ -935,13 +932,11 @@ let scannerMode = 'add';
 let isKiosk = false;
 let lastConnectionError = null;
 
-/* دردشة */
 let chatUser = null;
 let chatInitialized = false;
 let chatUnread = 0;
 let chatIsOpen = false;
 
-/* إعلانات */
 let announcements = {};
 let annRotationTimer = null;
 let annCurrentIndex = 0;
@@ -1115,25 +1110,15 @@ function changeLowStockThreshold(value) {
   showToast("عتبة التنبيه: " + n, "success");
 }
 
-function resetSettings() {
-  showConfirm("استعادة الإعدادات", "سيتم حذف جميع الإعدادات. هل أنت متأكد؟", () => {
-    localStorage.clear();
-    location.reload();
-  });
-}
-
 /* ================= الأدمن ================= */
 function handleAdminClick() {
-  if (isAdmin) {
-    logoutAdmin();
-  } else {
-    const emailEl = document.getElementById('loginEmail');
-    const passEl = document.getElementById('loginPassword');
-    if (emailEl) emailEl.value = '';
-    if (passEl) passEl.value = '';
-    openModal('loginModal');
-    setTimeout(() => { if (emailEl) emailEl.focus(); }, 100);
-  }
+  if (isAdmin) { logoutAdmin(); return; }
+  const emailEl = document.getElementById('loginEmail');
+  const passEl = document.getElementById('loginPassword');
+  if (emailEl) emailEl.value = '';
+  if (passEl) passEl.value = '';
+  openModal('loginModal');
+  setTimeout(() => { if (emailEl) emailEl.focus(); }, 100);
 }
 
 async function submitLogin() {
@@ -1144,7 +1129,6 @@ async function submitLogin() {
 
   const email = emailEl.value.trim();
   const password = passEl.value;
-
   if (!email || !password) return showToast("⚠️ أدخل البريد وكلمة المرور", "warning");
   if (!auth) return showToast("⚠️ Firebase لم يتهيأ بعد", "warning");
 
@@ -1175,9 +1159,7 @@ async function logoutAdmin() {
       await auth.signOut();
       await auth.signInAnonymously();
       showToast("👋 تم تسجيل الخروج", "info");
-    } catch (err) {
-      showToast("❌ " + err.message, "error");
-    }
+    } catch (err) { showToast("❌ " + err.message, "error"); }
   });
 }
 
@@ -1199,10 +1181,7 @@ function updateAdminUI(enabled) {
 function checkEnvironment() {
   const issues = [];
   if (location.protocol === 'file:') {
-    issues.push({
-      ok: false, icon: '🌐', title: 'التطبيق يعمل من ملف محلي (file://)',
-      desc: 'المصادقة لا تعمل من ملف محلي. استخدم https أو localhost.'
-    });
+    issues.push({ ok: false, icon: '🌐', title: 'التطبيق يعمل من ملف محلي (file://)', desc: 'المصادقة لا تعمل من ملف محلي. استخدم https أو localhost.' });
   } else {
     issues.push({ ok: true, icon: '🌐', title: 'البروتوكول: ' + location.protocol, desc: 'مناسب.' });
   }
@@ -1223,8 +1202,15 @@ function initFirebase() {
   const status = document.getElementById('cloudStatus');
   if (status) { status.innerText = "🔄 1/4 — تهيئة Firebase..."; status.className = "warning"; }
 
+  if (typeof firebase === 'undefined') {
+    // Module لم يُحمَّل بعد — انتظر
+    if (status) { status.innerText = "⏳ انتظار تحميل Firebase..."; status.className = "warning"; }
+    setTimeout(initFirebase, 200);
+    return;
+  }
+
   try {
-    firebase.initializeApp(firebaseConfig);
+    firebase.initializeApp();
     auth = firebase.auth();
 
     let authStateFired = false;
@@ -1244,22 +1230,17 @@ function initFirebase() {
         isAuthReady = true;
         updateAdminUI(!user.isAnonymous);
         connectWithRetry(0);
-
-        // 📢 تهيئة الإعلانات
         setTimeout(() => setupAnnouncementsListener(), 800);
-
-        // 💬 تجهيز الدردشة
         if (localStorage.getItem('chat_name')) {
           setTimeout(() => setupChatListeners(), 1500);
         }
       } else {
         if (status) { status.innerText = "🔄 2/4 — تسجيل دخول مجهول..."; status.className = "warning"; }
-        auth.signInAnonymously()
-          .catch((error) => {
-            lastConnectionError = error;
-            if (status) { status.innerText = "🔴 فشل المصادقة: " + error.code; status.className = "offline"; }
-            showToast("❌ فشل المصادقة: " + error.code, "error");
-          });
+        auth.signInAnonymously().catch((error) => {
+          lastConnectionError = error;
+          if (status) { status.innerText = "🔴 فشل المصادقة: " + error.code; status.className = "offline"; }
+          showToast("❌ فشل المصادقة: " + error.code, "error");
+        });
       }
     });
   } catch (e) {
@@ -1373,13 +1354,10 @@ function updateDashboard() {
   const lowStock = prices.filter(p => {
     const ps = Number(p.packetStock) || 0;
     const cs = Number(p.cartonStock) || 0;
-    return (p.packetStock != null && ps <= threshold && ps > 0) ||
-           (p.cartonStock != null && cs <= threshold && cs > 0);
+    return (p.packetStock != null && ps <= threshold && ps > 0) || (p.cartonStock != null && cs <= threshold && cs > 0);
   }).length;
   const totalValue = prices.reduce((sum, p) => {
-    const pVal = (Number(p.packetSell) || 0) * (Number(p.packetStock) || 0);
-    const cVal = (Number(p.cartonSell) || 0) * (Number(p.cartonStock) || 0);
-    return sum + pVal + cVal;
+    return sum + (Number(p.packetSell) || 0) * (Number(p.packetStock) || 0) + (Number(p.cartonSell) || 0) * (Number(p.cartonStock) || 0);
   }, 0);
   const pEl = document.getElementById('dashPricesCount');
   const lEl = document.getElementById('dashLowStockCount');
@@ -1445,8 +1423,7 @@ function renderPrices() {
         '<th>أسعار الكارتون<br><small style="font-weight:600; opacity:0.8;">كلفة | بيع | ربح</small></th>' +
         '<th>مخزون الكارتون</th><th>إجراءات</th></tr>';
     } else {
-      thead.innerHTML = '<tr>' +
-        '<th>المادة</th><th>الباركود</th>' +
+      thead.innerHTML = '<tr><th>المادة</th><th>الباركود</th>' +
         '<th>سعر الباكيت</th><th>مخزون الباكيت</th>' +
         '<th>سعر الكارتون</th><th>مخزون الكارتون</th></tr>';
     }
@@ -1516,14 +1493,12 @@ function renderPrices() {
       packetCells = '<td data-label="أسعار الباكيت"><div class="price-box">' +
         '<span class="price-cost">كلفة: ' + formatIQD(packetCost) + '</span><br>' +
         '<span class="price-sell">بيع: ' + formatIQD(packetSell) + '</span><br>' +
-        '<span class="price-profit ' + (packetProfit < 0 ? 'negative' : '') + '">ربح: ' + formatIQD(packetProfit) + '</span>' +
-        '</div></td>' +
+        '<span class="price-profit ' + (packetProfit < 0 ? 'negative' : '') + '">ربح: ' + formatIQD(packetProfit) + '</span></div></td>' +
         '<td data-label="مخزون الباكيت"><span class="stock-badge ' + getBadgeClass(pStock) + '">' + pStock + '</span>' + quickControls('packet') + '</td>';
       cartonCells = '<td data-label="أسعار الكارتون"><div class="price-box">' +
         '<span class="price-cost">كلفة: ' + formatIQD(cartonCost) + '</span><br>' +
         '<span class="price-sell">بيع: ' + formatIQD(cartonSell) + '</span><br>' +
-        '<span class="price-profit ' + (cartonProfit < 0 ? 'negative' : '') + '">ربح: ' + formatIQD(cartonProfit) + '</span>' +
-        '</div></td>' +
+        '<span class="price-profit ' + (cartonProfit < 0 ? 'negative' : '') + '">ربح: ' + formatIQD(cartonProfit) + '</span></div></td>' +
         '<td data-label="مخزون الكارتون"><span class="stock-badge ' + getBadgeClass(cStock) + '">' + cStock + '</span>' + quickControls('carton') + '</td>';
       actionCell = '<td class="action-cell" data-label="إجراءات">' +
         '<button class="action-btn btn-secondary" onclick="openEditModal(\'' + id + '\')">✏️ تعديل</button>' +
@@ -1540,8 +1515,7 @@ function renderPrices() {
       '<td data-label="المادة"><div class="product-name">' + escapeHtml(p.name) + '</div>' +
       '<div class="product-meta">' + escapeHtml(p.updatedAt || p.createdAt || '') + '</div></td>' +
       '<td data-label="الباركود" style="font-family:\'IBM Plex Mono\', monospace; font-weight:700;">' + escapeHtml(p.code || '—') + '</td>' +
-      packetCells + cartonCells + actionCell +
-      '</tr>';
+      packetCells + cartonCells + actionCell + '</tr>';
   }).join('');
 }
 
@@ -1566,11 +1540,7 @@ function openStockModal(id, type) {
   const nmEl = document.getElementById('stockProductName');
   const qtyEl = document.getElementById('stockNewQty');
   if (nmEl) nmEl.textContent = p.name + ' - ' + (type === 'packet' ? 'الباكيت' : 'الكارتون');
-  if (qtyEl) {
-    qtyEl.value = Number(p[field]) || 0;
-    qtyEl.dataset.id = id;
-    qtyEl.dataset.field = field;
-  }
+  if (qtyEl) { qtyEl.value = Number(p[field]) || 0; qtyEl.dataset.id = id; qtyEl.dataset.field = field; }
   openModal('stockModal');
 }
 
@@ -1880,7 +1850,7 @@ async function executeImport() {
   finally { btn.disabled = false; btn.textContent = '✅ تنفيذ الاسترجاع'; }
 }
 
-/* ================= وضع Kiosk ================= */
+/* ================= Kiosk ================= */
 function toggleKiosk() {
   isKiosk = !isKiosk;
   document.body.classList.toggle('kiosk-mode', isKiosk);
@@ -1891,7 +1861,6 @@ function toggleKiosk() {
     if (document.exitFullscreen && document.fullscreenElement) document.exitFullscreen().catch(function() {});
   }
 }
-
 document.addEventListener('fullscreenchange', function() {
   if (!document.fullscreenElement && isKiosk) {
     isKiosk = false;
@@ -1993,20 +1962,13 @@ function openChat() {
   }, 200);
 }
 
-function closeChat() {
-  chatIsOpen = false;
-  closeModal('chatModal');
-}
+function closeChat() { chatIsOpen = false; closeModal('chatModal'); }
 
 function updateChatBadge() {
   const badge = document.getElementById('chatUnreadBadge');
   if (!badge) return;
-  if (chatUnread > 0) {
-    badge.textContent = chatUnread > 9 ? '9+' : chatUnread;
-    badge.style.display = 'flex';
-  } else {
-    badge.style.display = 'none';
-  }
+  if (chatUnread > 0) { badge.textContent = chatUnread > 9 ? '9+' : chatUnread; badge.style.display = 'flex'; }
+  else badge.style.display = 'none';
 }
 
 function appendChatMessage(key, msg) {
@@ -2020,11 +1982,9 @@ function appendChatMessage(key, msg) {
   const div = document.createElement('div');
   div.id = 'msg_' + key;
   div.className = 'chat-msg ' + (isMine ? 'mine' : 'theirs');
-  div.innerHTML =
-    '<div class="chat-msg-head">' +
+  div.innerHTML = '<div class="chat-msg-head">' +
       '<span class="chat-msg-name">' + escapeHtml(msg.name || 'مجهول') + '</span>' +
-      '<span class="chat-msg-time">' + time + '</span>' +
-    '</div>' +
+      '<span class="chat-msg-time">' + time + '</span></div>' +
     '<div class="chat-msg-body">' + escapeHtml(msg.text || '') + '</div>';
   container.appendChild(div);
   if (chatIsOpen) scrollChatToBottom();
@@ -2043,9 +2003,8 @@ function sendChatMessage() {
     if (!chatUser) chatUser = { uid: 'guest_' + Date.now(), name: name };
   }
   if (!db) return showToast('⚠️ غير متصل بقاعدة البيانات', 'warning');
-  db.child('chat/messages').push({
-    uid: chatUser.uid, name: chatUser.name, text: text, time: Date.now()
-  }).catch(err => showToast('تعذر الإرسال: ' + err.message, 'error'));
+  db.child('chat/messages').push({ uid: chatUser.uid, name: chatUser.name, text: text, time: Date.now() })
+    .catch(err => showToast('تعذر الإرسال: ' + err.message, 'error'));
   input.value = '';
   input.focus();
 }
@@ -2060,17 +2019,15 @@ function playChatBeep() {
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
+    osc.connect(gain); gain.connect(ctx.destination);
     osc.frequency.value = 800;
     gain.gain.setValueAtTime(0.1, ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
-    osc.start();
-    osc.stop(ctx.currentTime + 0.15);
+    osc.start(); osc.stop(ctx.currentTime + 0.15);
   } catch (e) {}
 }
 
-/* ================= الإعلانات العلوية ================= */
+/* ================= الإعلانات ================= */
 function setupAnnouncementsListener() {
   if (!db) return;
   db.child('announcements').on('value', (snap) => {
@@ -2090,18 +2047,15 @@ function getActiveAnnouncements() {
 function renderAnnouncementBanner() {
   const banner = document.getElementById('announcementBanner');
   if (!banner) return;
-
   const active = getActiveAnnouncements();
   if (!active.length) {
     banner.style.display = 'none';
     if (annRotationTimer) { clearInterval(annRotationTimer); annRotationTimer = null; }
     return;
   }
-
   banner.style.display = 'block';
   annCurrentIndex = 0;
   showAnnouncement(active[0]);
-
   if (annRotationTimer) clearInterval(annRotationTimer);
   if (active.length > 1) {
     annRotationTimer = setInterval(() => {
@@ -2115,12 +2069,9 @@ function showAnnouncement(pair) {
   const [, ann] = pair;
   const content = document.getElementById('announcementContent');
   if (!content) return;
-
   const icons = { 'info': '📢', 'price-up': '📈', 'price-down': '📉', 'warning': '⚠️', 'urgent': '🚨' };
-
   content.className = 'ann-banner ann-' + (ann.type || 'info');
-  content.innerHTML =
-    '<span class="ann-icon">' + (icons[ann.type] || '📢') + '</span>' +
+  content.innerHTML = '<span class="ann-icon">' + (icons[ann.type] || '📢') + '</span>' +
     '<span class="ann-text">' + escapeHtml(ann.text) + '</span>' +
     '<button class="ann-manage-btn" onclick="openAnnouncementManager()" title="إدارة">⚙️</button>';
 }
@@ -2151,32 +2102,24 @@ async function saveAnnouncement() {
   const textEl = document.getElementById('annText');
   const typeEl = document.getElementById('annType');
   const expEl = document.getElementById('annExpiry');
-
   const text = textEl.value.trim();
   if (!text) return showToast('⚠️ أدخل نص الإعلان', 'warning');
-  if (text.length > 200) return showToast('⚠️ النص طويل جداً (200 حرف كحد أقصى)', 'warning');
-
+  if (text.length > 200) return showToast('⚠️ النص طويل جداً', 'warning');
   const type = typeEl.value;
   const expiryDays = Number(expEl.value) || 0;
   const now = Date.now();
   const expiresAt = expiryDays > 0 ? now + (expiryDays * 24 * 60 * 60 * 1000) : null;
-
   const btn = document.getElementById('annSaveBtn');
   btn.disabled = true;
   const original = btn.textContent;
   btn.textContent = '⏳...';
-
   try {
     const editId = idEl.value;
     if (editId) {
-      await db.child('announcements').child(editId).update({
-        text, type, expiresAt: expiresAt, updatedAt: now
-      });
+      await db.child('announcements').child(editId).update({ text, type, expiresAt: expiresAt, updatedAt: now });
       showToast('✅ تم تحديث الإعلان', 'success');
     } else {
-      await db.child('announcements').push({
-        text, type, active: true, expiresAt: expiresAt, createdAt: now, updatedAt: now
-      });
+      await db.child('announcements').push({ text, type, active: true, expiresAt: expiresAt, createdAt: now, updatedAt: now });
       showToast('✅ تم إضافة الإعلان', 'success');
     }
     resetAnnForm();
@@ -2193,13 +2136,9 @@ async function toggleAnnouncement(id) {
   const ann = announcements[id];
   if (!ann) return;
   try {
-    await db.child('announcements').child(id).update({
-      active: !ann.active, updatedAt: Date.now()
-    });
+    await db.child('announcements').child(id).update({ active: !ann.active, updatedAt: Date.now() });
     showToast(ann.active ? '⏸️ تم إيقاف الإعلان' : '▶️ تم تفعيل الإعلان', 'success');
-  } catch (err) {
-    showToast('تعذر التحديث: ' + err.message, 'error');
-  }
+  } catch (err) { showToast('تعذر التحديث: ' + err.message, 'error'); }
 }
 
 async function deleteAnnouncement(id) {
@@ -2210,9 +2149,7 @@ async function deleteAnnouncement(id) {
     try {
       await db.child('announcements').child(id).remove();
       showToast('🗑️ تم الحذف', 'success');
-    } catch (err) {
-      showToast('تعذر الحذف: ' + err.message, 'error');
-    }
+    } catch (err) { showToast('تعذر الحذف: ' + err.message, 'error'); }
   });
 }
 
@@ -2223,15 +2160,11 @@ function editAnnouncement(id) {
   document.getElementById('annEditId').value = id;
   document.getElementById('annText').value = ann.text || '';
   document.getElementById('annType').value = ann.type || 'info';
-
   const expEl = document.getElementById('annExpiry');
   if (ann.expiresAt && ann.expiresAt > Date.now()) {
     const days = Math.round((ann.expiresAt - Date.now()) / (24 * 60 * 60 * 1000));
     expEl.value = String(days);
-  } else {
-    expEl.value = '';
-  }
-
+  } else expEl.value = '';
   document.getElementById('annSaveBtn').textContent = '💾 حفظ التعديل';
   document.getElementById('annText').focus();
 }
@@ -2239,57 +2172,33 @@ function editAnnouncement(id) {
 function renderAnnouncementManager() {
   const list = document.getElementById('annList');
   if (!list) return;
-
   const now = Date.now();
-  const entries = Object.entries(announcements)
-    .sort((a, b) => (b[1].createdAt || 0) - (a[1].createdAt || 0));
-
+  const entries = Object.entries(announcements).sort((a, b) => (b[1].createdAt || 0) - (a[1].createdAt || 0));
   if (!entries.length) {
     list.innerHTML = '<div style="text-align:center; padding:30px; color:var(--text-muted);">لا توجد إعلانات بعد<br>أضف أول إعلان من الأعلى ↑</div>';
     return;
   }
-
-  const typeNames = {
-    'info': '📢 معلومة',
-    'price-up': '📈 ارتفع',
-    'price-down': '📉 انخفض',
-    'warning': '⚠️ تنبيه',
-    'urgent': '🚨 عاجل'
-  };
-
+  const typeNames = { 'info': '📢 معلومة', 'price-up': '📈 ارتفع', 'price-down': '📉 انخفض', 'warning': '⚠️ تنبيه', 'urgent': '🚨 عاجل' };
   list.innerHTML = entries.map(([id, a]) => {
     const isExpired = a.expiresAt && a.expiresAt < now;
     const cls = !a.active ? 'inactive' : (isExpired ? 'expired' : '');
     const statusBadge = isExpired
       ? '<span class="ann-badge ann-badge-expired">انتهى</span>'
-      : (a.active
-        ? '<span class="ann-badge ann-badge-active">نشط</span>'
-        : '<span class="ann-badge ann-badge-inactive">موقوف</span>');
-
+      : (a.active ? '<span class="ann-badge ann-badge-active">نشط</span>' : '<span class="ann-badge ann-badge-inactive">موقوف</span>');
     const typeBadge = '<span class="ann-type-badge ann-type-' + (a.type || 'info') + '">' + (typeNames[a.type] || 'معلومة') + '</span>';
-
     let expiryText = '';
     if (a.expiresAt) {
-      if (a.expiresAt < now) {
-        expiryText = ' • انتهى في ' + new Date(a.expiresAt).toLocaleDateString('ar-IQ');
-      } else {
-        expiryText = ' • ينتهي ' + new Date(a.expiresAt).toLocaleDateString('ar-IQ');
-      }
+      expiryText = a.expiresAt < now ? ' • انتهى في ' + new Date(a.expiresAt).toLocaleDateString('ar-IQ') : ' • ينتهي ' + new Date(a.expiresAt).toLocaleDateString('ar-IQ');
     }
-
     const createdText = a.createdAt ? new Date(a.createdAt).toLocaleDateString('ar-IQ') : '';
-
-    return '<div class="ann-item ' + cls + '">' +
-      '<div class="ann-item-body">' +
-        '<div class="ann-item-text">' + escapeHtml(a.text) + '</div>' +
-        '<div class="ann-item-meta">' + typeBadge + statusBadge + ' • ' + createdText + expiryText + '</div>' +
-        '<div class="ann-item-actions">' +
-          '<button onclick="editAnnouncement(\'' + id + '\')" class="btn-secondary" style="width:auto; padding:5px 12px; font-size:0.8em;">✏️ تعديل</button>' +
-          '<button onclick="toggleAnnouncement(\'' + id + '\')" class="' + (a.active ? 'btn-secondary' : 'btn-success') + '" style="width:auto; padding:5px 12px; font-size:0.8em;">' + (a.active ? '⏸️ إيقاف' : '▶️ تفعيل') + '</button>' +
-          '<button onclick="deleteAnnouncement(\'' + id + '\')" class="btn-danger" style="width:auto; padding:5px 12px; font-size:0.8em;">🗑️ حذف</button>' +
-        '</div>' +
-      '</div>' +
-    '</div>';
+    return '<div class="ann-item ' + cls + '"><div class="ann-item-body">' +
+      '<div class="ann-item-text">' + escapeHtml(a.text) + '</div>' +
+      '<div class="ann-item-meta">' + typeBadge + statusBadge + ' • ' + createdText + expiryText + '</div>' +
+      '<div class="ann-item-actions">' +
+        '<button onclick="editAnnouncement(\'' + id + '\')" class="btn-secondary" style="width:auto; padding:5px 12px; font-size:0.8em;">✏️ تعديل</button>' +
+        '<button onclick="toggleAnnouncement(\'' + id + '\')" class="' + (a.active ? 'btn-secondary' : 'btn-success') + '" style="width:auto; padding:5px 12px; font-size:0.8em;">' + (a.active ? '⏸️ إيقاف' : '▶️ تفعيل') + '</button>' +
+        '<button onclick="deleteAnnouncement(\'' + id + '\')" class="btn-danger" style="width:auto; padding:5px 12px; font-size:0.8em;">🗑️ حذف</button>' +
+      '</div></div></div>';
   }).join('');
 }
 
