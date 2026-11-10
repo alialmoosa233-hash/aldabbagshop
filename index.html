@@ -317,106 +317,73 @@
     .inv-search-item:hover { background: var(--stripe-bg); }
     .inv-extra-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
 
-    /* ═══════ الفاتورة — تصميم كاشير عراقي ═══════ */
+    /* ═══════ الفاتورة — طولية بخط كبير ═══════ */
     .invoice-print {
       font-family: 'Tajawal', sans-serif;
       color: #000; background: #fff; direction: rtl;
-      padding: 8px; line-height: 1.3;
-      position: relative; min-height: 600px;
-      font-size: 11px;
+      padding: 12px; line-height: 1.5;
+      position: relative; min-height: 620px;
+      font-size: 14px;
     }
     .inv-watermark {
       position: absolute; top: 50%; left: 50%;
       transform: translate(-50%, -50%);
-      font-size: 22em; font-weight: 900;
-      color: #e8e8e8; opacity: 0.55;
+      font-size: 18em; font-weight: 900;
+      color: #eaeaea; opacity: 0.5;
       z-index: 0; pointer-events: none; user-select: none;
       font-family: 'Amiri', serif; line-height: 1;
-      letter-spacing: -0.05em;
     }
     .inv-watermark::after { content: 'الدباغ'; }
     .inv-content { position: relative; z-index: 1; }
-
     .inv-head {
-      display: grid; grid-template-columns: 1fr 2fr; gap: 8px;
-      border: 2px solid #000; border-bottom: none;
-      padding: 6px 8px; align-items: center;
+      display: grid; grid-template-columns: 1fr;
+      gap: 10px; border: 2.5px solid #000; border-bottom: none;
+      padding: 10px 12px; text-align: center;
     }
-    .inv-logo-box { display: flex; align-items: center; justify-content: center; gap: 4px; flex-wrap: wrap; }
-    .inv-logo-red {
-      background: #991B1B; color: #fff;
-      font-size: 2.2em; font-weight: 900;
-      padding: 6px 16px; border-radius: 4px;
-      font-family: 'Amiri', serif; line-height: 1;
-    }
-    .inv-logo-products { font-size: 2.5em; line-height: 1; }
-    .inv-shop-info { text-align: right; }
-    .inv-shop-name { font-size: 2em; font-weight: 900; color: #991B1B; margin-bottom: 2px; font-family: 'Amiri', serif; line-height: 1; }
-    .inv-shop-tagline { font-size: 0.85em; color: #333; font-weight: 700; margin-bottom: 2px; }
-
+    .inv-logo-box { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; }
+    .inv-logo-red { background: #991B1B; color: #fff; font-size: 2.2em; font-weight: 900; padding: 8px 20px; border-radius: 6px; font-family: 'Amiri', serif; line-height: 1; }
+    .inv-logo-products { font-size: 2.2em; line-height: 1; }
+    .inv-shop-info { text-align: center; }
+    .inv-shop-name { font-size: 2em; font-weight: 900; color: #991B1B; margin-bottom: 4px; font-family: 'Amiri', serif; line-height: 1.1; }
+    .inv-shop-tagline { font-size: 1em; color: #333; font-weight: 700; }
     .inv-contact {
-      background: #FCD34D; border: 2px solid #000;
-      padding: 4px 10px; display: flex; justify-content: space-between; align-items: center;
-      gap: 8px; flex-wrap: wrap;
-      font-size: 0.78em; font-weight: 800; color: #000;
+      background: #FCD34D; border: 2.5px solid #000;
+      padding: 8px 12px; display: flex; flex-direction: column;
+      align-items: center; gap: 4px;
+      font-size: 0.9em; font-weight: 800; color: #000; text-align: center;
     }
-    .inv-contact span { white-space: nowrap; }
-
-    .inv-customer-table {
-      display: grid; grid-template-columns: repeat(2, 1fr); gap: 0;
-      border: 2px solid #000; border-top: none; border-bottom: none;
-    }
-    .inv-cust-row { display: grid; grid-template-columns: 1fr 1fr; border-bottom: 1px solid #000; }
+    .inv-contact span { display: block; }
+    .inv-customer-table { display: grid; grid-template-columns: 1fr; border: 2.5px solid #000; border-top: none; }
+    .inv-cust-row { display: grid; grid-template-columns: 1fr 1fr; border-bottom: 1.5px solid #000; }
     .inv-cust-row:last-child { border-bottom: none; }
-    .inv-cust-cell { display: flex; align-items: stretch; border-inline-end: 1px solid #000; }
+    .inv-cust-cell { display: flex; align-items: stretch; border-inline-end: 1.5px solid #000; }
     .inv-cust-cell:last-child { border-inline-end: none; }
-    .inv-cust-label {
-      background: #F8FAFC; padding: 4px 8px; font-weight: 700; font-size: 0.72em;
-      border-inline-end: 1px solid #000; display: flex; align-items: center;
-      white-space: nowrap; min-width: 70px;
-    }
-    .inv-cust-value {
-      padding: 4px 8px; font-weight: 800; flex: 1; text-align: center;
-      font-family: 'IBM Plex Mono', monospace; font-size: 0.78em;
-    }
-
-    .inv-products { width: 100%; border-collapse: collapse; font-size: 0.78em; border: 2px solid #000; }
-    .inv-products th {
-      background: #991B1B; color: #FCD34D; padding: 4px 3px; border: 1px solid #000;
-      font-weight: 800; text-align: center; font-size: 0.85em;
-    }
-    .inv-products td { padding: 4px 3px; border: 1px solid #000; text-align: center; background: #FEFCE8; }
+    .inv-cust-label { background: #F8FAFC; padding: 8px 10px; font-weight: 700; font-size: 0.85em; border-inline-end: 1.5px solid #000; display: flex; align-items: center; white-space: nowrap; min-width: 80px; }
+    .inv-cust-value { padding: 8px 10px; font-weight: 800; flex: 1; text-align: center; font-family: 'IBM Plex Mono', monospace; font-size: 0.95em; word-break: break-word; }
+    .inv-products { width: 100%; border-collapse: collapse; font-size: 0.95em; border: 2.5px solid #000; }
+    .inv-products th { background: #991B1B; color: #FCD34D; padding: 8px 4px; border: 1.5px solid #000; font-weight: 800; text-align: center; font-size: 0.9em; }
+    .inv-products td { padding: 10px 6px; border: 1.5px solid #000; text-align: center; background: #FEFCE8; font-size: 1em; }
     .inv-products tbody tr:nth-child(even) td { background: #FEF9C3; }
-    .inv-products td.details { text-align: right; font-weight: 600; padding-inline-end: 6px; }
-    .inv-products td.num { font-family: 'IBM Plex Mono', monospace; font-weight: 700; }
-
-    .inv-totals { display: flex; border: 2px solid #000; border-top: none; }
-    .inv-totals-spacer { flex: 1; border-inline-end: 1px solid #000; padding: 8px; position: relative; }
-    .inv-signature { position: absolute; bottom: 8px; right: 12px; font-size: 0.72em; font-weight: 700; }
-    .inv-signature-line { display: inline-block; border-bottom: 1px solid #000; width: 80px; margin-inline-start: 8px; margin-bottom: 2px; }
-
-    .inv-totals-table { width: 50%; border-collapse: collapse; font-size: 0.75em; }
-    .inv-totals-table td { border: 1px solid #000; padding: 4px 8px; font-weight: 700; }
-    .inv-totals-table .inv-tot-label { background: #F8FAFC; text-align: right; width: 55%; font-size: 0.9em; }
-    .inv-totals-table .inv-tot-currency { background: #F8FAFC; text-align: center; width: 12%; font-size: 0.85em; }
-    .inv-totals-table .inv-tot-value { text-align: center; font-family: 'IBM Plex Mono', monospace; font-weight: 800; width: 33%; font-size: 0.9em; }
-    .inv-totals-table tr.highlight .inv-tot-value { background: #FEF9C3; }
-
-    .inv-words {
-      border: 2px solid #000; border-top: none; padding: 4px 10px;
-      text-align: center; font-size: 0.72em; font-weight: 800;
-      background: #FEF9C3; color: #000;
-    }
-    .inv-bottom {
-      margin-top: 8px; display: flex; justify-content: space-between; align-items: center;
-      font-size: 0.68em; color: #555; padding-top: 4px; border-top: 1px solid #999;
-      font-family: 'IBM Plex Mono', monospace;
-    }
+    .inv-products td.details { text-align: right; font-weight: 700; padding-inline-end: 8px; line-height: 1.4; word-break: break-word; }
+    .inv-products td.details .barcode-small { display: block; font-size: 0.75em; color: #666; font-weight: 500; margin-top: 2px; }
+    .inv-products td.num { font-family: 'IBM Plex Mono', monospace; font-weight: 700; white-space: nowrap; }
+    .inv-products td.total-col { font-weight: 900; background: #FEF3C7 !important; }
+    .inv-totals { display: flex; flex-direction: column; border: 2.5px solid #000; border-top: none; }
+    .inv-totals-table { width: 100%; border-collapse: collapse; font-size: 0.95em; }
+    .inv-totals-table td { border: 1.5px solid #000; padding: 8px 10px; font-weight: 700; }
+    .inv-totals-table .inv-tot-label { background: #F8FAFC; text-align: right; width: 50%; font-size: 0.9em; }
+    .inv-totals-table .inv-tot-currency { background: #F8FAFC; text-align: center; width: 10%; font-size: 0.85em; }
+    .inv-totals-table .inv-tot-value { text-align: center; font-family: 'IBM Plex Mono', monospace; font-weight: 800; width: 40%; font-size: 1em; }
+    .inv-totals-table tr.highlight .inv-tot-value { background: #FEF9C3; font-size: 1.05em; }
+    .inv-signature-box { border-top: 2px solid #000; padding: 14px 10px; display: flex; justify-content: space-around; align-items: center; font-size: 0.85em; font-weight: 700; }
+    .inv-signature-line { display: inline-block; border-bottom: 1.5px solid #000; width: 100px; margin-inline-start: 8px; }
+    .inv-words { border: 2.5px solid #000; border-top: none; padding: 10px 12px; text-align: center; font-size: 0.9em; font-weight: 800; background: #FEF9C3; color: #000; line-height: 1.4; }
+    .inv-bottom { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; align-items: center; font-size: 0.8em; color: #555; padding-top: 8px; border-top: 1.5px solid #999; font-family: 'IBM Plex Mono', monospace; }
     .inv-bottom-center { font-weight: 800; color: #000; }
 
     @media print {
-      .invoice-print { padding: 4mm; }
-      .inv-watermark { font-size: 18em; }
+      .invoice-print { padding: 6mm; font-size: 12px; }
+      .inv-watermark { font-size: 14em; }
     }
 
     @media (max-width: 768px) {
@@ -442,12 +409,6 @@
       #chatFab, .invoice-fab { width: 54px; height: 54px; font-size: 1.3em; }
       #chatFab { bottom: 15px; right: 15px; }
       .invoice-fab { bottom: 80px; right: 15px; }
-      .inv-head { grid-template-columns: 1fr; }
-      .inv-shop-info { text-align: center; }
-      .inv-totals-table { width: 100%; }
-      .inv-customer-table { grid-template-columns: 1fr; }
-      .inv-cust-row { grid-template-columns: 1fr; }
-      .inv-watermark { font-size: 12em; }
     }
   </style>
 </head>
@@ -581,7 +542,7 @@
       <div class="logo-preview-box">
         <img id="logoPreview" src="" style="display:none;" alt="شعار" />
         <div style="flex:1;">
-          <p style="margin:0 0 8px; font-size:0.85em; color:var(--text-muted);">يظهر في الفاتورة المطبوعة. صورة مربعة بخلفية شفافة مفضلة.</p>
+          <p style="margin:0 0 8px; font-size:0.85em; color:var(--text-muted);">يظهر في الفاتورة. صورة مربعة بخلفية شفافة مفضلة.</p>
           <input type="file" id="logoInput" accept="image/*" onchange="handleLogoUpload(event)" style="margin:0;" />
         </div>
         <button onclick="removeLogo()" class="btn-danger" style="width:auto; padding:8px 12px; font-size:0.85em;">🗑️</button>
@@ -701,7 +662,7 @@
 </div>
 
 <div id="invoiceViewModal" class="modal">
-  <div class="modal-content" style="max-width: 800px;">
+  <div class="modal-content" style="max-width: 520px;">
     <div class="modal-header"><h3>🧾 الفاتورة</h3><button class="modal-close" onclick="closeModal('invoiceViewModal')">✕</button></div>
     <div id="invoicePrintArea"></div>
     <div class="modal-actions">
@@ -984,7 +945,6 @@ function changeStyleSetting(style) { applyStyle(style); localStorage.setItem('ap
 function changeFontSizeSetting(size) { document.documentElement.style.setProperty('--font-size-base', size); localStorage.setItem('app_fontsize', size); showToast("تم تغيير حجم الخط", "success"); }
 function changeLowStockThreshold(value) { const n = Math.max(1, Number(value) || DEFAULTS.LOW_STOCK); localStorage.setItem('low_stock_threshold', n); renderPrices(); showToast("عتبة التنبيه: " + n, "success"); }
 
-/* Logo */
 function handleLogoUpload(event) {
   const file = event.target.files[0]; if (!file) return;
   if (!file.type.startsWith('image/')) return showToast('⚠️ اختر صورة', 'warning');
@@ -1003,7 +963,6 @@ function updateLogoPreview() {
   if (img) { if (logo) { img.src = logo; img.style.display = 'block'; } else { img.src = ''; img.style.display = 'none'; } }
 }
 
-/* Admin */
 function handleAdminClick() {
   if (isAdmin) { logoutAdmin(); return; }
   document.getElementById('loginEmail').value = '';
@@ -1655,18 +1614,15 @@ function numberToArabicWords(num) {
   return r.join(' و');
 }
 
-/* ═══════ الفاتورة الجديدة (تصميم عراقي) ═══════ */
 function renderInvoiceHTML(inv) {
   const itemsRows = (inv.items || []).map((item, i) => {
-    const unitLabel = item.unit === 'carton' ? ' (كارتون)' : '';
-    const modeLabel = item.priceMode === 'wholesale' ? ' جملة' : '';
+    const unitLabel = item.unit === 'carton' ? ' 📦' : ' 🛍️';
+    const modeLabel = item.priceMode === 'wholesale' ? ' <span style="color:#7C3AED;font-size:0.85em;">(جملة)</span>' : '';
     return '<tr>' +
       '<td class="num">' + (i + 1) + '</td>' +
-      '<td class="num">' + escapeHtml(item.code || '—') + '</td>' +
-      '<td class="details">' + escapeHtml(item.name) + unitLabel + modeLabel + '</td>' +
-      '<td class="num">' + formatNum(item.price) + '</td>' +
-      '<td class="num">' + item.qty + '</td>' +
-      '<td class="num">' + formatNum((item.price || 0) * (item.qty || 0)) + '</td>' +
+      '<td class="details">' + escapeHtml(item.name) + modeLabel + unitLabel + (item.code ? '<span class="barcode-small">🏷️ ' + escapeHtml(item.code) + '</span>' : '') + '</td>' +
+      '<td class="num">' + item.qty + ' × ' + formatNum(item.price) + '</td>' +
+      '<td class="num total-col">' + formatNum((item.price || 0) * (item.qty || 0)) + '</td>' +
     '</tr>';
   }).join('');
 
@@ -1678,84 +1634,66 @@ function renderInvoiceHTML(inv) {
 
   const dateObj = inv.createdAt ? new Date(inv.createdAt) : new Date();
   const dateStr = String(dateObj.getDate()).padStart(2, '0') + '/' + String(dateObj.getMonth() + 1).padStart(2, '0') + '/' + dateObj.getFullYear();
-  const timeStr = dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
-  const fullTimestamp = String(dateObj.getMonth() + 1) + '/' + dateObj.getDate() + '/' + dateObj.getFullYear() + ' ' + timeStr;
+  const timeStr = dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
 
   const invoiceNum = inv.invoiceNumber || '—';
   const logo = localStorage.getItem('shop_logo');
-  const itemsCount = (inv.items || []).length;
 
   return '<div class="invoice-print">' +
     '<div class="inv-watermark"></div>' +
     '<div class="inv-content">' +
-
       '<div class="inv-head">' +
         '<div class="inv-logo-box">' +
-          (logo
-            ? '<img src="' + logo + '" alt="logo" style="max-width:90px;max-height:70px;object-fit:contain;" />'
-            : '<div class="inv-logo-red">الدباغ</div><div class="inv-logo-products">🧴🛒</div>'
-          ) +
+          (logo ? '<img src="' + logo + '" alt="logo" style="max-width:100px;max-height:80px;object-fit:contain;" />' : '<div class="inv-logo-red">الدباغ</div><div class="inv-logo-products">🧴🛒</div>') +
         '</div>' +
         '<div class="inv-shop-info">' +
           '<div class="inv-shop-name">محلات الدباغ</div>' +
           '<div class="inv-shop-tagline">لتجارة المواد الغذائية</div>' +
         '</div>' +
       '</div>' +
-
       '<div class="inv-contact">' +
         '<span>📞 07511504085 - 07706149990</span>' +
-        '<span>📍 الموصل - الزهور - قرب مركز شرطة الزهور</span>' +
+        '<span>📍 الموصل - الزهور</span>' +
       '</div>' +
-
       '<div class="inv-customer-table">' +
         '<div class="inv-cust-row">' +
-          '<div class="inv-cust-cell"><span class="inv-cust-label">تاريخ الفاتورة</span><span class="inv-cust-value">' + dateStr + '</span></div>' +
-          '<div class="inv-cust-cell"><span class="inv-cust-label">رقم الفاتورة</span><span class="inv-cust-value">' + escapeHtml(invoiceNum) + '</span></div>' +
+          '<div class="inv-cust-cell"><span class="inv-cust-label">التاريخ</span><span class="inv-cust-value">' + dateStr + '</span></div>' +
+          '<div class="inv-cust-cell"><span class="inv-cust-label">الفاتورة</span><span class="inv-cust-value">' + escapeHtml(invoiceNum) + '</span></div>' +
         '</div>' +
         '<div class="inv-cust-row">' +
-          '<div class="inv-cust-cell"><span class="inv-cust-label">اسم الزبون</span><span class="inv-cust-value">' + escapeHtml(inv.customerName || '—') + '</span></div>' +
-          '<div class="inv-cust-cell"><span class="inv-cust-label">رقم الهاتف</span><span class="inv-cust-value">' + escapeHtml(inv.customerPhone || '—') + '</span></div>' +
+          '<div class="inv-cust-cell"><span class="inv-cust-label">الزبون</span><span class="inv-cust-value">' + escapeHtml(inv.customerName || '—') + '</span></div>' +
+          '<div class="inv-cust-cell"><span class="inv-cust-label">الهاتف</span><span class="inv-cust-value">' + escapeHtml(inv.customerPhone || '—') + '</span></div>' +
         '</div>' +
-        '<div class="inv-cust-row">' +
-          '<div class="inv-cust-cell"><span class="inv-cust-label">رقم الحساب</span><span class="inv-cust-value">' + escapeHtml(inv.customerAccount || '—') + '</span></div>' +
-          '<div class="inv-cust-cell"><span class="inv-cust-label">المدفوع</span><span class="inv-cust-value">' + formatNum(paid) + ' د.ع</span></div>' +
-        '</div>' +
+        (inv.customerAccount ? '<div class="inv-cust-row"><div class="inv-cust-cell" style="grid-column: span 2;"><span class="inv-cust-label">رقم الحساب</span><span class="inv-cust-value">' + escapeHtml(inv.customerAccount) + '</span></div></div>' : '') +
       '</div>' +
-
       '<table class="inv-products">' +
         '<thead><tr>' +
-          '<th style="width:32px;">التسلسل</th>' +
-          '<th style="width:95px;">الباركود</th>' +
-          '<th>التفاصيل</th>' +
-          '<th style="width:70px;">السعر</th>' +
-          '<th style="width:45px;">الكمية</th>' +
-          '<th style="width:80px;">الاجمالي</th>' +
+          '<th style="width:40px;">#</th>' +
+          '<th>المادة</th>' +
+          '<th style="width:90px;">الكمية × السعر</th>' +
+          '<th style="width:85px;">الإجمالي</th>' +
         '</tr></thead>' +
         '<tbody>' + itemsRows + '</tbody>' +
       '</table>' +
-
       '<div class="inv-totals">' +
-        '<div class="inv-totals-spacer">' +
-          '<div class="inv-signature">سلمت بيد <span class="inv-signature-line"></span></div>' +
-        '</div>' +
         '<table class="inv-totals-table">' +
-          '<tr><td class="inv-tot-label">الحساب السابق</td><td class="inv-tot-currency">د.ع</td><td class="inv-tot-value">0</td></tr>' +
-          '<tr><td class="inv-tot-label">مبلغ الفاتورة قبل الخصم</td><td class="inv-tot-currency">د.ع</td><td class="inv-tot-value">' + formatNum(subtotal) + '</td></tr>' +
-          '<tr><td class="inv-tot-label">مبلغ الخصم</td><td class="inv-tot-currency">د.ع</td><td class="inv-tot-value">' + formatNum(discount) + '</td></tr>' +
-          '<tr class="highlight"><td class="inv-tot-label">مبلغ الفاتورة بعد الخصم</td><td class="inv-tot-currency">د.ع</td><td class="inv-tot-value">' + formatNum(total) + '</td></tr>' +
+          '<tr><td class="inv-tot-label">المجموع قبل الخصم</td><td class="inv-tot-currency">د.ع</td><td class="inv-tot-value">' + formatNum(subtotal) + '</td></tr>' +
+          '<tr><td class="inv-tot-label">الخصم</td><td class="inv-tot-currency">د.ع</td><td class="inv-tot-value">' + formatNum(discount) + '</td></tr>' +
+          '<tr class="highlight"><td class="inv-tot-label">الإجمالي بعد الخصم</td><td class="inv-tot-currency">د.ع</td><td class="inv-tot-value">' + formatNum(total) + '</td></tr>' +
           '<tr><td class="inv-tot-label">المبلغ الواصل</td><td class="inv-tot-currency">د.ع</td><td class="inv-tot-value">' + formatNum(paid) + '</td></tr>' +
-          '<tr class="highlight"><td class="inv-tot-label">صافي المبلغ</td><td class="inv-tot-currency">د.ع</td><td class="inv-tot-value">' + formatNum(remaining) + '</td></tr>' +
+          '<tr class="highlight"><td class="inv-tot-label">صافي المطلوب</td><td class="inv-tot-currency">د.ع</td><td class="inv-tot-value">' + formatNum(remaining) + '</td></tr>' +
         '</table>' +
+        '<div class="inv-signature-box">' +
+          '<div>سلمت بيد <span class="inv-signature-line"></span></div>' +
+          '<div>توقيع المستلم <span class="inv-signature-line"></span></div>' +
+        '</div>' +
       '</div>' +
-
       '<div class="inv-words">الجملة: ' + numberToArabicWords(total) + ' دينار عراقي</div>' +
-
       '<div class="inv-bottom">' +
-        '<span>' + fullTimestamp + '</span>' +
-        '<span class="inv-bottom-center">' + itemsCount + ' | ' + itemsCount + '</span>' +
-        '<span>الخط اسرع وموزع تلقائي</span>' +
+        '<span>🕐 ' + dateStr + ' — ' + timeStr + '</span>' +
+        '<span class="inv-bottom-center">' + (inv.items || []).length + ' مادة</span>' +
+        '<span>نظام نقاط البيع</span>' +
       '</div>' +
-
     '</div>' +
   '</div>';
 }
@@ -1765,51 +1703,52 @@ function printInvoice() {
   const area = document.getElementById('invoicePrintArea');
   if (!area || !area.innerHTML.trim()) return;
   const html = area.innerHTML;
-  const win = window.open('', '_blank', 'width=600,height=800');
+  const win = window.open('', '_blank', 'width=600,height=900');
   if (!win) return showToast('⚠️ اسمح بالنوافذ', 'warning');
   win.document.write('<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>فاتورة</title>' +
     '<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;800;900&family=Amiri:wght@400;700&family=IBM+Plex+Mono:wght@600;700&display=swap" rel="stylesheet">' +
-    '<style>*{box-sizing:border-box;margin:0;padding:0;}body{font-family:Tajawal,sans-serif;padding:10mm;max-width:210mm;margin:0 auto;direction:rtl;background:#fff;}' +
-    '.invoice-print{font-family:Tajawal,sans-serif;color:#000;background:#fff;direction:rtl;padding:8px;line-height:1.3;position:relative;min-height:600px;font-size:11px;}' +
-    '.inv-watermark{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:22em;font-weight:900;color:#e8e8e8;opacity:0.55;z-index:0;pointer-events:none;user-select:none;font-family:Amiri,serif;line-height:1;letter-spacing:-0.05em;}' +
+    '<style>*{box-sizing:border-box;margin:0;padding:0;}body{font-family:Tajawal,sans-serif;padding:10mm;max-width:520px;margin:0 auto;direction:rtl;background:#fff;}' +
+    '.invoice-print{font-family:Tajawal,sans-serif;color:#000;background:#fff;direction:rtl;padding:12px;line-height:1.5;position:relative;min-height:620px;font-size:14px;}' +
+    '.inv-watermark{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:18em;font-weight:900;color:#eaeaea;opacity:0.5;z-index:0;pointer-events:none;user-select:none;font-family:Amiri,serif;line-height:1;}' +
     '.inv-watermark::after{content:"الدباغ";}' +
     '.inv-content{position:relative;z-index:1;}' +
-    '.inv-head{display:grid;grid-template-columns:1fr 2fr;gap:8px;border:2px solid #000;border-bottom:none;padding:6px 8px;align-items:center;}' +
-    '.inv-logo-box{display:flex;align-items:center;justify-content:center;gap:4px;flex-wrap:wrap;}' +
-    '.inv-logo-red{background:#991B1B;color:#fff;font-size:2.2em;font-weight:900;padding:6px 16px;border-radius:4px;font-family:Amiri,serif;line-height:1;}' +
-    '.inv-logo-products{font-size:2.5em;line-height:1;}' +
-    '.inv-shop-info{text-align:right;}' +
-    '.inv-shop-name{font-size:2em;font-weight:900;color:#991B1B;margin-bottom:2px;font-family:Amiri,serif;line-height:1;}' +
-    '.inv-shop-tagline{font-size:0.85em;color:#333;font-weight:700;margin-bottom:2px;}' +
-    '.inv-contact{background:#FCD34D;border:2px solid #000;padding:4px 10px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;font-size:0.78em;font-weight:800;color:#000;}' +
-    '.inv-contact span{white-space:nowrap;}' +
-    '.inv-customer-table{display:grid;grid-template-columns:repeat(2,1fr);gap:0;border:2px solid #000;border-top:none;border-bottom:none;}' +
-    '.inv-cust-row{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid #000;}' +
+    '.inv-head{display:grid;grid-template-columns:1fr;gap:10px;border:2.5px solid #000;border-bottom:none;padding:10px 12px;text-align:center;}' +
+    '.inv-logo-box{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;}' +
+    '.inv-logo-red{background:#991B1B;color:#fff;font-size:2.2em;font-weight:900;padding:8px 20px;border-radius:6px;font-family:Amiri,serif;line-height:1;}' +
+    '.inv-logo-products{font-size:2.2em;line-height:1;}' +
+    '.inv-shop-info{text-align:center;}' +
+    '.inv-shop-name{font-size:2em;font-weight:900;color:#991B1B;margin-bottom:4px;font-family:Amiri,serif;line-height:1.1;}' +
+    '.inv-shop-tagline{font-size:1em;color:#333;font-weight:700;}' +
+    '.inv-contact{background:#FCD34D;border:2.5px solid #000;padding:8px 12px;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:0.9em;font-weight:800;color:#000;text-align:center;}' +
+    '.inv-contact span{display:block;}' +
+    '.inv-customer-table{display:grid;grid-template-columns:1fr;border:2.5px solid #000;border-top:none;}' +
+    '.inv-cust-row{display:grid;grid-template-columns:1fr 1fr;border-bottom:1.5px solid #000;}' +
     '.inv-cust-row:last-child{border-bottom:none;}' +
-    '.inv-cust-cell{display:flex;align-items:stretch;border-inline-end:1px solid #000;}' +
+    '.inv-cust-cell{display:flex;align-items:stretch;border-inline-end:1.5px solid #000;}' +
     '.inv-cust-cell:last-child{border-inline-end:none;}' +
-    '.inv-cust-label{background:#F8FAFC;padding:4px 8px;font-weight:700;font-size:0.72em;border-inline-end:1px solid #000;display:flex;align-items:center;white-space:nowrap;min-width:70px;}' +
-    '.inv-cust-value{padding:4px 8px;font-weight:800;flex:1;text-align:center;font-family:"IBM Plex Mono",monospace;font-size:0.78em;}' +
-    '.inv-products{width:100%;border-collapse:collapse;font-size:0.78em;border:2px solid #000;}' +
-    '.inv-products th{background:#991B1B;color:#FCD34D;padding:4px 3px;border:1px solid #000;font-weight:800;text-align:center;font-size:0.85em;}' +
-    '.inv-products td{padding:4px 3px;border:1px solid #000;text-align:center;background:#FEFCE8;}' +
+    '.inv-cust-label{background:#F8FAFC;padding:8px 10px;font-weight:700;font-size:0.85em;border-inline-end:1.5px solid #000;display:flex;align-items:center;white-space:nowrap;min-width:80px;}' +
+    '.inv-cust-value{padding:8px 10px;font-weight:800;flex:1;text-align:center;font-family:"IBM Plex Mono",monospace;font-size:0.95em;word-break:break-word;}' +
+    '.inv-products{width:100%;border-collapse:collapse;font-size:0.95em;border:2.5px solid #000;}' +
+    '.inv-products th{background:#991B1B;color:#FCD34D;padding:8px 4px;border:1.5px solid #000;font-weight:800;text-align:center;font-size:0.9em;}' +
+    '.inv-products td{padding:10px 6px;border:1.5px solid #000;text-align:center;background:#FEFCE8;font-size:1em;}' +
     '.inv-products tbody tr:nth-child(even) td{background:#FEF9C3;}' +
-    '.inv-products td.details{text-align:right;font-weight:600;padding-inline-end:6px;}' +
-    '.inv-products td.num{font-family:"IBM Plex Mono",monospace;font-weight:700;}' +
-    '.inv-totals{display:flex;border:2px solid #000;border-top:none;}' +
-    '.inv-totals-spacer{flex:1;border-inline-end:1px solid #000;padding:8px;position:relative;}' +
-    '.inv-signature{position:absolute;bottom:8px;right:12px;font-size:0.72em;font-weight:700;}' +
-    '.inv-signature-line{display:inline-block;border-bottom:1px solid #000;width:80px;margin-inline-start:8px;margin-bottom:2px;}' +
-    '.inv-totals-table{width:50%;border-collapse:collapse;font-size:0.75em;}' +
-    '.inv-totals-table td{border:1px solid #000;padding:4px 8px;font-weight:700;}' +
-    '.inv-totals-table .inv-tot-label{background:#F8FAFC;text-align:right;width:55%;font-size:0.9em;}' +
-    '.inv-totals-table .inv-tot-currency{background:#F8FAFC;text-align:center;width:12%;font-size:0.85em;}' +
-    '.inv-totals-table .inv-tot-value{text-align:center;font-family:"IBM Plex Mono",monospace;font-weight:800;width:33%;font-size:0.9em;}' +
-    '.inv-totals-table tr.highlight .inv-tot-value{background:#FEF9C3;}' +
-    '.inv-words{border:2px solid #000;border-top:none;padding:4px 10px;text-align:center;font-size:0.72em;font-weight:800;background:#FEF9C3;color:#000;}' +
-    '.inv-bottom{margin-top:8px;display:flex;justify-content:space-between;align-items:center;font-size:0.68em;color:#555;padding-top:4px;border-top:1px solid #999;font-family:"IBM Plex Mono",monospace;}' +
+    '.inv-products td.details{text-align:right;font-weight:700;padding-inline-end:8px;line-height:1.4;word-break:break-word;}' +
+    '.inv-products td.details .barcode-small{display:block;font-size:0.75em;color:#666;font-weight:500;margin-top:2px;}' +
+    '.inv-products td.num{font-family:"IBM Plex Mono",monospace;font-weight:700;white-space:nowrap;}' +
+    '.inv-products td.total-col{font-weight:900;background:#FEF3C7 !important;}' +
+    '.inv-totals{display:flex;flex-direction:column;border:2.5px solid #000;border-top:none;}' +
+    '.inv-totals-table{width:100%;border-collapse:collapse;font-size:0.95em;}' +
+    '.inv-totals-table td{border:1.5px solid #000;padding:8px 10px;font-weight:700;}' +
+    '.inv-totals-table .inv-tot-label{background:#F8FAFC;text-align:right;width:50%;font-size:0.9em;}' +
+    '.inv-totals-table .inv-tot-currency{background:#F8FAFC;text-align:center;width:10%;font-size:0.85em;}' +
+    '.inv-totals-table .inv-tot-value{text-align:center;font-family:"IBM Plex Mono",monospace;font-weight:800;width:40%;font-size:1em;}' +
+    '.inv-totals-table tr.highlight .inv-tot-value{background:#FEF9C3;font-size:1.05em;}' +
+    '.inv-signature-box{border-top:2px solid #000;padding:14px 10px;display:flex;justify-content:space-around;align-items:center;font-size:0.85em;font-weight:700;}' +
+    '.inv-signature-line{display:inline-block;border-bottom:1.5px solid #000;width:100px;margin-inline-start:8px;}' +
+    '.inv-words{border:2.5px solid #000;border-top:none;padding:10px 12px;text-align:center;font-size:0.9em;font-weight:800;background:#FEF9C3;color:#000;line-height:1.4;}' +
+    '.inv-bottom{margin-top:10px;display:flex;flex-direction:column;gap:6px;align-items:center;font-size:0.8em;color:#555;padding-top:8px;border-top:1.5px solid #999;font-family:"IBM Plex Mono",monospace;}' +
     '.inv-bottom-center{font-weight:800;color:#000;}' +
-    '@media print{body{padding:4mm;}@page{size:A4;margin:8mm;}}' +
+    '@media print{body{padding:5mm;}@page{size:A5;margin:8mm;}}' +
     '</style></head><body>' + html + '</body></html>');
   win.document.close(); win.focus();
   setTimeout(() => win.print(), 800);
