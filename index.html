@@ -317,75 +317,151 @@
     .inv-search-item:hover { background: var(--stripe-bg); }
     .inv-extra-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
 
-    /* ═══════ الفاتورة — طولية بخط كبير ═══════ */
+    /* الفاتورة — تستخدم متغيرات التصميم */
     .invoice-print {
-      font-family: 'Tajawal', sans-serif;
       color: #000; background: #fff; direction: rtl;
       padding: 12px; line-height: 1.5;
-      position: relative; min-height: 620px;
-      font-size: 14px;
+      position: relative; min-height: 400px;
     }
     .inv-watermark {
       position: absolute; top: 50%; left: 50%;
       transform: translate(-50%, -50%);
-      font-size: 18em; font-weight: 900;
-      color: #eaeaea; opacity: 0.5;
+      font-weight: 900; color: #eaeaea;
       z-index: 0; pointer-events: none; user-select: none;
-      font-family: 'Amiri', serif; line-height: 1;
+      font-family: 'Amiri', serif; line-height: 1; white-space: nowrap;
     }
-    .inv-watermark::after { content: 'الدباغ'; }
     .inv-content { position: relative; z-index: 1; }
-    .inv-head {
-      display: grid; grid-template-columns: 1fr;
-      gap: 10px; border: 2.5px solid #000; border-bottom: none;
-      padding: 10px 12px; text-align: center;
-    }
+    .inv-head { display: grid; grid-template-columns: 1fr; gap: 10px; border: 2.5px solid var(--inv-border, #000); border-bottom: none; padding: 10px 12px; text-align: center; }
     .inv-logo-box { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; }
-    .inv-logo-red { background: #991B1B; color: #fff; font-size: 2.2em; font-weight: 900; padding: 8px 20px; border-radius: 6px; font-family: 'Amiri', serif; line-height: 1; }
+    .inv-logo-red { background: var(--inv-logo-bg, #991B1B); color: #fff; font-size: 2.2em; font-weight: 900; padding: 8px 20px; border-radius: 6px; line-height: 1; }
     .inv-logo-products { font-size: 2.2em; line-height: 1; }
     .inv-shop-info { text-align: center; }
-    .inv-shop-name { font-size: 2em; font-weight: 900; color: #991B1B; margin-bottom: 4px; font-family: 'Amiri', serif; line-height: 1.1; }
+    .inv-shop-name { font-size: 2em; font-weight: 900; color: var(--inv-logo-bg, #991B1B); margin-bottom: 4px; line-height: 1.1; }
     .inv-shop-tagline { font-size: 1em; color: #333; font-weight: 700; }
-    .inv-contact {
-      background: #FCD34D; border: 2.5px solid #000;
-      padding: 8px 12px; display: flex; flex-direction: column;
-      align-items: center; gap: 4px;
-      font-size: 0.9em; font-weight: 800; color: #000; text-align: center;
-    }
+    .inv-contact { background: var(--inv-contact-bg, #FCD34D); color: var(--inv-contact-text, #000); border: 2.5px solid var(--inv-border, #000); padding: 8px 12px; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 0.9em; font-weight: 800; text-align: center; }
     .inv-contact span { display: block; }
-    .inv-customer-table { display: grid; grid-template-columns: 1fr; border: 2.5px solid #000; border-top: none; }
-    .inv-cust-row { display: grid; grid-template-columns: 1fr 1fr; border-bottom: 1.5px solid #000; }
+    .inv-customer-table { display: grid; grid-template-columns: 1fr; border: 2.5px solid var(--inv-border, #000); border-top: none; }
+    .inv-cust-row { display: grid; grid-template-columns: 1fr 1fr; border-bottom: 1.5px solid var(--inv-border, #000); }
     .inv-cust-row:last-child { border-bottom: none; }
-    .inv-cust-cell { display: flex; align-items: stretch; border-inline-end: 1.5px solid #000; }
+    .inv-cust-cell { display: flex; align-items: stretch; border-inline-end: 1.5px solid var(--inv-border, #000); }
     .inv-cust-cell:last-child { border-inline-end: none; }
-    .inv-cust-label { background: #F8FAFC; padding: 8px 10px; font-weight: 700; font-size: 0.85em; border-inline-end: 1.5px solid #000; display: flex; align-items: center; white-space: nowrap; min-width: 80px; }
+    .inv-cust-label { background: #F8FAFC; padding: 8px 10px; font-weight: 700; font-size: 0.85em; border-inline-end: 1.5px solid var(--inv-border, #000); display: flex; align-items: center; white-space: nowrap; min-width: 80px; }
     .inv-cust-value { padding: 8px 10px; font-weight: 800; flex: 1; text-align: center; font-family: 'IBM Plex Mono', monospace; font-size: 0.95em; word-break: break-word; }
-    .inv-products { width: 100%; border-collapse: collapse; font-size: 0.95em; border: 2.5px solid #000; }
-    .inv-products th { background: #991B1B; color: #FCD34D; padding: 8px 4px; border: 1.5px solid #000; font-weight: 800; text-align: center; font-size: 0.9em; }
-    .inv-products td { padding: 10px 6px; border: 1.5px solid #000; text-align: center; background: #FEFCE8; font-size: 1em; }
-    .inv-products tbody tr:nth-child(even) td { background: #FEF9C3; }
+    .inv-products { width: 100%; border-collapse: collapse; font-size: 0.95em; border: 2.5px solid var(--inv-border, #000); }
+    .inv-products th { background: var(--inv-header-bg, #991B1B); color: var(--inv-header-text, #FCD34D); padding: 8px 4px; border: 1.5px solid var(--inv-border, #000); font-weight: 800; text-align: center; font-size: 0.9em; }
+    .inv-products td { padding: 10px 6px; border: 1.5px solid var(--inv-border, #000); text-align: center; background: var(--inv-products-bg, #FEFCE8); font-size: 1em; }
+    .inv-products tbody tr:nth-child(even) td { background: var(--inv-products-alt-bg, #FEF9C3); }
     .inv-products td.details { text-align: right; font-weight: 700; padding-inline-end: 8px; line-height: 1.4; word-break: break-word; }
     .inv-products td.details .barcode-small { display: block; font-size: 0.75em; color: #666; font-weight: 500; margin-top: 2px; }
     .inv-products td.num { font-family: 'IBM Plex Mono', monospace; font-weight: 700; white-space: nowrap; }
-    .inv-products td.total-col { font-weight: 900; background: #FEF3C7 !important; }
-    .inv-totals { display: flex; flex-direction: column; border: 2.5px solid #000; border-top: none; }
+    .inv-products td.total-col { font-weight: 900; background: var(--inv-highlight-bg, #FEF3C7) !important; }
+    .inv-totals { display: flex; flex-direction: column; border: 2.5px solid var(--inv-border, #000); border-top: none; }
     .inv-totals-table { width: 100%; border-collapse: collapse; font-size: 0.95em; }
-    .inv-totals-table td { border: 1.5px solid #000; padding: 8px 10px; font-weight: 700; }
+    .inv-totals-table td { border: 1.5px solid var(--inv-border, #000); padding: 8px 10px; font-weight: 700; }
     .inv-totals-table .inv-tot-label { background: #F8FAFC; text-align: right; width: 50%; font-size: 0.9em; }
     .inv-totals-table .inv-tot-currency { background: #F8FAFC; text-align: center; width: 10%; font-size: 0.85em; }
     .inv-totals-table .inv-tot-value { text-align: center; font-family: 'IBM Plex Mono', monospace; font-weight: 800; width: 40%; font-size: 1em; }
-    .inv-totals-table tr.highlight .inv-tot-value { background: #FEF9C3; font-size: 1.05em; }
-    .inv-signature-box { border-top: 2px solid #000; padding: 14px 10px; display: flex; justify-content: space-around; align-items: center; font-size: 0.85em; font-weight: 700; }
-    .inv-signature-line { display: inline-block; border-bottom: 1.5px solid #000; width: 100px; margin-inline-start: 8px; }
-    .inv-words { border: 2.5px solid #000; border-top: none; padding: 10px 12px; text-align: center; font-size: 0.9em; font-weight: 800; background: #FEF9C3; color: #000; line-height: 1.4; }
+    .inv-totals-table tr.highlight .inv-tot-value { background: var(--inv-highlight-bg, #FEF9C3); font-size: 1.05em; }
+    .inv-signature-box { border-top: 2px solid var(--inv-border, #000); padding: 14px 10px; display: flex; justify-content: space-around; align-items: center; font-size: 0.85em; font-weight: 700; }
+    .inv-signature-line { display: inline-block; border-bottom: 1.5px solid var(--inv-border, #000); width: 100px; margin-inline-start: 8px; }
+    .inv-words { border: 2.5px solid var(--inv-border, #000); border-top: none; padding: 10px 12px; text-align: center; font-size: 0.9em; font-weight: 800; background: var(--inv-highlight-bg, #FEF9C3); color: #000; line-height: 1.4; }
     .inv-bottom { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; align-items: center; font-size: 0.8em; color: #555; padding-top: 8px; border-top: 1.5px solid #999; font-family: 'IBM Plex Mono', monospace; }
     .inv-bottom-center { font-weight: 800; color: #000; }
 
-    @media print {
-      .invoice-print { padding: 6mm; font-size: 12px; }
-      .inv-watermark { font-size: 14em; }
+    /* مصمم الفاتورة */
+    #designerModal { z-index: 9998; }
+    .designer-content {
+      background: var(--card-bg); border-radius: var(--radius);
+      width: 100%; max-width: 1100px; max-height: 95vh;
+      display: flex; flex-direction: column; overflow: hidden;
+      border-top: 4px solid var(--primary);
     }
-
+    .designer-header {
+      background: var(--primary); color: #fff;
+      padding: 16px 20px; display: flex; justify-content: space-between; align-items: center;
+    }
+    .designer-header h3 { margin: 0; color: #fff; font-size: 1.15em; }
+    .designer-header .close-btn {
+      background: none; color: #fff; font-size: 1.4em;
+      cursor: pointer; width: auto; padding: 0 8px;
+    }
+    .designer-body {
+      flex: 1; display: grid; grid-template-columns: 1fr 1fr;
+      overflow: hidden;
+    }
+    .designer-panel {
+      overflow-y: auto; padding: 18px;
+      border-inline-end: 2px solid var(--border-color);
+    }
+    .designer-preview-panel {
+      overflow-y: auto; padding: 14px; background: #888;
+      display: flex; align-items: flex-start; justify-content: center;
+    }
+    .designer-preview-wrap {
+      background: #fff; max-width: 100%;
+      transform-origin: top center;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    }
+    .designer-section { margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px dashed var(--border-color); }
+    .designer-section:last-child { border-bottom: none; }
+    .designer-section h4 {
+      margin: 0 0 12px 0; color: var(--primary); font-size: 0.95em;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .designer-field { display: grid; grid-template-columns: 110px 1fr; gap: 8px; align-items: center; margin-bottom: 8px; }
+    .designer-field label { margin: 0; font-size: 0.82em; font-weight: 700; }
+    .designer-field input, .designer-field select { margin: 0; padding: 6px 10px; font-size: 0.9em; }
+    .designer-field input[type="color"] { padding: 2px; height: 34px; cursor: pointer; }
+    .designer-field input[type="range"] { padding: 0; height: 6px; }
+    .designer-toggle-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 10px; background: var(--stripe-bg);
+      border-radius: 6px; margin-bottom: 6px; cursor: pointer;
+      border: 1px solid var(--border-color);
+    }
+    .designer-toggle-row span { font-size: 0.85em; font-weight: 700; }
+    .designer-toggle-row input { width: auto; margin: 0; cursor: pointer; }
+    .designer-footer {
+      background: var(--card-bg); padding: 12px 18px;
+      border-top: 2px solid var(--border-color);
+      display: flex; gap: 10px; flex-wrap: wrap;
+      justify-content: space-between;
+    }
+    .designer-footer button { width: auto; padding: 10px 18px; }
+    .designer-tabs {
+      display: flex; gap: 4px; margin-bottom: 16px;
+      border-bottom: 2px solid var(--border-color);
+      flex-wrap: wrap;
+    }
+    .designer-tab {
+      padding: 8px 12px; background: var(--stripe-bg);
+      border: 1px solid var(--border-color); border-bottom: none;
+      border-radius: 6px 6px 0 0; cursor: pointer;
+      font-weight: 700; font-size: 0.85em; color: var(--text-muted);
+      width: auto;
+    }
+    .designer-tab.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .designer-pane { display: none; }
+    .designer-pane.active { display: block; }
+    .templates-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 8px; margin-bottom: 12px;
+    }
+    .template-card {
+      padding: 10px 8px; border-radius: 8px; text-align: center;
+      border: 2px solid var(--border-color); cursor: pointer;
+      background: var(--card-bg); color: var(--text-main);
+      font-weight: 700; font-size: 0.8em;
+      transition: all 0.2s;
+    }
+    .template-card:hover { border-color: var(--primary); transform: translateY(-2px); }
+    .template-card .t-emoji { font-size: 1.6em; display: block; margin-bottom: 4px; }
+    .template-card .t-name { font-size: 0.85em; }
+    @media (max-width: 900px) {
+      .designer-body { grid-template-columns: 1fr; }
+      .designer-panel { border-inline-end: none; border-bottom: 2px solid var(--border-color); max-height: 50vh; }
+      .designer-preview-panel { max-height: 40vh; }
+    }
     @media (max-width: 768px) {
       header { padding: 14px 16px; font-size: 17px; }
       .container { padding: 0 12px; margin: 16px auto; }
@@ -548,6 +624,19 @@
         <button onclick="removeLogo()" class="btn-danger" style="width:auto; padding:8px 12px; font-size:0.85em;">🗑️</button>
       </div>
 
+      <h3 style="color:var(--primary); font-size:1em; margin:20px 0 10px;">🎨 تصميم الفاتورة</h3>
+      <div style="background:var(--stripe-bg); padding:14px; border-radius:10px; border:1px solid var(--border-color); margin-bottom:20px;">
+        <p style="margin:0 0 12px; font-size:0.85em; color:var(--text-muted); line-height:1.6;">
+          غيّر شكل الفاتورة بالكامل: النصوص، الألوان، الخطوط، العناصر — كل ذلك مع معاينة فورية.
+        </p>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button onclick="openInvoiceDesigner()" class="btn-price" style="width:auto; padding:10px 20px;">🎨 فتح المصمم</button>
+          <button onclick="exportInvoiceDesign()" class="btn-secondary" style="width:auto; padding:10px 16px;">📤 تصدير JSON</button>
+          <button onclick="triggerImportDesign()" class="btn-secondary" style="width:auto; padding:10px 16px;">📥 استيراد JSON</button>
+          <input type="file" id="designFileInput" accept=".json" style="display:none;" onchange="handleDesignFile(event)" />
+        </div>
+      </div>
+
       <h3 style="color:var(--primary); font-size:1em; margin:20px 0 10px;">🎨 نمط الألوان</h3>
       <div class="theme-grid" id="themeGrid"></div>
 
@@ -662,7 +751,7 @@
 </div>
 
 <div id="invoiceViewModal" class="modal">
-  <div class="modal-content" style="max-width: 520px;">
+  <div class="modal-content" style="max-width: 620px;">
     <div class="modal-header"><h3>🧾 الفاتورة</h3><button class="modal-close" onclick="closeModal('invoiceViewModal')">✕</button></div>
     <div id="invoicePrintArea"></div>
     <div class="modal-actions">
@@ -815,6 +904,144 @@
   </div>
 </div>
 
+<div id="designerModal" class="modal">
+  <div class="designer-content">
+    <div class="designer-header">
+      <h3>🎨 مصمم الفاتورة</h3>
+      <button class="close-btn" onclick="closeInvoiceDesigner()">✕</button>
+    </div>
+    <div class="designer-body">
+      <div class="designer-panel">
+        <div class="designer-tabs">
+          <button class="designer-tab active" onclick="switchDesignerTab('templates', event)">✨ قوالب</button>
+          <button class="designer-tab" onclick="switchDesignerTab('texts', event)">📝 نصوص</button>
+          <button class="designer-tab" onclick="switchDesignerTab('colors', event)">🎨 ألوان</button>
+          <button class="designer-tab" onclick="switchDesignerTab('fonts', event)">🔤 خطوط</button>
+          <button class="designer-tab" onclick="switchDesignerTab('elements', event)">👁️ عناصر</button>
+          <button class="designer-tab" onclick="switchDesignerTab('layout', event)">📏 حجم</button>
+        </div>
+
+        <div class="designer-pane active" id="pane-templates">
+          <div class="designer-section">
+            <h4>✨ اختر قالباً جاهزاً</h4>
+            <div class="templates-grid" id="templatesGrid"></div>
+            <p style="font-size:0.8em; color:var(--text-muted); margin-top:8px;">اختر قالباً كنقطة بداية، ثم خصّصه كيف تشاء من التبويبات الأخرى.</p>
+          </div>
+        </div>
+
+        <div class="designer-pane" id="pane-texts">
+          <div class="designer-section">
+            <h4>📝 نصوص الترويسة</h4>
+            <div class="designer-field"><label>اسم المحل</label><input type="text" id="d_shopName" oninput="applyDesign('shopName', this.value)" /></div>
+            <div class="designer-field"><label>الوصف</label><input type="text" id="d_tagline" oninput="applyDesign('tagline', this.value)" /></div>
+            <div class="designer-field"><label>الهاتف</label><input type="text" id="d_phone" oninput="applyDesign('phone', this.value)" /></div>
+            <div class="designer-field"><label>العنوان</label><input type="text" id="d_address" oninput="applyDesign('address', this.value)" /></div>
+            <div class="designer-field"><label>التذييل</label><input type="text" id="d_footer" oninput="applyDesign('footer', this.value)" /></div>
+          </div>
+        </div>
+
+        <div class="designer-pane" id="pane-colors">
+          <div class="designer-section">
+            <h4>🎨 ألوان</h4>
+            <div class="designer-field"><label>رأس الجدول</label><input type="color" id="d_headerBg" onchange="applyDesign('headerBg', this.value)" /></div>
+            <div class="designer-field"><label>نص الرأس</label><input type="color" id="d_headerText" onchange="applyDesign('headerText', this.value)" /></div>
+            <div class="designer-field"><label>شريط الاتصال</label><input type="color" id="d_contactBg" onchange="applyDesign('contactBg', this.value)" /></div>
+            <div class="designer-field"><label>نص الاتصال</label><input type="color" id="d_contactText" onchange="applyDesign('contactText', this.value)" /></div>
+            <div class="designer-field"><label>خلفية المنتجات</label><input type="color" id="d_productsBg" onchange="applyDesign('productsBg', this.value)" /></div>
+            <div class="designer-field"><label>الصفوف المتبادلة</label><input type="color" id="d_productsAltBg" onchange="applyDesign('productsAltBg', this.value)" /></div>
+            <div class="designer-field"><label>الإجماليات المميزة</label><input type="color" id="d_highlightBg" onchange="applyDesign('highlightBg', this.value)" /></div>
+            <div class="designer-field"><label>الحدود</label><input type="color" id="d_borderColor" onchange="applyDesign('borderColor', this.value)" /></div>
+            <div class="designer-field"><label>اللوجو الأحمر</label><input type="color" id="d_logoBg" onchange="applyDesign('logoBg', this.value)" /></div>
+            <div class="designer-field"><label>نص اللوجو</label><input type="color" id="d_logoText" onchange="applyDesign('logoText', this.value)" /></div>
+          </div>
+        </div>
+
+        <div class="designer-pane" id="pane-fonts">
+          <div class="designer-section">
+            <h4>🔤 الخطوط</h4>
+            <div class="designer-field">
+              <label>الخط العام</label>
+              <select id="d_fontFamily" onchange="applyDesign('fontFamily', this.value)">
+                <option value="Tajawal">تجوال</option>
+                <option value="Cairo">كايرو</option>
+                <option value="Almarai">المراعي</option>
+                <option value="Noto Kufi Arabic">كوفي</option>
+                <option value="Amiri">أميري</option>
+                <option value="Readex Pro">ريدكس</option>
+                <option value="IBM Plex Sans Arabic">IBM بليكس</option>
+              </select>
+            </div>
+            <div class="designer-field">
+              <label>خط العنوان</label>
+              <select id="d_titleFont" onchange="applyDesign('titleFont', this.value)">
+                <option value="Amiri">أميري</option>
+                <option value="Tajawal">تجوال</option>
+                <option value="Cairo">كايرو</option>
+                <option value="Almarai">المراعي</option>
+                <option value="El Messiri">المسيري</option>
+                <option value="Cairo Play">كايرو بلاي</option>
+              </select>
+            </div>
+            <div class="designer-field">
+              <label>حجم الخط (px)</label>
+              <input type="number" id="d_fontSize" min="10" max="20" onchange="applyDesign('fontSize', Number(this.value))" />
+            </div>
+          </div>
+        </div>
+
+        <div class="designer-pane" id="pane-elements">
+          <div class="designer-section">
+            <h4>👁️ العناصر الظاهرة</h4>
+            <label class="designer-toggle-row"><span>🖼️ الشعار</span><input type="checkbox" id="d_showLogo" onchange="applyDesign('showLogo', this.checked)" /></label>
+            <label class="designer-toggle-row"><span>💧 العلامة المائية</span><input type="checkbox" id="d_showWatermark" onchange="applyDesign('showWatermark', this.checked)" /></label>
+            <label class="designer-toggle-row"><span>🏷️ الباركود</span><input type="checkbox" id="d_showBarcode" onchange="applyDesign('showBarcode', this.checked)" /></label>
+            <label class="designer-toggle-row"><span>✍️ التوقيعات</span><input type="checkbox" id="d_showSignatures" onchange="applyDesign('showSignatures', this.checked)" /></label>
+            <label class="designer-toggle-row"><span>💬 المبلغ بالحروف</span><input type="checkbox" id="d_showWords" onchange="applyDesign('showWords', this.checked)" /></label>
+            <label class="designer-toggle-row"><span>⏰ التذييل (وقت + عدد)</span><input type="checkbox" id="d_showTimestamp" onchange="applyDesign('showTimestamp', this.checked)" /></label>
+            <label class="designer-toggle-row"><span>🆔 رقم حساب الزبون</span><input type="checkbox" id="d_showCustomerAccount" onchange="applyDesign('showCustomerAccount', this.checked)" /></label>
+            <label class="designer-toggle-row"><span>💰 سطر "قبل الخصم"</span><input type="checkbox" id="d_showSubtotal" onchange="applyDesign('showSubtotal', this.checked)" /></label>
+            <label class="designer-toggle-row"><span>🏷️ سطر "الخصم"</span><input type="checkbox" id="d_showDiscount" onchange="applyDesign('showDiscount', this.checked)" /></label>
+            <label class="designer-toggle-row"><span>💵 سطر "الواصل"</span><input type="checkbox" id="d_showPaid" onchange="applyDesign('showPaid', this.checked)" /></label>
+          </div>
+          <div class="designer-section">
+            <h4>💧 العلامة المائية</h4>
+            <div class="designer-field"><label>النص</label><input type="text" id="d_watermarkText" oninput="applyDesign('watermarkText', this.value)" /></div>
+            <div class="designer-field"><label>الشفافية</label><input type="range" id="d_watermarkOpacity" min="0.05" max="1" step="0.05" oninput="applyDesign('watermarkOpacity', Number(this.value))" /></div>
+            <div class="designer-field"><label>الحجم (em)</label><input type="range" id="d_watermarkSize" min="8" max="30" step="1" oninput="applyDesign('watermarkSize', Number(this.value))" /></div>
+          </div>
+        </div>
+
+        <div class="designer-pane" id="pane-layout">
+          <div class="designer-section">
+            <h4>📏 الحجم</h4>
+            <div class="designer-field"><label>عرض الفاتورة (px)</label><input type="number" id="d_width" min="400" max="800" step="20" onchange="applyDesign('width', Number(this.value))" /></div>
+            <div class="designer-field">
+              <label>حجم الورق</label>
+              <select id="d_paperSize" onchange="applyDesign('paperSize', this.value)">
+                <option value="A4">A4</option>
+                <option value="A5">A5</option>
+                <option value="A6">A6</option>
+                <option value="80mm">حراري 80mm</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="designer-preview-panel">
+        <div class="designer-preview-wrap" id="designerPreview"></div>
+      </div>
+    </div>
+    <div class="designer-footer">
+      <button class="btn-secondary" onclick="resetInvoiceDesign()">🔄 استعادة الافتراضي</button>
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn-secondary" onclick="closeInvoiceDesigner()">إغلاق</button>
+        <button class="btn-success" onclick="saveDesignAndClose()">💾 حفظ وإغلاق</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 const DEFAULTS = { THEME: 'light', COLOR: 'blue', FONT: 'Tajawal', FONT_SIZE: '15.5px', STYLE: 'classic', LOW_STOCK: 5 };
 
@@ -853,6 +1080,101 @@ const STYLE_OPTIONS = [
   { value: 'modern', name: 'حديث', icon: '✨', desc: 'حواف ناعمة' },
   { value: 'flat', name: 'مسطح', icon: '⬜', desc: 'بدون ظلال' }
 ];
+
+/* ═══════ قوالب الفاتورة ═══════ */
+const INVOICE_TEMPLATES = {
+  iraqiRed: {
+    name: 'عراقي أحمر',
+    emoji: '🔴',
+    config: {
+      headerBg: '#991B1B', headerText: '#FCD34D', contactBg: '#FCD34D', contactText: '#000000',
+      productsBg: '#FEFCE8', productsAltBg: '#FEF9C3', highlightBg: '#FEF3C7',
+      borderColor: '#000000', logoBg: '#991B1B', logoText: '#FFFFFF',
+      fontFamily: 'Tajawal', titleFont: 'Amiri', fontSize: 14, width: 520
+    }
+  },
+  blueModern: {
+    name: 'أزرق حديث',
+    emoji: '🔵',
+    config: {
+      headerBg: '#1E40AF', headerText: '#FFFFFF', contactBg: '#DBEAFE', contactText: '#1E3A8A',
+      productsBg: '#FFFFFF', productsAltBg: '#EFF6FF', highlightBg: '#DBEAFE',
+      borderColor: '#1E40AF', logoBg: '#1E40AF', logoText: '#FFFFFF',
+      fontFamily: 'Cairo', titleFont: 'Cairo', fontSize: 14, width: 520
+    }
+  },
+  greenNatural: {
+    name: 'أخضر طبيعي',
+    emoji: '🌿',
+    config: {
+      headerBg: '#065F46', headerText: '#FFFFFF', contactBg: '#D1FAE5', contactText: '#065F46',
+      productsBg: '#F0FDF4', productsAltBg: '#DCFCE7', highlightBg: '#BBF7D0',
+      borderColor: '#065F46', logoBg: '#065F46', logoText: '#FFFFFF',
+      fontFamily: 'Almarai', titleFont: 'Almarai', fontSize: 14, width: 520
+    }
+  },
+  purpleElegant: {
+    name: 'بنفسجي أنيق',
+    emoji: '🟣',
+    config: {
+      headerBg: '#6B21A8', headerText: '#FFFFFF', contactBg: '#E9D5FF', contactText: '#581C87',
+      productsBg: '#FAF5FF', productsAltBg: '#F3E8FF', highlightBg: '#E9D5FF',
+      borderColor: '#6B21A8', logoBg: '#6B21A8', logoText: '#FFFFFF',
+      fontFamily: 'Tajawal', titleFont: 'El Messiri', fontSize: 14, width: 520
+    }
+  },
+  goldLuxury: {
+    name: 'ذهبي فخم',
+    emoji: '⭐',
+    config: {
+      headerBg: '#78350F', headerText: '#FCD34D', contactBg: '#FEF3C7', contactText: '#78350F',
+      productsBg: '#FFFBEB', productsAltBg: '#FEF3C7', highlightBg: '#FDE68A',
+      borderColor: '#78350F', logoBg: '#78350F', logoText: '#FCD34D',
+      fontFamily: 'Amiri', titleFont: 'Amiri', fontSize: 15, width: 520
+    }
+  },
+  monochrome: {
+    name: 'أبيض وأسود',
+    emoji: '⚫',
+    config: {
+      headerBg: '#000000', headerText: '#FFFFFF', contactBg: '#F5F5F5', contactText: '#000000',
+      productsBg: '#FFFFFF', productsAltBg: '#F5F5F5', highlightBg: '#E5E5E5',
+      borderColor: '#000000', logoBg: '#000000', logoText: '#FFFFFF',
+      fontFamily: 'Tajawal', titleFont: 'Cairo', fontSize: 13, width: 450
+    }
+  },
+  thermal80: {
+    name: 'حراري 80mm',
+    emoji: '🧾',
+    config: {
+      headerBg: '#333333', headerText: '#FFFFFF', contactBg: '#E5E5E5', contactText: '#000000',
+      productsBg: '#FFFFFF', productsAltBg: '#F5F5F5', highlightBg: '#E5E5E5',
+      borderColor: '#000000', logoBg: '#000000', logoText: '#FFFFFF',
+      fontFamily: 'Tajawal', titleFont: 'Tajawal', fontSize: 11, width: 400,
+      paperSize: '80mm', showWatermark: false, showBarcode: false
+    }
+  },
+  deepNavy: {
+    name: 'كحلي عميق',
+    emoji: '⚓',
+    config: {
+      headerBg: '#0C4A6E', headerText: '#FFFFFF', contactBg: '#E0F2FE', contactText: '#0C4A6E',
+      productsBg: '#F0F9FF', productsAltBg: '#E0F2FE', highlightBg: '#BAE6FD',
+      borderColor: '#0C4A6E', logoBg: '#0C4A6E', logoText: '#FFFFFF',
+      fontFamily: 'IBM Plex Sans Arabic', titleFont: 'Cairo', fontSize: 14, width: 520
+    }
+  },
+  roseSoft: {
+    name: 'وردي ناعم',
+    emoji: '🌸',
+    config: {
+      headerBg: '#9F1239', headerText: '#FFFFFF', contactBg: '#FFE4E6', contactText: '#9F1239',
+      productsBg: '#FFF1F2', productsAltBg: '#FFE4E6', highlightBg: '#FECDD3',
+      borderColor: '#9F1239', logoBg: '#9F1239', logoText: '#FFFFFF',
+      fontFamily: 'El Messiri', titleFont: 'El Messiri', fontSize: 14, width: 520
+    }
+  }
+};
 
 let db = null, auth = null;
 let currentData = { prices: {} };
@@ -963,6 +1285,161 @@ function updateLogoPreview() {
   if (img) { if (logo) { img.src = logo; img.style.display = 'block'; } else { img.src = ''; img.style.display = 'none'; } }
 }
 
+/* ═══════ مصمم الفاتورة ═══════ */
+const INVOICE_DESIGN_DEFAULTS = {
+  shopName: 'محلات الدباغ',
+  tagline: 'لتجارة المواد الغذائية',
+  phone: '07511504085 - 07706149990',
+  address: 'الموصل - الزهور - قرب مركز شرطة الزهور',
+  footer: 'شكراً لتسوقكم من محلات الدباغ',
+  headerBg: '#991B1B', headerText: '#FCD34D', contactBg: '#FCD34D', contactText: '#000000',
+  productsBg: '#FEFCE8', productsAltBg: '#FEF9C3', highlightBg: '#FEF9C3',
+  borderColor: '#000000', logoBg: '#991B1B', logoText: '#FFFFFF',
+  fontFamily: 'Tajawal', titleFont: 'Amiri', fontSize: 14,
+  watermarkText: 'الدباغ', watermarkOpacity: 0.5, watermarkSize: 18,
+  width: 520, paperSize: 'A5',
+  showLogo: true, showWatermark: true, showBarcode: true, showSignatures: true,
+  showWords: true, showTimestamp: true, showCustomerAccount: true,
+  showSubtotal: true, showDiscount: true, showPaid: true
+};
+
+function getInvoiceDesign() {
+  try {
+    const stored = localStorage.getItem('invoice_design');
+    if (stored) return Object.assign({}, INVOICE_DESIGN_DEFAULTS, JSON.parse(stored));
+  } catch (e) {}
+  return Object.assign({}, INVOICE_DESIGN_DEFAULTS);
+}
+
+function saveInvoiceDesign(design) {
+  localStorage.setItem('invoice_design', JSON.stringify(design));
+}
+
+function buildTemplatesGrid() {
+  const grid = document.getElementById('templatesGrid'); if (!grid) return;
+  grid.innerHTML = Object.entries(INVOICE_TEMPLATES).map(([key, t]) =>
+    '<div class="template-card" onclick="applyTemplate(\'' + key + '\')">' +
+      '<div class="t-emoji">' + t.emoji + '</div>' +
+      '<div class="t-name">' + t.name + '</div>' +
+    '</div>'
+  ).join('');
+}
+
+function applyTemplate(key) {
+  const t = INVOICE_TEMPLATES[key];
+  if (!t) return;
+  const d = getInvoiceDesign();
+  Object.assign(d, t.config);
+  saveInvoiceDesign(d);
+  populateDesignForm(d);
+  updateDesignerPreview();
+  showToast('✨ تم تطبيق قالب: ' + t.name, 'success');
+}
+
+function openInvoiceDesigner() {
+  if (!isAdmin) return showToast('يجب تسجيل الدخول', 'warning');
+  buildTemplatesGrid();
+  const d = getInvoiceDesign();
+  populateDesignForm(d);
+  updateDesignerPreview();
+  switchDesignerTab('templates', { target: document.querySelectorAll('.designer-tab')[0] });
+  openModal('designerModal');
+}
+
+function populateDesignForm(d) {
+  Object.keys(d).forEach(k => {
+    const el = document.getElementById('d_' + k);
+    if (!el) return;
+    if (el.type === 'checkbox') el.checked = !!d[k];
+    else el.value = d[k];
+  });
+}
+
+function closeInvoiceDesigner() { closeModal('designerModal'); }
+function saveDesignAndClose() { showToast('✅ تم حفظ تصميم الفاتورة', 'success'); closeInvoiceDesigner(); }
+
+function switchDesignerTab(name, e) {
+  document.querySelectorAll('.designer-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.designer-pane').forEach(p => p.classList.remove('active'));
+  if (e && e.target) e.target.classList.add('active');
+  else {
+    const tabs = document.querySelectorAll('.designer-tab');
+    tabs.forEach(t => { if (t.textContent.trim().length > 0 && t.getAttribute('onclick') && t.getAttribute('onclick').includes("'" + name + "'")) t.classList.add('active'); });
+  }
+  const pane = document.getElementById('pane-' + name);
+  if (pane) pane.classList.add('active');
+}
+
+function applyDesign(key, value) {
+  const d = getInvoiceDesign();
+  d[key] = value;
+  saveInvoiceDesign(d);
+  updateDesignerPreview();
+}
+
+function resetInvoiceDesign() {
+  showConfirm('استعادة الافتراضي', 'هل تريد استعادة تصميم الفاتورة الافتراضي؟', () => {
+    saveInvoiceDesign(Object.assign({}, INVOICE_DESIGN_DEFAULTS));
+    populateDesignForm(getInvoiceDesign());
+    updateDesignerPreview();
+    showToast('🔄 تم الاستعادة', 'success');
+  });
+}
+
+function exportInvoiceDesign() {
+  const d = getInvoiceDesign();
+  const json = JSON.stringify(d, null, 2);
+  const blob = new Blob([json], { type: 'application/json;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'invoice_design_' + new Date().toISOString().slice(0, 10) + '.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+  showToast('📤 تم تصدير التصميم', 'success');
+}
+
+function triggerImportDesign() {
+  if (!isAdmin) return showToast('يجب تسجيل الدخول', 'warning');
+  document.getElementById('designFileInput').click();
+}
+
+async function handleDesignFile(event) {
+  const f = event.target.files[0]; if (!f) return;
+  event.target.value = '';
+  try {
+    const text = await f.text();
+    const imported = JSON.parse(text);
+    if (typeof imported !== 'object' || imported === null) throw new Error('ملف غير صالح');
+    const merged = Object.assign({}, INVOICE_DESIGN_DEFAULTS, imported);
+    saveInvoiceDesign(merged);
+    populateDesignForm(merged);
+    updateDesignerPreview();
+    showToast('📥 تم استيراد التصميم', 'success');
+  } catch (err) {
+    showToast('❌ ' + err.message, 'error');
+  }
+}
+
+function updateDesignerPreview() {
+  const el = document.getElementById('designerPreview');
+  if (!el) return;
+  const d = getInvoiceDesign();
+  const sample = {
+    invoiceNumber: 'INV-20251110-0001',
+    items: [
+      { name: 'عصير برتقال', code: '8691234567890', price: 1500, qty: 2, unit: 'packet', priceMode: 'retail' },
+      { name: 'شاي ليبتون', code: '8691234567891', price: 3000, qty: 1, unit: 'carton', priceMode: 'wholesale' }
+    ],
+    subtotal: 6000, discount: 500, total: 5500, paid: 5500,
+    customerName: 'أحمد محمد', customerPhone: '07701234567', customerAccount: 'C-001',
+    createdAt: Date.now()
+  };
+  el.style.width = (d.width * 0.62) + 'px';
+  el.innerHTML = renderInvoiceHTML(sample);
+}
+
+/* ═══════ Admin ═══════ */
 function handleAdminClick() {
   if (isAdmin) { logoutAdmin(); return; }
   document.getElementById('loginEmail').value = '';
@@ -1615,12 +2092,17 @@ function numberToArabicWords(num) {
 }
 
 function renderInvoiceHTML(inv) {
+  const d = getInvoiceDesign();
+  const logo = localStorage.getItem('shop_logo');
+
   const itemsRows = (inv.items || []).map((item, i) => {
     const unitLabel = item.unit === 'carton' ? ' 📦' : ' 🛍️';
-    const modeLabel = item.priceMode === 'wholesale' ? ' <span style="color:#7C3AED;font-size:0.85em;">(جملة)</span>' : '';
+    const modeLabel = item.priceMode === 'wholesale' ? ' <span style="font-size:0.85em;opacity:0.75;">(جملة)</span>' : '';
     return '<tr>' +
       '<td class="num">' + (i + 1) + '</td>' +
-      '<td class="details">' + escapeHtml(item.name) + modeLabel + unitLabel + (item.code ? '<span class="barcode-small">🏷️ ' + escapeHtml(item.code) + '</span>' : '') + '</td>' +
+      '<td class="details">' + escapeHtml(item.name) + modeLabel + unitLabel +
+        (d.showBarcode && item.code ? '<span class="barcode-small">🏷️ ' + escapeHtml(item.code) + '</span>' : '') +
+      '</td>' +
       '<td class="num">' + item.qty + ' × ' + formatNum(item.price) + '</td>' +
       '<td class="num total-col">' + formatNum((item.price || 0) * (item.qty || 0)) + '</td>' +
     '</tr>';
@@ -1635,25 +2117,46 @@ function renderInvoiceHTML(inv) {
   const dateObj = inv.createdAt ? new Date(inv.createdAt) : new Date();
   const dateStr = String(dateObj.getDate()).padStart(2, '0') + '/' + String(dateObj.getMonth() + 1).padStart(2, '0') + '/' + dateObj.getFullYear();
   const timeStr = dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-
   const invoiceNum = inv.invoiceNumber || '—';
-  const logo = localStorage.getItem('shop_logo');
+  const itemsCount = (inv.items || []).length;
 
-  return '<div class="invoice-print">' +
-    '<div class="inv-watermark"></div>' +
+  const invStyles = 'font-family: \'' + d.fontFamily + '\', sans-serif; font-size: ' + d.fontSize + 'px; ' +
+    '--inv-header-bg: ' + d.headerBg + '; ' +
+    '--inv-header-text: ' + d.headerText + '; ' +
+    '--inv-contact-bg: ' + d.contactBg + '; ' +
+    '--inv-contact-text: ' + d.contactText + '; ' +
+    '--inv-products-bg: ' + d.productsBg + '; ' +
+    '--inv-products-alt-bg: ' + d.productsAltBg + '; ' +
+    '--inv-highlight-bg: ' + d.highlightBg + '; ' +
+    '--inv-border: ' + d.borderColor + '; ' +
+    '--inv-logo-bg: ' + d.logoBg + ';';
+
+  let summaryRows = '';
+  summaryRows += '<tr><td class="inv-tot-label">الحساب السابق</td><td class="inv-tot-currency">د.ع</td><td class="inv-tot-value">0</td></tr>';
+  if (d.showSubtotal) summaryRows += '<tr><td class="inv-tot-label">المجموع قبل الخصم</td><td class="inv-tot-currency">د.ع</td><td class="inv-tot-value">' + formatNum(subtotal) + '</td></tr>';
+  if (d.showDiscount) summaryRows += '<tr><td class="inv-tot-label">الخصم</td><td class="inv-tot-currency">د.ع</td><td class="inv-tot-value">' + formatNum(discount) + '</td></tr>';
+  summaryRows += '<tr class="highlight"><td class="inv-tot-label">الإجمالي بعد الخصم</td><td class="inv-tot-currency">د.ع</td><td class="inv-tot-value">' + formatNum(total) + '</td></tr>';
+  if (d.showPaid) summaryRows += '<tr><td class="inv-tot-label">المبلغ الواصل</td><td class="inv-tot-currency">د.ع</td><td class="inv-tot-value">' + formatNum(paid) + '</td></tr>';
+  summaryRows += '<tr class="highlight"><td class="inv-tot-label">صافي المطلوب</td><td class="inv-tot-currency">د.ع</td><td class="inv-tot-value">' + formatNum(remaining) + '</td></tr>';
+
+  return '<div class="invoice-print" style="' + invStyles + '">' +
+    (d.showWatermark ? '<div class="inv-watermark" style="font-size:' + d.watermarkSize + 'em;opacity:' + d.watermarkOpacity + ';">' + escapeHtml(d.watermarkText) + '</div>' : '') +
     '<div class="inv-content">' +
       '<div class="inv-head">' +
         '<div class="inv-logo-box">' +
-          (logo ? '<img src="' + logo + '" alt="logo" style="max-width:100px;max-height:80px;object-fit:contain;" />' : '<div class="inv-logo-red">الدباغ</div><div class="inv-logo-products">🧴🛒</div>') +
+          (d.showLogo && logo
+            ? '<img src="' + logo + '" alt="logo" style="max-width:100px;max-height:80px;object-fit:contain;" />'
+            : '<div class="inv-logo-red" style="background:' + d.logoBg + ';color:' + d.logoText + ';font-family:\'' + d.titleFont + '\', serif;">' + escapeHtml(d.shopName.split(' ').pop() || 'شعار') + '</div>'
+          ) +
         '</div>' +
         '<div class="inv-shop-info">' +
-          '<div class="inv-shop-name">محلات الدباغ</div>' +
-          '<div class="inv-shop-tagline">لتجارة المواد الغذائية</div>' +
+          '<div class="inv-shop-name" style="font-family:\'' + d.titleFont + '\', serif;">' + escapeHtml(d.shopName) + '</div>' +
+          '<div class="inv-shop-tagline">' + escapeHtml(d.tagline) + '</div>' +
         '</div>' +
       '</div>' +
       '<div class="inv-contact">' +
-        '<span>📞 07511504085 - 07706149990</span>' +
-        '<span>📍 الموصل - الزهور</span>' +
+        '<span>📞 ' + escapeHtml(d.phone) + '</span>' +
+        '<span>📍 ' + escapeHtml(d.address) + '</span>' +
       '</div>' +
       '<div class="inv-customer-table">' +
         '<div class="inv-cust-row">' +
@@ -1664,7 +2167,9 @@ function renderInvoiceHTML(inv) {
           '<div class="inv-cust-cell"><span class="inv-cust-label">الزبون</span><span class="inv-cust-value">' + escapeHtml(inv.customerName || '—') + '</span></div>' +
           '<div class="inv-cust-cell"><span class="inv-cust-label">الهاتف</span><span class="inv-cust-value">' + escapeHtml(inv.customerPhone || '—') + '</span></div>' +
         '</div>' +
-        (inv.customerAccount ? '<div class="inv-cust-row"><div class="inv-cust-cell" style="grid-column: span 2;"><span class="inv-cust-label">رقم الحساب</span><span class="inv-cust-value">' + escapeHtml(inv.customerAccount) + '</span></div></div>' : '') +
+        (d.showCustomerAccount && inv.customerAccount
+          ? '<div class="inv-cust-row"><div class="inv-cust-cell" style="grid-column: span 2;"><span class="inv-cust-label">رقم الحساب</span><span class="inv-cust-value">' + escapeHtml(inv.customerAccount) + '</span></div></div>'
+          : '') +
       '</div>' +
       '<table class="inv-products">' +
         '<thead><tr>' +
@@ -1676,24 +2181,22 @@ function renderInvoiceHTML(inv) {
         '<tbody>' + itemsRows + '</tbody>' +
       '</table>' +
       '<div class="inv-totals">' +
-        '<table class="inv-totals-table">' +
-          '<tr><td class="inv-tot-label">المجموع قبل الخصم</td><td class="inv-tot-currency">د.ع</td><td class="inv-tot-value">' + formatNum(subtotal) + '</td></tr>' +
-          '<tr><td class="inv-tot-label">الخصم</td><td class="inv-tot-currency">د.ع</td><td class="inv-tot-value">' + formatNum(discount) + '</td></tr>' +
-          '<tr class="highlight"><td class="inv-tot-label">الإجمالي بعد الخصم</td><td class="inv-tot-currency">د.ع</td><td class="inv-tot-value">' + formatNum(total) + '</td></tr>' +
-          '<tr><td class="inv-tot-label">المبلغ الواصل</td><td class="inv-tot-currency">د.ع</td><td class="inv-tot-value">' + formatNum(paid) + '</td></tr>' +
-          '<tr class="highlight"><td class="inv-tot-label">صافي المطلوب</td><td class="inv-tot-currency">د.ع</td><td class="inv-tot-value">' + formatNum(remaining) + '</td></tr>' +
-        '</table>' +
-        '<div class="inv-signature-box">' +
-          '<div>سلمت بيد <span class="inv-signature-line"></span></div>' +
-          '<div>توقيع المستلم <span class="inv-signature-line"></span></div>' +
-        '</div>' +
+        '<table class="inv-totals-table">' + summaryRows + '</table>' +
+        (d.showSignatures
+          ? '<div class="inv-signature-box">' +
+              '<div>سلمت بيد <span class="inv-signature-line"></span></div>' +
+              '<div>توقيع المستلم <span class="inv-signature-line"></span></div>' +
+            '</div>'
+          : '') +
       '</div>' +
-      '<div class="inv-words">الجملة: ' + numberToArabicWords(total) + ' دينار عراقي</div>' +
-      '<div class="inv-bottom">' +
-        '<span>🕐 ' + dateStr + ' — ' + timeStr + '</span>' +
-        '<span class="inv-bottom-center">' + (inv.items || []).length + ' مادة</span>' +
-        '<span>نظام نقاط البيع</span>' +
-      '</div>' +
+      (d.showWords ? '<div class="inv-words">الجملة: ' + numberToArabicWords(total) + ' دينار عراقي</div>' : '') +
+      (d.showTimestamp
+        ? '<div class="inv-bottom">' +
+            '<span>🕐 ' + dateStr + ' — ' + timeStr + '</span>' +
+            '<span class="inv-bottom-center">' + itemsCount + ' مادة</span>' +
+            '<span>' + escapeHtml(d.footer) + '</span>' +
+          '</div>'
+        : '<div style="text-align:center; font-size:0.8em; margin-top:8px; font-weight:700;">' + escapeHtml(d.footer) + '</div>') +
     '</div>' +
   '</div>';
 }
@@ -1702,57 +2205,62 @@ function viewInvoice(id) { const inv = invoices[id]; if (!inv) return; document.
 function printInvoice() {
   const area = document.getElementById('invoicePrintArea');
   if (!area || !area.innerHTML.trim()) return;
+  const d = getInvoiceDesign();
   const html = area.innerHTML;
   const win = window.open('', '_blank', 'width=600,height=900');
   if (!win) return showToast('⚠️ اسمح بالنوافذ', 'warning');
+  const pageSize = d.paperSize === '80mm' ? '80mm auto' : d.paperSize;
   win.document.write('<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>فاتورة</title>' +
-    '<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;800;900&family=Amiri:wght@400;700&family=IBM+Plex+Mono:wght@600;700&display=swap" rel="stylesheet">' +
-    '<style>*{box-sizing:border-box;margin:0;padding:0;}body{font-family:Tajawal,sans-serif;padding:10mm;max-width:520px;margin:0 auto;direction:rtl;background:#fff;}' +
-    '.invoice-print{font-family:Tajawal,sans-serif;color:#000;background:#fff;direction:rtl;padding:12px;line-height:1.5;position:relative;min-height:620px;font-size:14px;}' +
-    '.inv-watermark{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:18em;font-weight:900;color:#eaeaea;opacity:0.5;z-index:0;pointer-events:none;user-select:none;font-family:Amiri,serif;line-height:1;}' +
-    '.inv-watermark::after{content:"الدباغ";}' +
+    '<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;800;900&family=Cairo:wght@400;700;900&family=Almarai:wght@400;700;800&family=Amiri:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@400;600;700&family=El+Messiri:wght@400;600;700&family=Noto+Kufi+Arabic:wght@400;700&family=Readex+Pro:wght@400;600;700&family=Cairo+Play:wght@400;700;900&family=IBM+Plex+Mono:wght@600;700&display=swap" rel="stylesheet">' +
+    '<style>*{box-sizing:border-box;margin:0;padding:0;}body{padding:10mm;max-width:' + d.width + 'px;margin:0 auto;direction:rtl;background:#fff;font-family:\'' + d.fontFamily + '\',sans-serif;}' +
+    '.invoice-print{color:#000;background:#fff;direction:rtl;padding:12px;line-height:1.5;position:relative;min-height:400px;font-size:' + d.fontSize + 'px;' + invStylesForPrint(d) + '}' +
+    '.inv-watermark{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-weight:900;color:#eaeaea;z-index:0;pointer-events:none;user-select:none;font-family:Amiri,serif;line-height:1;white-space:nowrap;}' +
     '.inv-content{position:relative;z-index:1;}' +
-    '.inv-head{display:grid;grid-template-columns:1fr;gap:10px;border:2.5px solid #000;border-bottom:none;padding:10px 12px;text-align:center;}' +
+    '.inv-head{display:grid;grid-template-columns:1fr;gap:10px;border:2.5px solid var(--inv-border);border-bottom:none;padding:10px 12px;text-align:center;}' +
     '.inv-logo-box{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;}' +
-    '.inv-logo-red{background:#991B1B;color:#fff;font-size:2.2em;font-weight:900;padding:8px 20px;border-radius:6px;font-family:Amiri,serif;line-height:1;}' +
-    '.inv-logo-products{font-size:2.2em;line-height:1;}' +
+    '.inv-logo-red{font-size:2.2em;font-weight:900;padding:8px 20px;border-radius:6px;line-height:1;}' +
     '.inv-shop-info{text-align:center;}' +
-    '.inv-shop-name{font-size:2em;font-weight:900;color:#991B1B;margin-bottom:4px;font-family:Amiri,serif;line-height:1.1;}' +
+    '.inv-shop-name{font-size:2em;font-weight:900;margin-bottom:4px;line-height:1.1;}' +
     '.inv-shop-tagline{font-size:1em;color:#333;font-weight:700;}' +
-    '.inv-contact{background:#FCD34D;border:2.5px solid #000;padding:8px 12px;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:0.9em;font-weight:800;color:#000;text-align:center;}' +
+    '.inv-contact{background:var(--inv-contact-bg);color:var(--inv-contact-text);border:2.5px solid var(--inv-border);padding:8px 12px;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:0.9em;font-weight:800;text-align:center;}' +
     '.inv-contact span{display:block;}' +
-    '.inv-customer-table{display:grid;grid-template-columns:1fr;border:2.5px solid #000;border-top:none;}' +
-    '.inv-cust-row{display:grid;grid-template-columns:1fr 1fr;border-bottom:1.5px solid #000;}' +
+    '.inv-customer-table{display:grid;grid-template-columns:1fr;border:2.5px solid var(--inv-border);border-top:none;}' +
+    '.inv-cust-row{display:grid;grid-template-columns:1fr 1fr;border-bottom:1.5px solid var(--inv-border);}' +
     '.inv-cust-row:last-child{border-bottom:none;}' +
-    '.inv-cust-cell{display:flex;align-items:stretch;border-inline-end:1.5px solid #000;}' +
+    '.inv-cust-cell{display:flex;align-items:stretch;border-inline-end:1.5px solid var(--inv-border);}' +
     '.inv-cust-cell:last-child{border-inline-end:none;}' +
-    '.inv-cust-label{background:#F8FAFC;padding:8px 10px;font-weight:700;font-size:0.85em;border-inline-end:1.5px solid #000;display:flex;align-items:center;white-space:nowrap;min-width:80px;}' +
-    '.inv-cust-value{padding:8px 10px;font-weight:800;flex:1;text-align:center;font-family:"IBM Plex Mono",monospace;font-size:0.95em;word-break:break-word;}' +
-    '.inv-products{width:100%;border-collapse:collapse;font-size:0.95em;border:2.5px solid #000;}' +
-    '.inv-products th{background:#991B1B;color:#FCD34D;padding:8px 4px;border:1.5px solid #000;font-weight:800;text-align:center;font-size:0.9em;}' +
-    '.inv-products td{padding:10px 6px;border:1.5px solid #000;text-align:center;background:#FEFCE8;font-size:1em;}' +
-    '.inv-products tbody tr:nth-child(even) td{background:#FEF9C3;}' +
+    '.inv-cust-label{background:#F8FAFC;padding:8px 10px;font-weight:700;font-size:0.85em;border-inline-end:1.5px solid var(--inv-border);display:flex;align-items:center;white-space:nowrap;min-width:80px;}' +
+    '.inv-cust-value{padding:8px 10px;font-weight:800;flex:1;text-align:center;font-family:\'IBM Plex Mono\',monospace;font-size:0.95em;word-break:break-word;}' +
+    '.inv-products{width:100%;border-collapse:collapse;font-size:0.95em;border:2.5px solid var(--inv-border);}' +
+    '.inv-products th{background:var(--inv-header-bg);color:var(--inv-header-text);padding:8px 4px;border:1.5px solid var(--inv-border);font-weight:800;text-align:center;font-size:0.9em;}' +
+    '.inv-products td{padding:10px 6px;border:1.5px solid var(--inv-border);text-align:center;background:var(--inv-products-bg);font-size:1em;}' +
+    '.inv-products tbody tr:nth-child(even) td{background:var(--inv-products-alt-bg);}' +
     '.inv-products td.details{text-align:right;font-weight:700;padding-inline-end:8px;line-height:1.4;word-break:break-word;}' +
     '.inv-products td.details .barcode-small{display:block;font-size:0.75em;color:#666;font-weight:500;margin-top:2px;}' +
-    '.inv-products td.num{font-family:"IBM Plex Mono",monospace;font-weight:700;white-space:nowrap;}' +
-    '.inv-products td.total-col{font-weight:900;background:#FEF3C7 !important;}' +
-    '.inv-totals{display:flex;flex-direction:column;border:2.5px solid #000;border-top:none;}' +
+    '.inv-products td.num{font-family:\'IBM Plex Mono\',monospace;font-weight:700;white-space:nowrap;}' +
+    '.inv-products td.total-col{font-weight:900;background:var(--inv-highlight-bg) !important;}' +
+    '.inv-totals{display:flex;flex-direction:column;border:2.5px solid var(--inv-border);border-top:none;}' +
     '.inv-totals-table{width:100%;border-collapse:collapse;font-size:0.95em;}' +
-    '.inv-totals-table td{border:1.5px solid #000;padding:8px 10px;font-weight:700;}' +
+    '.inv-totals-table td{border:1.5px solid var(--inv-border);padding:8px 10px;font-weight:700;}' +
     '.inv-totals-table .inv-tot-label{background:#F8FAFC;text-align:right;width:50%;font-size:0.9em;}' +
     '.inv-totals-table .inv-tot-currency{background:#F8FAFC;text-align:center;width:10%;font-size:0.85em;}' +
-    '.inv-totals-table .inv-tot-value{text-align:center;font-family:"IBM Plex Mono",monospace;font-weight:800;width:40%;font-size:1em;}' +
-    '.inv-totals-table tr.highlight .inv-tot-value{background:#FEF9C3;font-size:1.05em;}' +
-    '.inv-signature-box{border-top:2px solid #000;padding:14px 10px;display:flex;justify-content:space-around;align-items:center;font-size:0.85em;font-weight:700;}' +
-    '.inv-signature-line{display:inline-block;border-bottom:1.5px solid #000;width:100px;margin-inline-start:8px;}' +
-    '.inv-words{border:2.5px solid #000;border-top:none;padding:10px 12px;text-align:center;font-size:0.9em;font-weight:800;background:#FEF9C3;color:#000;line-height:1.4;}' +
-    '.inv-bottom{margin-top:10px;display:flex;flex-direction:column;gap:6px;align-items:center;font-size:0.8em;color:#555;padding-top:8px;border-top:1.5px solid #999;font-family:"IBM Plex Mono",monospace;}' +
+    '.inv-totals-table .inv-tot-value{text-align:center;font-family:\'IBM Plex Mono\',monospace;font-weight:800;width:40%;font-size:1em;}' +
+    '.inv-totals-table tr.highlight .inv-tot-value{background:var(--inv-highlight-bg);font-size:1.05em;}' +
+    '.inv-signature-box{border-top:2px solid var(--inv-border);padding:14px 10px;display:flex;justify-content:space-around;align-items:center;font-size:0.85em;font-weight:700;}' +
+    '.inv-signature-line{display:inline-block;border-bottom:1.5px solid var(--inv-border);width:100px;margin-inline-start:8px;}' +
+    '.inv-words{border:2.5px solid var(--inv-border);border-top:none;padding:10px 12px;text-align:center;font-size:0.9em;font-weight:800;background:var(--inv-highlight-bg);color:#000;line-height:1.4;}' +
+    '.inv-bottom{margin-top:10px;display:flex;flex-direction:column;gap:6px;align-items:center;font-size:0.8em;color:#555;padding-top:8px;border-top:1.5px solid #999;font-family:\'IBM Plex Mono\',monospace;}' +
     '.inv-bottom-center{font-weight:800;color:#000;}' +
-    '@media print{body{padding:5mm;}@page{size:A5;margin:8mm;}}' +
+    '@media print{body{padding:5mm;}@page{size:' + pageSize + ';margin:6mm;}}' +
     '</style></head><body>' + html + '</body></html>');
   win.document.close(); win.focus();
   setTimeout(() => win.print(), 800);
 }
+
+function invStylesForPrint(d) {
+  return '--inv-header-bg: ' + d.headerBg + '; --inv-header-text: ' + d.headerText + '; --inv-contact-bg: ' + d.contactBg + '; --inv-contact-text: ' + d.contactText + '; --inv-products-bg: ' + d.productsBg + '; --inv-products-alt-bg: ' + d.productsAltBg + '; --inv-highlight-bg: ' + d.highlightBg + '; --inv-border: ' + d.borderColor + '; --inv-logo-bg: ' + d.logoBg + ';';
+}
+
 function quickPrintInvoice(id) { viewInvoice(id); setTimeout(() => printInvoice(), 250); }
 
 document.querySelectorAll('.modal').forEach(m => { m.addEventListener('click', e => { if (e.target === m) m.classList.remove('show'); }); });
