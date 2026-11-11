@@ -86,6 +86,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
 
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=Cairo:wght@400;600;700;800&family=Almarai:wght@400;700;800&family=Noto+Kufi+Arabic:wght@400;600;700;800&family=Readex+Pro:wght@400;600;700&family=IBM+Plex+Sans+Arabic:wght@400;600;700&family=Amiri:wght@400;700&family=Rubik:wght@400;600;700&family=Changa:wght@400;600;700&family=El+Messiri:wght@400;600;700&family=Cairo+Play:wght@400;700;900&family=Lalezar&family=IBM+Plex+Mono:wght@600;700&display=swap" rel="stylesheet">
 
@@ -313,7 +314,6 @@
     .inv-search-item { padding: 10px 14px; cursor: pointer; border-bottom: 1px solid var(--border-color); font-size: 0.9em; }
     .inv-search-item:hover { background: var(--stripe-bg); }
     .inv-extra-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
-
     .invoice-print { color: #000; background: #fff; direction: rtl; padding: 12px; line-height: 1.5; position: relative; min-height: 400px; }
     .inv-watermark { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-weight: 900; color: #eaeaea; z-index: 0; pointer-events: none; user-select: none; font-family: 'Amiri', serif; line-height: 1; white-space: nowrap; }
     .inv-content { position: relative; z-index: 1; }
@@ -353,7 +353,6 @@
     .inv-words { border: 2.5px solid var(--inv-border, #000); border-top: none; padding: 10px 12px; text-align: center; font-size: 0.9em; font-weight: 800; background: var(--inv-highlight-bg, #FEF9C3); color: #000; line-height: 1.4; }
     .inv-bottom { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; align-items: center; font-size: 0.8em; color: #555; padding-top: 8px; border-top: 1.5px solid #999; font-family: 'IBM Plex Mono', monospace; }
     .inv-bottom-center { font-weight: 800; color: #000; }
-
     #designerModal { z-index: 9998; }
     .designer-content { background: var(--card-bg); border-radius: var(--radius); width: 100%; max-width: 1100px; max-height: 95vh; display: flex; flex-direction: column; overflow: hidden; border-top: 4px solid var(--primary); }
     .designer-header { background: var(--primary); color: #fff; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; }
@@ -386,7 +385,6 @@
     .template-card:hover { border-color: var(--primary); transform: translateY(-2px); }
     .template-card .t-emoji { font-size: 1.6em; display: block; margin-bottom: 4px; }
     .template-card .t-name { font-size: 0.85em; }
-    
     @media (max-width: 900px) {
       .designer-body { grid-template-columns: 1fr; }
       .designer-panel { border-inline-end: none; border-bottom: 2px solid var(--border-color); max-height: 50vh; }
@@ -415,8 +413,6 @@
       #chatFab, .invoice-fab { width: 54px; height: 54px; font-size: 1.3em; }
       #chatFab { bottom: 15px; right: 15px; }
       .invoice-fab { bottom: 80px; right: 15px; }
-
-      /* ✅ تحسينات الجوال الجديدة */
       .search-toolbar { position: sticky; top: 0; background: var(--bg-main); z-index: 100; padding: 10px 0; margin-top: -10px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
       button, input, select, textarea { min-height: 48px; font-size: 16px !important; }
       .action-btn, .filter-btn, .quick-qty-btn { min-height: 42px; min-width: 42px; }
@@ -700,6 +696,25 @@
   </div>
 </div>
 
+<div id="barcodeModal" class="modal">
+  <div class="modal-content" style="max-width: 500px;">
+    <div class="modal-header"><h3>🏷️ طباعة باركود</h3><button class="modal-close" onclick="closeModal('barcodeModal')">✕</button></div>
+    <div id="barcodePreviewArea" style="text-align:center; background:#fff; padding:10px; border:1px dashed #ccc; margin-bottom:15px; border-radius:8px;"></div>
+    <div style="display:flex; gap:10px; align-items:center; margin-bottom:15px;">
+      <label style="margin:0; white-space:nowrap;">عدد الملصقات:</label>
+      <input type="number" id="barcodeQty" value="1" min="1" max="50" style="margin:0; text-align:center;" />
+    </div>
+    <div id="barcodeNoCodeAlert" style="display:none; background:var(--warning-bg); color:var(--warning); padding:10px; border-radius:8px; font-size:0.85em; margin-bottom:15px;">
+      ⚠️ هذه المادة لا تملك باركود. اضغط الزر أدناه لتوليد باركود عشوائي وحفظه للمادة.
+      <button onclick="generateNewBarcode()" class="btn-admin" style="width:100%; margin-top:8px;">✨ توليد باركود جديد</button>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal('barcodeModal')">إلغاء</button>
+      <button class="btn-success" onclick="printBarcodeLabels()">🖨️ طباعة الملصقات</button>
+    </div>
+  </div>
+</div>
+
 <div id="announcementManagerModal" class="modal">
   <div class="modal-content" style="max-width: 600px;">
     <div class="modal-header"><h3>📢 الإعلانات</h3><button class="modal-close" onclick="closeModal('announcementManagerModal')">✕</button></div>
@@ -859,7 +874,6 @@
           <button class="designer-tab" onclick="switchDesignerTab('elements', event)">👁️ عناصر</button>
           <button class="designer-tab" onclick="switchDesignerTab('layout', event)">📏 حجم</button>
         </div>
-
         <div class="designer-pane active" id="pane-templates">
           <div class="designer-section">
             <h4>✨ اختر قالباً جاهزاً</h4>
@@ -867,7 +881,6 @@
             <p style="font-size:0.8em; color:var(--text-muted); margin-top:8px;">اختر قالباً كنقطة بداية، ثم خصّصه كيف تشاء من التبويبات الأخرى.</p>
           </div>
         </div>
-
         <div class="designer-pane" id="pane-texts">
           <div class="designer-section">
             <h4>📝 نصوص الترويسة</h4>
@@ -878,7 +891,6 @@
             <div class="designer-field"><label>التذييل</label><input type="text" id="d_footer" oninput="applyDesign('footer', this.value)" /></div>
           </div>
         </div>
-
         <div class="designer-pane" id="pane-colors">
           <div class="designer-section">
             <h4>🎨 ألوان</h4>
@@ -894,40 +906,24 @@
             <div class="designer-field"><label>نص اللوجو</label><input type="color" id="d_logoText" onchange="applyDesign('logoText', this.value)" /></div>
           </div>
         </div>
-
         <div class="designer-pane" id="pane-fonts">
           <div class="designer-section">
             <h4>🔤 الخطوط</h4>
             <div class="designer-field">
               <label>الخط العام</label>
               <select id="d_fontFamily" onchange="applyDesign('fontFamily', this.value)">
-                <option value="Tajawal">تجوال</option>
-                <option value="Cairo">كايرو</option>
-                <option value="Almarai">المراعي</option>
-                <option value="Noto Kufi Arabic">كوفي</option>
-                <option value="Amiri">أميري</option>
-                <option value="Readex Pro">ريدكس</option>
-                <option value="IBM Plex Sans Arabic">IBM بليكس</option>
+                <option value="Tajawal">تجوال</option><option value="Cairo">كايرو</option><option value="Almarai">المراعي</option><option value="Noto Kufi Arabic">كوفي</option><option value="Amiri">أميري</option><option value="Readex Pro">ريدكس</option><option value="IBM Plex Sans Arabic">IBM بليكس</option>
               </select>
             </div>
             <div class="designer-field">
               <label>خط العنوان</label>
               <select id="d_titleFont" onchange="applyDesign('titleFont', this.value)">
-                <option value="Amiri">أميري</option>
-                <option value="Tajawal">تجوال</option>
-                <option value="Cairo">كايرو</option>
-                <option value="Almarai">المراعي</option>
-                <option value="El Messiri">المسيري</option>
-                <option value="Cairo Play">كايرو بلاي</option>
+                <option value="Amiri">أميري</option><option value="Tajawal">تجوال</option><option value="Cairo">كايرو</option><option value="Almarai">المراعي</option><option value="El Messiri">المسيري</option><option value="Cairo Play">كايرو بلاي</option>
               </select>
             </div>
-            <div class="designer-field">
-              <label>حجم الخط (px)</label>
-              <input type="number" id="d_fontSize" min="10" max="20" onchange="applyDesign('fontSize', Number(this.value))" />
-            </div>
+            <div class="designer-field"><label>حجم الخط (px)</label><input type="number" id="d_fontSize" min="10" max="20" onchange="applyDesign('fontSize', Number(this.value))" /></div>
           </div>
         </div>
-
         <div class="designer-pane" id="pane-elements">
           <div class="designer-section">
             <h4>👁️ العناصر الظاهرة</h4>
@@ -949,7 +945,6 @@
             <div class="designer-field"><label>الحجم (em)</label><input type="range" id="d_watermarkSize" min="8" max="30" step="1" oninput="applyDesign('watermarkSize', Number(this.value))" /></div>
           </div>
         </div>
-
         <div class="designer-pane" id="pane-layout">
           <div class="designer-section">
             <h4>📏 الحجم</h4>
@@ -957,16 +952,12 @@
             <div class="designer-field">
               <label>حجم الورق</label>
               <select id="d_paperSize" onchange="applyDesign('paperSize', this.value)">
-                <option value="A4">A4</option>
-                <option value="A5">A5</option>
-                <option value="A6">A6</option>
-                <option value="80mm">حراري 80mm</option>
+                <option value="A4">A4</option><option value="A5">A5</option><option value="A6">A6</option><option value="80mm">حراري 80mm</option>
               </select>
             </div>
           </div>
         </div>
       </div>
-
       <div class="designer-preview-panel">
         <div class="designer-preview-wrap" id="designerPreview"></div>
       </div>
@@ -1044,6 +1035,7 @@ let chatUser = null, chatInitialized = false, chatUnread = 0, chatIsOpen = false
 let announcements = {}, annRotationTimer = null, annCurrentIndex = 0;
 let invoices = {}, currentInvoiceItems = [];
 let invPriceMode = 'retail', invUnit = 'packet';
+let currentBarcodeProductId = null;
 
 function setStatus(m, c) { const el = document.getElementById('cloudStatus'); if (el) { el.textContent = m; el.className = c || ''; } }
 function showToast(message, type = 'info') {
@@ -1282,12 +1274,10 @@ function initFirebase() {
         fired = true;
         if (user) {
           isAuthReady = true;
-          // ✅ تحديث فحص الأدمن ليعتمد على قاعدة البيانات بدلاً من isAnonymous فقط
           db = firebase.database().ref("simple_price_debts_v4");
           db.child('admins').child(user.uid).once('value').then(snap => {
-            updateAdminUI(snap.exists() || !user.isAnonymous); // احتياطياً إذا لم يكن هناك جدول admins
+            updateAdminUI(snap.exists() || !user.isAnonymous);
           });
-          
           setStatus("🟡 مزامنة البيانات...", "warning");
           connectWithRetry(0);
           setTimeout(() => setupAnnouncementsListener(), 800);
@@ -1309,7 +1299,6 @@ function connectWithRetry(attempt) {
   const delay = attempt === 0 ? 500 : (1000 * Math.pow(1.6, attempt));
   setStatus("🟡 تأكيد الصلاحيات... (" + (attempt + 1) + "/" + MAX + ")", "warning");
   setTimeout(() => {
-    // ✅ قراءة prices فقط وليس الجذر
     db.child("prices").once("value").then((snap) => {
       lastConnectionError = null; setStatus("🟢 متصل ومؤمّن", "online");
       currentData.prices = snap.val() || {}; renderPrices(); updateDashboard();
@@ -1373,7 +1362,7 @@ function renderPrices() {
     if (isAdmin) {
       pCells = '<td data-label="الباكيت"><div class="price-box"><span class="price-cost">ك: ' + formatIQD(pCost) + '</span><br><span class="price-sell">م: ' + formatIQD(pSell) + '</span>' + (pWhole > 0 ? '<br><span class="price-wholesale">ج: ' + formatIQD(pWhole) + '</span>' : '') + '<br><span class="price-profit">ر: ' + formatIQD(pProfit) + '</span></div></td><td data-label="مخزون"><span class="stock-badge ' + badge(pS) + '">' + pS + '</span>' + qc('packet') + '</td>';
       cCells = '<td data-label="الكارتون"><div class="price-box"><span class="price-cost">ك: ' + formatIQD(cCost) + '</span><br><span class="price-sell">م: ' + formatIQD(cSell) + '</span>' + (cWhole > 0 ? '<br><span class="price-wholesale">ج: ' + formatIQD(cWhole) + '</span>' : '') + '<br><span class="price-profit">ر: ' + formatIQD(cProfit) + '</span></div></td><td data-label="مخزون"><span class="stock-badge ' + badge(cS) + '">' + cS + '</span>' + qc('carton') + '</td>';
-      actionCell = '<td class="action-cell" data-label="إجراءات"><button class="action-btn btn-secondary" onclick="openEditModal(\'' + id + '\')">✏️</button><button class="action-btn btn-danger" onclick="confirmDelete(\'' + id + '\')">🗑️</button></td>';
+      actionCell = '<td class="action-cell" data-label="إجراءات"><button class="action-btn btn-secondary" onclick="openEditModal(\'' + id + '\')">✏️</button><button class="action-btn btn-admin" onclick="openBarcodeModal(\'' + id + '\')" title="باركود">🏷️</button><button class="action-btn btn-danger" onclick="confirmDelete(\'' + id + '\')">🗑️</button></td>';
     } else {
       pCells = '<td data-label="مفرد"><div class="price-box"><span class="price-sell" style="font-size:1.1em;">' + formatIQD(pSell) + '</span></div></td><td data-label="جملة"><div class="price-box">' + (pWhole > 0 ? '<span class="price-wholesale" style="font-size:1em;">' + formatIQD(pWhole) + '</span>' : '<span style="color:var(--text-muted);">—</span>') + '</div></td><td data-label="مخزون"><span class="stock-badge ' + badge(pS) + '">' + pS + '</span></td>';
       cCells = '<td data-label="كارتون"><div class="price-box"><span class="price-sell" style="font-size:1em;">' + formatIQD(cSell) + '</span></div></td><td data-label="مخزون"><span class="stock-badge ' + badge(cS) + '">' + cS + '</span></td>';
@@ -1440,6 +1429,87 @@ function exportCsv() {
   const a = document.createElement('a'); a.href = url; a.download = 'أسعار_' + new Date().toISOString().slice(0, 10) + '.csv';
   document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url); showToast("📥 تم", "success");
 }
+
+// --- ميزة توليد وطباعة الباركود ---
+function openBarcodeModal(id) {
+  if (!isAdmin) return showToast('يجب الدخول', 'warning');
+  const p = currentData.prices[id]; if (!p) return;
+  currentBarcodeProductId = id;
+  document.getElementById('barcodeQty').value = 1;
+  const alertEl = document.getElementById('barcodeNoCodeAlert');
+  const previewEl = document.getElementById('barcodePreviewArea');
+  if (!p.code || p.code.trim() === '') {
+    alertEl.style.display = 'block';
+    previewEl.innerHTML = '<div style="padding:20px; color:#888;">لا يوجد باركود</div>';
+  } else {
+    alertEl.style.display = 'none';
+    renderBarcodeSVG(p.code, p.name, p.packetSell);
+  }
+  openModal('barcodeModal');
+}
+function generateNewBarcode() {
+  if (!currentBarcodeProductId) return;
+  const newCode = '200' + Math.floor(Math.random() * 1000000000).toString().padStart(9, '0');
+  db.child("prices").child(currentBarcodeProductId).update({ code: newCode, updatedAt: new Date().toLocaleString('ar-IQ') })
+  .then(() => { showToast('✅ تم توليد وحفظ الباركود', 'success'); openBarcodeModal(currentBarcodeProductId); })
+  .catch(err => showToast('تعذر: ' + err.message, 'error'));
+}
+function renderBarcodeSVG(code, name, price) {
+  const previewEl = document.getElementById('barcodePreviewArea');
+  previewEl.innerHTML = `
+    <div style="font-family: Tajawal, sans-serif; padding: 10px; border: 2px solid #000; display: inline-block; min-width: 250px; background: #fff;">
+      <div style="font-size: 14px; font-weight: 800; margin-bottom: 5px;">محلات الدباغ</div>
+      <div style="font-size: 16px; font-weight: 900; margin-bottom: 5px;">${escapeHtml(name)}</div>
+      <svg id="barcodeSVG"></svg>
+      <div style="font-size: 20px; font-weight: 900; margin-top: 5px;">${formatIQD(price)}</div>
+    </div>
+  `;
+  try { JsBarcode("#barcodeSVG", code, { format: "CODE128", lineColor: "#000", width: 2, height: 50, displayValue: true, font: "monospace", fontSize: 14 }); }
+  catch (e) { previewEl.innerHTML = '<div style="color:red;">خطأ في رسم الباركود</div>'; }
+}
+function printBarcodeLabels() {
+  const qty = parseInt(document.getElementById('barcodeQty').value) || 1;
+  const p = currentData.prices[currentBarcodeProductId];
+  if (!p || !p.code) return showToast('⚠️ لا يوجد باركود', 'warning');
+  const win = window.open('', '_blank', 'width=600,height=800');
+  if (!win) return showToast('⚠️ اسمح بالنوافذ', 'warning');
+  let labelsHtml = '';
+  for (let i = 0; i < qty; i++) {
+    labelsHtml += `
+      <div class="label-box">
+        <div class="shop-name">محلات الدباغ</div>
+        <div class="product-name">${escapeHtml(p.name)}</div>
+        <svg class="barcode-svg"></svg>
+        <div class="price">${formatIQD(p.packetSell)}</div>
+      </div>
+    `;
+  }
+  win.document.write(`
+    <!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;800;900&display=swap" rel="stylesheet">
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body { font-family: 'Tajawal', sans-serif; padding: 10mm; background: #fff; }
+      .labels-grid { display: flex; flex-wrap: wrap; gap: 10px; }
+      .label-box { border: 2px dashed #000; padding: 10px; text-align: center; width: 48%; page-break-inside: avoid; background: #fff; }
+      .shop-name { font-size: 14px; font-weight: 800; margin-bottom: 2px; }
+      .product-name { font-size: 16px; font-weight: 900; margin-bottom: 5px; height: 24px; overflow: hidden; }
+      .barcode-svg { max-width: 100%; height: auto; }
+      .price { font-size: 20px; font-weight: 900; margin-top: 5px; }
+      @media print { body { padding: 0; } .label-box { border: 1px solid #000; width: 32%; margin-bottom: 5px; } @page { size: A4; margin: 5mm; } }
+    </style></head><body>
+    <div class="labels-grid">${labelsHtml}</div>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"><\/script>
+    <script>
+      document.querySelectorAll('.barcode-svg').forEach(svg => {
+        JsBarcode(svg, "${p.code}", { format: "CODE128", width: 1.5, height: 40, displayValue: true, fontSize: 12 });
+      });
+      setTimeout(() => { window.print(); }, 500);
+    <\/script></body></html>
+  `);
+  win.document.close();
+}
+
 async function startScanner(mode) {
   mode = mode || 'add'; if (typeof Html5Qrcode === 'undefined') return showToast("مكتبة الباركود غير محملة", "error");
   scannerMode = mode; openModal('scannerModal');
@@ -1737,29 +1807,18 @@ function renderInvoiceHTML(inv) {
 
 function viewInvoice(id) { const inv = invoices[id]; if (!inv) return; document.getElementById('invoicePrintArea').innerHTML = renderInvoiceHTML(inv); openModal('invoiceViewModal'); }
 
-// ✅ دالة تحميل الفاتورة PDF
 async function downloadInvoicePDF() {
   const element = document.getElementById('invoicePrintArea');
   if (!element || !element.innerHTML.trim()) return;
-  const btn = document.getElementById('pdfBtn');
-  const originalText = btn.innerHTML;
-  btn.innerHTML = '⏳ جاري التحضير...';
-  btn.disabled = true;
+  const btn = document.getElementById('pdfBtn'); const originalText = btn.innerHTML;
+  btn.innerHTML = '⏳ جاري التحضير...'; btn.disabled = true;
   let invNum = 'invoice';
   const invNumMatch = element.querySelector('.inv-cust-value');
   if (invNumMatch && invNumMatch.textContent.includes('INV-')) { invNum = invNumMatch.textContent.trim(); }
-  const opt = {
-    margin: 0, filename: `فاتورة_${invNum}.pdf`, image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-  };
-  try {
-    await html2pdf().set(opt).from(element).save();
-    showToast('✅ تم تحميل الفاتورة كـ PDF', 'success');
-  } catch (e) {
-    showToast('❌ فشل التحميل: ' + e.message, 'error');
-  } finally {
-    btn.innerHTML = originalText; btn.disabled = false;
-  }
+  const opt = { margin: 0, filename: `فاتورة_${invNum}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } };
+  try { await html2pdf().set(opt).from(element).save(); showToast('✅ تم تحميل الفاتورة كـ PDF', 'success'); }
+  catch (e) { showToast('❌ فشل التحميل: ' + e.message, 'error'); }
+  finally { btn.innerHTML = originalText; btn.disabled = false; }
 }
 
 function printInvoice() {
