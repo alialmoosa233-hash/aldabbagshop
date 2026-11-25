@@ -1421,20 +1421,45 @@ function openEditModal(id) {
   openModal('editProductModal');
 }
 document.getElementById('editForm').addEventListener('submit', async function(e) {
-  e.preventDefault(); if (!ensureAuth()) return;
-  const name = document.getElementById('editName').value.trim(); if (!name) return showToast("⚠️ اسم مطلوب", "warning");
+  e.preventDefault(); 
+  if (!ensureAuth()) return;
+  
+  const editId = document.getElementById('editId').value;
+  const name = document.getElementById('editName').value.trim(); 
+  const code = document.getElementById('editCode').value.trim();
+  
+  if (!name) return showToast("⚠️ اسم مطلوب", "warning");
+
+  // ✅ فلتر منع تكرار الباركود (مع استثناء المادة الحالية التي نقوم بتعديلها)
+  if (code !== '') {
+    const barcodeExists = Object.entries(currentData.prices || {}).some(([id, p]) => id !== editId && p.code && p.code.trim() === code);
+    if (barcodeExists) {
+      return showToast("❌ هذا الباركود مسجل مسبقاً لمادة أخرى!", "error");
+    }
+  }
+
+  // ✅ فلتر منع تكرار الاسم (مع استثناء المادة الحالية)
+  const nameExists = Object.entries(currentData.prices || {}).some(([id, p]) => id !== editId && p.name && p.name.trim().toLowerCase() === name.toLowerCase());
+  if (nameExists) {
+    return showToast("❌ توجد مادة أخرى مسجلة بنفس هذا الاسم!", "error");
+  }
+
   const updated = {
-    name, code: document.getElementById('editCode').value.trim(), packetCost: safeNumber('editPacketCost'), packetSell: safeNumber('editPacketSell'), packetWholesale: safeNumber('editPacketWholesale'), packetStock: safeNumber('editPacketStock'),
-    cartonCost: safeNumber('editCartonCost'), cartonSell: safeNumber('editCartonSell'), cartonWholesale: safeNumber('editCartonWholesale'), cartonStock: safeNumber('editCartonStock'), updatedAt: new Date().toLocaleString('ar-IQ')
+    name, 
+    code, 
+    packetCost: safeNumber('editPacketCost'), packetSell: safeNumber('editPacketSell'), packetWholesale: safeNumber('editPacketWholesale'), packetStock: safeNumber('editPacketStock'),
+    cartonCost: safeNumber('editCartonCost'), cartonSell: safeNumber('editCartonSell'), cartonWholesale: safeNumber('editCartonWholesale'), cartonStock: safeNumber('editCartonStock'), 
+    updatedAt: new Date().toLocaleString('ar-IQ')
   };
-  try { await db.child("prices").child(document.getElementById('editId').value).update(updated); closeModal('editProductModal'); showToast("✅ تم", "success"); } catch (err) { showToast("تعذر: " + err.message, "error"); }
+  
+  try { 
+    await db.child("prices").child(editId).update(updated); 
+    closeModal('editProductModal'); 
+    showToast("✅ تم تعديل المادة بنجاح", "success"); 
+  } catch (err) { 
+    showToast("تعذر التعديل: " + err.message, "error"); 
+  }
 });
-function confirmDelete(id) {
-  if (!isAdmin) return; const p = currentData.prices[id]; if (!p) return;
-  showConfirm("تأكيد الحذف", 'حذف "' + p.name + '"؟', async () => {
-    try { await db.child("prices").child(id).remove(); showToast("🗑️ تم", "success"); } catch (err) { showToast("تعذر: " + err.message, "error"); }
-  });
-}
 function exportCsv() {
   const rows = [["اسم","باركود","كلفة الباكيت","بيع الباكيت","جملة الباكيت","مخزون الباكيت","كلفة الكارتون","بيع الكارتون","جملة الكارتون","مخزون الكارتون"]];
   Object.values(currentData.prices || {}).forEach(p => rows.push([p.name || '', p.code || '', p.packetCost || 0, p.packetSell || 0, p.packetWholesale || 0, p.packetStock || 0, p.cartonCost || 0, p.cartonSell || 0, p.cartonWholesale || 0, p.cartonStock || 0]));
