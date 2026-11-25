@@ -634,7 +634,7 @@
     </div>
     <div class="inv-search-box">
       <label>🔍 ابحث عن منتج</label>
-      <input type="text" id="invSearchInput" placeholder="اسم أو باركود..." oninput="searchInvoiceProduct(this.value)" onfocus="searchInvoiceProduct(this.value)" autocomplete="off" />
+      <input type="text" id="invSearchInput" placeholder="اسم أو باركود..." oninput="searchInvoiceProduct(this.value)" onfocus="searchInvoiceProduct(this.value)" onkeydown="if(event.key==='Enter' && window._firstInvResult) { event.preventDefault(); addProductToInvoice(window._firstInvResult); }" autocomplete="off" />
       <div id="invSearchResults" class="inv-search-results"></div>
     </div>
     <div style="background:var(--stripe-bg); border:1px solid var(--border-color); border-radius:10px; margin-bottom:12px; max-height:250px; overflow-y:auto;">
@@ -1689,8 +1689,10 @@ function openNewInvoice() {
 }
 function searchInvoiceProduct(query) {
   const resultsEl = document.getElementById('invSearchResults'); const q = (query || '').trim().toLowerCase();
-  if (!q) { resultsEl.classList.remove('show'); return; }
+  if (!q) { resultsEl.classList.remove('show'); window._firstInvResult = null; return; }
   const matches = Object.entries(currentData.prices || {}).filter(([id, p]) => { const n = (p.name || '').toLowerCase(), c = (p.code || '').toLowerCase(); return n.includes(q) || c.includes(q); }).slice(0, 10);
+  window._firstInvResult = matches.length > 0 ? matches[0][0] : null;
+  
   if (!matches.length) { resultsEl.innerHTML = '<div class="inv-search-item" style="color:var(--text-muted); cursor:default;">لا نتائج</div>'; resultsEl.classList.add('show'); return; }
   resultsEl.innerHTML = matches.map(([id, p]) => {
     const retailPrice = invUnit === 'packet' ? Number(p.packetSell) || 0 : Number(p.cartonSell) || 0;
@@ -1700,8 +1702,17 @@ function searchInvoiceProduct(query) {
 }
 function addProductToInvoice(id) {
   const p = currentData.prices[id]; if (!p) return;
-  const price = getInvoicePriceForProduct(p); const itemKey = id + '_' + invUnit + '_' + invPriceMode;
+  
+  const availableStock = invUnit === 'packet' ? (Number(p.packetStock) || 0) : (Number(p.cartonStock) || 0);
+  const itemKey = id + '_' + invUnit + '_' + invPriceMode;
   const existing = currentInvoiceItems.find(i => i.itemKey === itemKey);
+  const currentQtyInCart = existing ? existing.qty : 0;
+
+  if (currentQtyInCart + 1 > availableStock) {
+    return showToast(`⚠️ المخزون لا يكفي! المتوفر: ${availableStock} فقط`, "warning");
+  }
+
+  const price = getInvoicePriceForProduct(p);
   if (existing) existing.qty += 1;
   else currentInvoiceItems.push({ itemKey, id, name: p.name || '', code: p.code || '', price, qty: 1, unit: invUnit, priceMode: invPriceMode });
   document.getElementById('invSearchInput').value = ''; document.getElementById('invSearchResults').classList.remove('show');
@@ -1840,50 +1851,60 @@ function printInvoice() {
   const d = getInvoiceDesign(); const html = area.innerHTML;
   const win = window.open('', '_blank', 'width=800,height=1000');
   if (!win) return showToast('⚠️ اسمح بالنوافذ', 'warning');
-  const pageSize = d.paperSize === '80mm' ? '80mm auto' : d.paperSize;
+  
+  const pageSize = d.paperSize === '80mm' ? '80mm auto' : 'A4'; 
+  
   win.document.write('<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>فاتورة</title>' +
     '<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;800;900&family=Cairo:wght@400;700;900&family=Almarai:wght@400;700;800&family=Amiri:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@400;600;700&family=El+Messiri:wght@400;600;700&family=Noto+Kufi+Arabic:wght@400;700&family=Readex+Pro:wght@400;600;700&family=Cairo+Play:wght@400;700;900&family=IBM+Plex+Mono:wght@600;700&display=swap" rel="stylesheet">' +
-    '<style>*{box-sizing:border-box;margin:0;padding:0;}body{padding:10mm;width:100%;margin:0 auto;direction:rtl;background:#fff;font-family:\'' + d.fontFamily + '\',sans-serif;}' +
-    '.invoice-print{color:#000;background:#fff;direction:rtl;padding:12px;line-height:1.5;position:relative;min-height:400px;font-size:' + (Number(d.fontSize) + 2) + 'px;' + invStylesForPrint(d) + '}' +
+    '<style>*{box-sizing:border-box;margin:0;padding:0;}' +
+    'body{padding:0; margin:0; width:100%; direction:rtl; background:#fff; font-family:\'' + d.fontFamily + '\',sans-serif;}' +
+    
+    '.invoice-print{color:#000;background:#fff;direction:rtl;padding:10px;line-height:1.6;position:relative;min-height:100vh;font-size:' + (Number(d.fontSize) + 3) + 'px;' + invStylesForPrint(d) + '}' +
     '.inv-watermark{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-weight:900;color:#eaeaea;z-index:0;pointer-events:none;user-select:none;font-family:Amiri,serif;line-height:1;white-space:nowrap;}' +
     '.inv-content{position:relative;z-index:1;}' +
-    '.inv-head{display:grid;grid-template-columns:1fr;gap:10px;border:2.5px solid var(--inv-border);border-bottom:none;padding:10px 12px;text-align:center;}' +
+    '.inv-head{display:grid;grid-template-columns:1fr;gap:10px;border:2.5px solid var(--inv-border);border-bottom:none;padding:15px 12px;text-align:center;}' +
     '.inv-logo-box{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;}' +
-    '.inv-logo-red{font-size:2.2em;font-weight:900;padding:8px 20px;border-radius:6px;line-height:1;}' +
+    '.inv-logo-red{font-size:2.5em;font-weight:900;padding:8px 20px;border-radius:6px;line-height:1;}' +
     '.inv-shop-info{text-align:center;}' +
-    '.inv-shop-name{font-size:2em;font-weight:900;margin-bottom:4px;line-height:1.1;}' +
-    '.inv-shop-tagline{font-size:1em;color:#333;font-weight:700;}' +
-    '.inv-contact{background:var(--inv-contact-bg);color:var(--inv-contact-text);border:2.5px solid var(--inv-border);padding:8px 12px;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:0.9em;font-weight:800;text-align:center;}' +
+    '.inv-shop-name{font-size:2.2em;font-weight:900;margin-bottom:4px;line-height:1.1;}' +
+    '.inv-shop-tagline{font-size:1.1em;color:#333;font-weight:700;}' +
+    '.inv-contact{background:var(--inv-contact-bg);color:var(--inv-contact-text);border:2.5px solid var(--inv-border);padding:10px 12px;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:1em;font-weight:800;text-align:center;}' +
     '.inv-contact span{display:block;}' +
     '.inv-customer-table{display:grid;grid-template-columns:1fr;border:2.5px solid var(--inv-border);border-top:none;}' +
     '.inv-cust-row{display:grid;grid-template-columns:1fr 1fr;border-bottom:1.5px solid var(--inv-border);}' +
     '.inv-cust-row:last-child{border-bottom:none;}' +
     '.inv-cust-cell{display:flex;align-items:stretch;border-inline-end:1.5px solid var(--inv-border);}' +
     '.inv-cust-cell:last-child{border-inline-end:none;}' +
-    '.inv-cust-label{background:#F8FAFC;padding:8px 10px;font-weight:700;font-size:0.85em;border-inline-end:1.5px solid var(--inv-border);display:flex;align-items:center;white-space:nowrap;min-width:80px;}' +
-    '.inv-cust-value{padding:8px 10px;font-weight:800;flex:1;text-align:center;font-family:\'IBM Plex Mono\',monospace;font-size:0.95em;word-break:break-word;}' +
-    '.inv-products{width:100%;border-collapse:collapse;font-size:0.95em;border:2.5px solid var(--inv-border);}' +
-    '.inv-products th{background:var(--inv-header-bg);color:var(--inv-header-text);padding:8px 4px;border:1.5px solid var(--inv-border);font-weight:800;text-align:center;font-size:0.9em;}' +
-    '.inv-products td{padding:10px 6px;border:1.5px solid var(--inv-border);text-align:center;background:var(--inv-products-bg);font-size:1em;}' +
+    '.inv-cust-label{background:#F8FAFC;padding:10px;font-weight:700;font-size:0.95em;border-inline-end:1.5px solid var(--inv-border);display:flex;align-items:center;white-space:nowrap;min-width:100px;}' +
+    '.inv-cust-value{padding:10px;font-weight:800;flex:1;text-align:center;font-family:\'IBM Plex Mono\',monospace;font-size:1.05em;word-break:break-word;}' +
+    '.inv-products{width:100%;border-collapse:collapse;font-size:1.1em;border:2.5px solid var(--inv-border);}' +
+    '.inv-products th{background:var(--inv-header-bg);color:var(--inv-header-text);padding:12px 6px;border:1.5px solid var(--inv-border);font-weight:800;text-align:center;font-size:1em;}' +
+    '.inv-products td{padding:12px 8px;border:1.5px solid var(--inv-border);text-align:center;background:var(--inv-products-bg);font-size:1.05em;}' +
     '.inv-products tbody tr:nth-child(even) td{background:var(--inv-products-alt-bg);}' +
-    '.inv-products td.details{text-align:right;font-weight:700;padding-inline-end:8px;line-height:1.4;word-break:break-word;}' +
-    '.inv-products td.details .barcode-small{display:block;font-size:0.75em;color:#666;font-weight:500;margin-top:2px;}' +
+    '.inv-products td.details{text-align:right;font-weight:700;padding-inline-end:10px;line-height:1.5;word-break:break-word;}' +
+    '.inv-products td.details .barcode-small{display:block;font-size:0.8em;color:#666;font-weight:500;margin-top:2px;}' +
     '.inv-products td.num{font-family:\'IBM Plex Mono\',monospace;font-weight:700;white-space:nowrap;}' +
     '.inv-products td.total-col{font-weight:900;background:var(--inv-highlight-bg) !important;}' +
     '.inv-totals{display:flex;flex-direction:column;border:2.5px solid var(--inv-border);border-top:none;}' +
-    '.inv-totals-table{width:100%;border-collapse:collapse;font-size:0.95em;}' +
-    '.inv-totals-table td{border:1.5px solid var(--inv-border);padding:8px 10px;font-weight:700;}' +
-    '.inv-totals-table .inv-tot-label{background:#F8FAFC;text-align:right;width:50%;font-size:0.9em;}' +
-    '.inv-totals-table .inv-tot-currency{background:#F8FAFC;text-align:center;width:10%;font-size:0.85em;}' +
-    '.inv-totals-table .inv-tot-value{text-align:center;font-family:\'IBM Plex Mono\',monospace;font-weight:800;width:40%;font-size:1em;}' +
-    '.inv-totals-table tr.highlight .inv-tot-value{background:var(--inv-highlight-bg);font-size:1.05em;}' +
-    '.inv-signature-box{border-top:2px solid var(--inv-border);padding:14px 10px;display:flex;justify-content:space-around;align-items:center;font-size:0.85em;font-weight:700;}' +
-    '.inv-signature-line{display:inline-block;border-bottom:1.5px solid var(--inv-border);width:100px;margin-inline-start:8px;}' +
-    '.inv-words{border:2.5px solid var(--inv-border);border-top:none;padding:10px 12px;text-align:center;font-size:0.9em;font-weight:800;background:var(--inv-highlight-bg);color:#000;line-height:1.4;}' +
-    '.inv-bottom{margin-top:10px;display:flex;flex-direction:column;gap:6px;align-items:center;font-size:0.8em;color:#555;padding-top:8px;border-top:1.5px solid #999;font-family:\'IBM Plex Mono\',monospace;}' +
+    '.inv-totals-table{width:100%;border-collapse:collapse;font-size:1.05em;}' +
+    '.inv-totals-table td{border:1.5px solid var(--inv-border);padding:10px;font-weight:700;}' +
+    '.inv-totals-table .inv-tot-label{background:#F8FAFC;text-align:right;width:50%;font-size:1em;}' +
+    '.inv-totals-table .inv-tot-currency{background:#F8FAFC;text-align:center;width:10%;font-size:0.95em;}' +
+    '.inv-totals-table .inv-tot-value{text-align:center;font-family:\'IBM Plex Mono\',monospace;font-weight:800;width:40%;font-size:1.1em;}' +
+    '.inv-totals-table tr.highlight .inv-tot-value{background:var(--inv-highlight-bg);font-size:1.15em;}' +
+    '.inv-signature-box{border-top:2px solid var(--inv-border);padding:25px 15px;display:flex;justify-content:space-around;align-items:center;font-size:1em;font-weight:700;}' +
+    '.inv-signature-line{display:inline-block;border-bottom:1.5px solid var(--inv-border);width:120px;margin-inline-start:8px;}' +
+    '.inv-words{border:2.5px solid var(--inv-border);border-top:none;padding:15px;text-align:center;font-size:1.1em;font-weight:800;background:var(--inv-highlight-bg);color:#000;line-height:1.5;}' +
+    '.inv-bottom{margin-top:15px;display:flex;flex-direction:column;gap:8px;align-items:center;font-size:0.9em;color:#555;padding-top:10px;border-top:2px solid #999;font-family:\'IBM Plex Mono\',monospace;}' +
     '.inv-bottom-center{font-weight:800;color:#000;}' +
-    '@media print{body{padding:0; max-width:none !important; width:100% !important;} .invoice-print{width:100% !important; max-width:100% !important;} @page{size:' + pageSize + ';margin:10mm;}}' +
+    
+    '@media print{' +
+      'body{padding:0 !important; margin:0 !important; width:100% !important; max-width:none !important; -webkit-print-color-adjust:exact;}' +
+      '.invoice-print{width:100% !important; max-width:none !important; min-height:auto; padding:0 !important; margin:0 auto !important;}' +
+      '@page{size:' + pageSize + ';margin:5mm !important;}' +
+    '}' +
     '</style></head><body>' + html + '</body></html>');
+    
   win.document.close(); win.focus(); setTimeout(() => win.print(), 800);
 }
 function invStylesForPrint(d) { return '--inv-header-bg: ' + d.headerBg + '; --inv-header-text: ' + d.headerText + '; --inv-contact-bg: ' + d.contactBg + '; --inv-contact-text: ' + d.contactText + '; --inv-products-bg: ' + d.productsBg + '; --inv-products-alt-bg: ' + d.productsAltBg + '; --inv-highlight-bg: ' + d.highlightBg + '; --inv-border: ' + d.borderColor + '; --inv-logo-bg: ' + d.logoBg + ';'; }
