@@ -1728,13 +1728,14 @@ function searchInvoiceProduct(query) {
 function addProductToInvoice(id) {
   const p = currentData.prices[id]; if (!p) return;
   
-  const availableStock = invUnit === 'packet' ? (Number(p.packetStock) || 0) : (Number(p.cartonStock) || 0);
+    const availableStock = invUnit === 'packet' ? (Number(p.packetStock) || 0) : (Number(p.cartonStock) || 0);
   const itemKey = id + '_' + invUnit + '_' + invPriceMode;
   const existing = currentInvoiceItems.find(i => i.itemKey === itemKey);
   const currentQtyInCart = existing ? existing.qty : 0;
 
+  // تنبيه فقط (بدون منع البيع)
   if (currentQtyInCart + 1 > availableStock) {
-    return showToast(`⚠️ المخزون لا يكفي! المتوفر: ${availableStock} فقط`, "warning");
+    showToast(`⚠️ تنبيه: الكمية في المخزون ${availableStock} فقط!`, "warning");
   }
 
   const price = getInvoicePriceForProduct(p);
