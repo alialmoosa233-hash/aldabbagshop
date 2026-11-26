@@ -1978,7 +1978,13 @@ function quickPrintInvoice(id) { viewInvoice(id); setTimeout(() => printInvoice(
 
 document.querySelectorAll('.modal').forEach(m => { m.addEventListener('click', e => { if (e.target === m) m.classList.remove('show'); }); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') { document.querySelectorAll('.modal.show').forEach(m => m.classList.remove('show')); if (chatIsOpen) closeChat(); } });
-
+function setExactPaid() {
+  const subtotal = currentInvoiceItems.reduce((s, i) => s + (i.price * i.qty), 0);
+  const discount = Math.max(0, Number(document.getElementById('invDiscount').value) || 0); 
+  const finalTotal = Math.max(0, subtotal - discount);
+  document.getElementById('invPaidAmount').value = finalTotal;
+  showToast('✅ تم وضع المبلغ بالضبط', 'success');
+}
 window.addEventListener('load', () => {
   buildThemeGrid(); buildFontGrid(); buildStyleGrid(); loadSettings(); initFirebase();
 });
