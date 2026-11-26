@@ -622,46 +622,88 @@
 </div>
 
 <div id="invoiceModal" class="modal">
-  <div class="modal-content" style="max-width: 600px;">
-    <div class="modal-header"><h3>🧾 فاتورة جديدة</h3><button class="modal-close" onclick="closeModal('invoiceModal')">✕</button></div>
-    <div class="inv-mode-toggle">
-      <div class="inv-mode-label">💰 نوع السعر</div>
-      <button class="inv-mode-btn active" data-mode="retail" onclick="setInvMode('retail')">🛒 مفرد</button>
-      <button class="inv-mode-btn" data-mode="wholesale" onclick="setInvMode('wholesale')">📦 جملة</button>
-      <div class="inv-mode-label" style="margin-top:8px;">📦 الوحدة</div>
-      <button class="inv-mode-btn active" data-unit="packet" onclick="setInvUnit('packet')">باكيت</button>
-      <button class="inv-mode-btn" data-unit="carton" onclick="setInvUnit('carton')">كارتون</button>
+  <div class="modal-content" style="max-width: 700px; display: flex; flex-direction: column; height: 95vh;">
+    
+    <div class="modal-header" style="margin-bottom: 10px;">
+      <h3>🧾 فاتورة جديدة</h3>
+      <button class="modal-close" onclick="closeModal('invoiceModal')">✕</button>
     </div>
-    <div class="inv-search-box">
-      <label>🔍 ابحث عن منتج</label>
-      <input type="text" id="invSearchInput" placeholder="اسم أو باركود..." oninput="searchInvoiceProduct(this.value)" onfocus="searchInvoiceProduct(this.value)" onkeydown="if(event.key==='Enter' && window._firstInvResult) { event.preventDefault(); addProductToInvoice(window._firstInvResult); }" autocomplete="off" />
-      <div id="invSearchResults" class="inv-search-results"></div>
-    </div>
-    <div style="background:var(--stripe-bg); border:1px solid var(--border-color); border-radius:10px; margin-bottom:12px; max-height:250px; overflow-y:auto;">
-      <div id="invItemsList" style="min-height:60px;">
-        <div style="text-align:center; padding:20px; color:var(--text-muted); font-size:0.9em;">لم تُضف منتجات</div>
+
+    <!-- شريط البحث ونوع السعر -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+      <div>
+        <div class="inv-mode-toggle" style="margin:0; padding:8px;">
+          <button class="inv-mode-btn active" data-mode="retail" onclick="setInvMode('retail')">🛒 مفرد</button>
+          <button class="inv-mode-btn" data-mode="wholesale" onclick="setInvMode('wholesale')">📦 جملة</button>
+          <button class="inv-mode-btn active" data-unit="packet" onclick="setInvUnit('packet')">باكيت</button>
+          <button class="inv-mode-btn" data-unit="carton" onclick="setInvUnit('carton')">كارتون</button>
+        </div>
+      </div>
+      <div class="inv-search-box" style="margin:0;">
+        <input type="text" id="invSearchInput" placeholder="🔍 اسم أو باركود (Enter للإضافة)..." oninput="searchInvoiceProduct(this.value)" onfocus="searchInvoiceProduct(this.value)" onkeydown="if(event.key==='Enter' && window._firstInvResult) { event.preventDefault(); addProductToInvoice(window._firstInvResult); }" autocomplete="off" style="margin:0; border-radius: 8px; border: 2px solid var(--primary);" />
+        <div id="invSearchResults" class="inv-search-results"></div>
       </div>
     </div>
-    <div class="invoice-total-box">
-      <span>💰 الإجمالي</span>
-      <span id="invTotal" style="font-family:'IBM Plex Mono',monospace; font-size:1.4em;">0 د.ع</span>
+
+    <!-- جدول المواد (يأخذ المساحة المتبقية) -->
+    <div style="flex: 1; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 10px; background: var(--stripe-bg);">
+      <table style="width: 100%; border-collapse: collapse; font-size: 0.95em;">
+        <thead style="position: sticky; top: 0; z-index: 10; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+          <tr>
+            <th style="padding: 8px;">المادة</th>
+            <th style="padding: 8px; width: 90px;">السعر</th>
+            <th style="padding: 8px; width: 100px;">الكمية</th>
+            <th style="padding: 8px; width: 90px;">الإجمالي</th>
+            <th style="padding: 8px; width: 40px;"></th>
+          </tr>
+        </thead>
+        <tbody id="invItemsList">
+          <tr><td colspan="5" style="text-align:center; padding:30px; color:var(--text-muted);">لم تُضف منتجات بعد</td></tr>
+        </tbody>
+      </table>
     </div>
-    <div class="inv-extra-grid">
-      <div><label>👤 الزبون</label><input type="text" id="invCustomerName" placeholder="اختياري" maxlength="50" /></div>
-      <div><label>📞 الهاتف</label><input type="tel" id="invCustomerPhone" placeholder="اختياري" maxlength="20" /></div>
-      <div><label>🆔 رقم الحساب</label><input type="text" id="invCustomerAccount" placeholder="اختياري" maxlength="30" /></div>
-      <div><label>🏷️ الخصم</label><input type="number" id="invDiscount" placeholder="0" min="0" step="any" oninput="updateInvTotalDisplay()" /></div>
-      <div><label>💵 الواصل</label><input type="number" id="invPaidAmount" placeholder="0" min="0" step="any" /></div>
+
+    <!-- معلومات الزبون والدفع -->
+    <div class="inv-extra-grid" style="margin-bottom: 10px; margin-top: 0;">
+      <div>
+        <label>👤 الزبون</label>
+        <input type="text" id="invCustomerName" placeholder="زبون نقدي" maxlength="50" style="margin:0;" />
+      </div>
+      <div>
+        <label>📞 الهاتف</label>
+        <input type="tel" id="invCustomerPhone" placeholder="اختياري" maxlength="20" style="margin:0;" />
+      </div>
+      <div>
+        <label>🏷️ الخصم</label>
+        <input type="number" id="invDiscount" placeholder="0" min="0" step="any" oninput="updateInvTotalDisplay()" style="margin:0;" />
+      </div>
+      <div>
+        <label>💵 الواصل <button onclick="setExactPaid()" style="padding:2px 6px; font-size:0.7em; margin-inline-start:5px; background:var(--success);">بالضبط</button></label>
+        <input type="number" id="invPaidAmount" placeholder="0" min="0" step="any" style="margin:0;" />
+      </div>
     </div>
-    <label>📝 ملاحظات</label>
-    <input type="text" id="invNotes" placeholder="اختياري" maxlength="100" />
-    <div class="modal-actions">
-      <button class="btn-secondary" onclick="closeModal('invoiceModal')">إلغاء</button>
-      <button class="btn-success" onclick="saveInvoice()" id="invSaveBtn">💾 حفظ</button>
+
+    <!-- التذييل الثابت (الإجمالي وزر الحفظ) -->
+    <div style="background: var(--card-bg); border-top: 2px solid var(--border-color); padding-top: 10px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+      
+      <div style="flex: 1; display: flex; gap: 10px; align-items: center;">
+        <label style="margin: 0; display: flex; align-items: center; gap: 5px; cursor: pointer; font-size: 0.9em;">
+          <input type="checkbox" id="invAutoPrint" checked style="width: 18px; height: 18px; margin: 0;" /> 🖨️ طباعة تلقائية
+        </label>
+        <label style="margin: 0; display: flex; align-items: center; gap: 5px; cursor: pointer; font-size: 0.9em;">
+          <input type="checkbox" id="invMarkComplete" checked style="width: 18px; height: 18px; margin: 0;" /> ✅ إنجاز فوري
+        </label>
+      </div>
+
+      <div style="font-size: 1.5em; font-weight: 900; color: var(--primary); font-family: 'IBM Plex Mono', monospace;">
+        <span id="invTotal">0 د.ع</span>
+      </div>
+      
+      <button class="btn-success" onclick="saveInvoice()" id="invSaveBtn" style="padding: 14px 30px; font-size: 1.1em; border-radius: 10px;">💾 حفظ</button>
     </div>
+
   </div>
 </div>
-
 <div id="invoiceViewModal" class="modal">
   <div class="modal-content" style="max-width: 620px;">
     <div class="modal-header"><h3>🧾 الفاتورة</h3><button class="modal-close" onclick="closeModal('invoiceViewModal')">✕</button></div>
