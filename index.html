@@ -1790,39 +1790,37 @@ function changeInvoiceItemQty(index, delta) { const item = currentInvoiceItems[i
 function removeInvoiceItem(index) { currentInvoiceItems.splice(index, 1); renderInvoiceItems(); }
 function renderInvoiceItems() {
   const listEl = document.getElementById('invItemsList'), totalEl = document.getElementById('invTotal');
-  if (!currentInvoiceItems.length) { listEl.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted); font-size:0.9em;">لم تُضف منتجات</div>'; if (totalEl) totalEl.textContent = '0 د.ع'; return; }
+  if (!currentInvoiceItems.length) { 
+    listEl.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:30px; color:var(--text-muted);">لم تُضف منتجات بعد</td></tr>'; 
+    if (totalEl) totalEl.textContent = '0 د.ع'; 
+    return; 
+  }
   let total = 0;
   listEl.innerHTML = currentInvoiceItems.map((item, i) => {
     const lineTotal = item.price * item.qty; total += lineTotal;
-    const unitTag = item.unit === 'carton' ? '<span class="inv-unit-tag inv-unit-carton">كارتون</span>' : '<span class="inv-unit-tag inv-unit-packet">باكيت</span>';
-    const modeTag = item.priceMode === 'wholesale' ? '<span style="color:var(--wholesale); font-weight:800; font-size:0.7em;"> • جملة</span>' : '';
-    return '<div class="invoice-item-row"><div class="name" style="flex:1; min-width:80px;">' + escapeHtml(item.name) + unitTag + modeTag + '</div><input type="number" class="inv-price-input" value="' + item.price + '" min="0" step="any" onchange="updateInvoiceItemPrice(' + i + ', this.value)" /><div style="display:flex; align-items:center; gap:3px;"><button class="quick-qty-btn" onclick="changeInvoiceItemQty(' + i + ', -1)" style="width:24px; height:24px;">−</button><span style="min-width:24px; text-align:center; font-weight:800;">' + item.qty + '</span><button class="quick-qty-btn" onclick="changeInvoiceItemQty(' + i + ', 1)" style="width:24px; height:24px;">+</button></div><div style="font-family:monospace; font-weight:800; color:var(--price-blue); min-width:70px; text-align:left; font-size:0.9em;">' + formatIQD(lineTotal) + '</div><button onclick="removeInvoiceItem(' + i + ')" style="background:none; color:var(--danger); cursor:pointer; font-size:1.1em; width:auto; padding:0 2px;">✕</button></div>';
+    const unitTag = item.unit === 'carton' ? '<span style="font-size:0.7em; background:#FEE2E2; color:#991B1B; padding:2px 6px; border-radius:4px;">كارتون</span>' : '<span style="font-size:0.7em; background:#DBEAFE; color:#1E40AF; padding:2px 6px; border-radius:4px;">باكيت</span>';
+    const modeTag = item.priceMode === 'wholesale' ? '<span style="color:var(--wholesale); font-weight:800; font-size:0.7em;"> (جملة)</span>' : '';
+    
+    return `<tr style="border-bottom: 1px solid var(--border-color);">
+      <td style="padding: 8px; text-align:right;">
+        <div style="font-weight:700;">${escapeHtml(item.name)}</div>
+        <div style="font-size:0.8em; color:var(--text-muted);">${unitTag}${modeTag}</div>
+      </td>
+      <td style="padding: 8px;">
+        <input type="number" value="${item.price}" min="0" step="any" onchange="updateInvoiceItemPrice(${i}, this.value)" style="width: 80px; padding: 4px; margin:0; text-align:center; font-weight:700; border-color:var(--price-blue);" />
+      </td>
+      <td style="padding: 8px;">
+        <div style="display:flex; align-items:center; justify-content:center; gap:5px;">
+          <button onclick="changeInvoiceItemQty(${i}, -1)" style="padding: 4px 8px; border-radius: 4px; background:var(--border-color); color:var(--text-main);">−</button>
+          <span style="font-weight:800; width:20px;">${item.qty}</span>
+          <button onclick="changeInvoiceItemQty(${i}, 1)" style="padding: 4px 8px; border-radius: 4px; background:var(--border-color); color:var(--text-main);">+</button>
+        </div>
+      </td>
+      <td style="padding: 8px; font-weight:900; color:var(--price-blue); font-family:monospace;">${formatIQD(lineTotal)}</td>
+      <td style="padding: 8px;"><button onclick="removeInvoiceItem(${i})" style="background:none; color:var(--danger); font-size:1.2em;">✕</button></td>
+    </tr>`;
   }).join('');
   if (totalEl) totalEl.textContent = formatIQD(total); updateInvTotalDisplay();
-}
-function updateInvTotalDisplay() {
-  const subtotal = currentInvoiceItems.reduce((s, i) => s + (i.price * i.qty), 0);
-  const discount = Math.max(0, Number(document.getElementById('invDiscount').value) || 0); const final = Math.max(0, subtotal - discount);
-  const totalEl = document.getElementById('invTotal');
-  if (discount > 0) totalEl.textContent = formatIQD(final) + ' (خصم ' + formatIQD(discount) + ')'; else totalEl.textContent = formatIQD(subtotal);
-}
-async function saveInvoice() {
-  if (!isAdmin || !ensureAuth()) return;
-  if (!currentInvoiceItems.length) return showToast('⚠️ أضف منتجاً', 'warning');
-  const subtotal = currentInvoiceItems.reduce((s, i) => s + (i.price * i.qty), 0);
-  const discount = Math.max(0, Number(document.getElementById('invDiscount').value) || 0); const total = Math.max(0, subtotal - discount);
-  const paid = Math.max(0, Number(document.getElementById('invPaidAmount').value) || 0);
-  const now = new Date(); const datePart = now.getFullYear().toString() + String(now.getMonth() + 1).padStart(2, '0') + String(now.getDate()).padStart(2, '0');
-  const invoiceNumber = 'INV-' + datePart + '-' + String(Object.keys(invoices || {}).length + 1).padStart(4, '0');
-  const btn = document.getElementById('invSaveBtn'); btn.disabled = true; btn.textContent = '⏳...';
-  try {
-    await db.child('invoices').push({
-      invoiceNumber, items: currentInvoiceItems.map(i => ({ id: i.id, name: i.name, code: i.code || '', price: i.price, qty: i.qty, unit: i.unit, priceMode: i.priceMode })),
-      subtotal, discount, total, paid, customerName: document.getElementById('invCustomerName').value.trim(), customerPhone: document.getElementById('invCustomerPhone').value.trim(), customerAccount: document.getElementById('invCustomerAccount').value.trim(),
-      notes: document.getElementById('invNotes').value.trim(), status: 'pending', createdAt: Date.now(), createdBy: auth.currentUser.email || '', completedAt: null
-    });
-    showToast('✅ ' + invoiceNumber, 'success'); closeModal('invoiceModal'); switchTab('invoices');
-  } catch (err) { showToast('تعذر: ' + err.message, 'error'); } finally { btn.disabled = false; btn.textContent = '💾 حفظ'; }
 }
 function renderInvoicesList() {
   const listEl = document.getElementById('invoicesList'); const entries = Object.entries(invoices).sort((a, b) => (b[1].createdAt || 0) - (a[1].createdAt || 0));
